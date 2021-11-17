@@ -46,20 +46,20 @@ const sendToken= async(req,res)=>{
         secret: user.secret.base32,
         encoding: 'base32'
       });
-      console.log(token,user.secret.base32 )
+    console.log(token,userId )
 
     sgMail.setApiKey(process.env.SENDGRID_API_KEY)
     const msg = {
         to: user.email, 
-        from: 'vienne@labs196.com', 
+        from: 'info@auction10x.com', 
         subject: 'Auction 10X Register',
         text: `Verify Code: ${token}`,
         }
     sgMail.send(msg)
         .then(() => {console.log('Email sent')})
         .catch((error) => {console.error(error)
-    return res.json({token, userId})
 })
+return res.status(200).json({token, userId})
 }
 
 // @desc  Verify token and make secret permanent
@@ -69,7 +69,6 @@ const verify=async(req,res)=>{
     console.log(token,userId)
     try{
         const user=await User.findOne({_id:userId})
-        console.log(user.secret.base32)
         const {base32:secret}=user.secret;
         const verified = speakeasy.totp.verify({
             secret,
