@@ -29,8 +29,22 @@ const registerUser= async(req,res)=>{
 
     try{
         const savedUser=await user.save();
-        console.log(savedUser.secret)
-        res.send({userId:savedUser.id, secret: savedUser.secret.base32});
+           const token = speakeasy.totp({
+        secret: savedUser.secret.base32,
+        encoding: 'base32'
+      });
+      sgMail.setApiKey(process.env.SENDGRID_API_KEY)
+      const msg = {
+          to: user.email, 
+          from: 'info@auction10x.com', 
+          subject: 'Auction 10X Register',
+          text: `Verify Code: ${token}`,
+          }
+      sgMail.send(msg)
+          .then(() => {console.log('Email sent')})
+          .catch((error) => {console.error(error)
+  })
+        res.send({userId:savedUser._id});
     }
     catch(err){
         res.status(400).send(err.message)
@@ -42,11 +56,10 @@ const registerUser= async(req,res)=>{
 const sendToken= async(req,res)=>{
     const {userId}=req.body;
     const user=await User.findOne({_id:userId})
-    var token = speakeasy.totp({
+    const token = speakeasy.totp({
         secret: user.secret.base32,
         encoding: 'base32'
       });
-    console.log(token,userId )
 
     sgMail.setApiKey(process.env.SENDGRID_API_KEY)
     const msg = {
