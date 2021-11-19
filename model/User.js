@@ -11,7 +11,8 @@ const userSchema=new mongoose.Schema({
     city:{type:String},
     date:{type:Date,default: Date.now},
     secret:{type:Object},
-    isActive:false
+    isActive:{type:Boolean, required:true,default:false},
+    KYC: {type:Boolean, required:true,default:false}
 })
 
 module.exports=mongoose.model('User', userSchema)

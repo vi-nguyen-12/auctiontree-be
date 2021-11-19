@@ -5,7 +5,7 @@ const jwt=require("jsonwebtoken");
 const speakeasy = require("speakeasy");
 const sgMail = require('@sendgrid/mail');
 
-//@desc  Register a new user & create temp secret
+//@desc  Register a new user & create secret
 //@route POST /api/user/register
 const registerUser= async(req,res)=>{
     const emailExist=await User.findOne({email:req.body.email})
@@ -14,7 +14,6 @@ const registerUser= async(req,res)=>{
     const salt = await bcrypt.genSaltSync(10);
     const hashedPassword = await bcrypt.hash(req.body.password,salt)
     const temp_secret= speakeasy.generateSecret();
-    console.log(temp_secret)
     const user=new User({
         firstName:req.body.firstName,
         lastName:req.body.lastName,
@@ -51,37 +50,12 @@ const registerUser= async(req,res)=>{
     }
 }
 
-// @desc  Create token and send to user via email
-// @route POST /api/user/sendToken
-const sendToken= async(req,res)=>{
-    const {userId}=req.body;
-    const user=await User.findOne({_id:userId})
-    const token = speakeasy.totp({
-        secret: user.secret.base32,
-        encoding: 'base32'
-      });
-
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY)
-    const msg = {
-        to: user.email, 
-        from: 'info@auction10x.com', 
-        subject: 'Auction 10X Register',
-        text: `Verify Code: ${token}`,
-        }
-    sgMail.send(msg)
-        .then(() => {console.log('Email sent')})
-        .catch((error) => {console.error(error)
-})
-return res.status(200).json({token, userId})
-}
-
-// @desc  Verify token and make secret permanent
+// @desc  Verify token and activate user
 // @route POST /api/user/verify
 const verify=async(req,res)=>{
-    const {token, userId}=req.body;
-    console.log(token,userId)
+    const {token, email}=req.body;
     try{
-        const user=await User.findOne({_id:userId})
+        const user=await User.findOne({email})
         const {base32:secret}=user.secret;
         const verified = speakeasy.totp.verify({
             secret,
@@ -90,6 +64,7 @@ const verify=async(req,res)=>{
           }); 
         if(verified) {
             user.isActive=true;
+            await user.save();
             return res.json({verified: true});
         }else{
             return res.json({verified: false})
@@ -102,41 +77,20 @@ const verify=async(req,res)=>{
 
 //@desc  Log in
 //@route POST /api/user/login
-const authUser=async(req,res)=>{
+const login=async(req,res)=>{
     const user=await User.findOne({email:req.body.email})
     if(!user){return res.status(400).send("Email is not found")}
    
     const validPass=await bcrypt.compare(req.body.password,user.password)
     if(!validPass){return res.status(400).send("Invalid password")}
+    if(!user.isActive){return res.status(400).send("User is verified")}
     return res.status(200).json({userId:_id})
 }
 
-// @desc  Verify token and make secret permanent
-// @route POST /api/user/validate
-const validate=async(req,res)=>{
-    const {token, userId}=req.body;
-    console.log(token,userId)
-    try{
-        const user=await User.findOne({_id:userId})
-        const {base32:secret}=user.secret;
-        const verified = speakeasy.totp.verify({
-            secret,
-            encoding: 'base32',
-            token
-          }); 
-        if(verified) {
-            return res.json({verified: true});
-        }else{
-            return res.json({verified: false})
-        }
-    }
-    catch(error){
-        return res.status(500).json({message:error.message})
-    }
-}
+//@desc  KYC is approved, send email notification
+//@route POST /api/user/login
+
 
 exports.registerUser=registerUser;
-exports.authUser=authUser;
+exports.login=login;
 exports.verify=verify;
-exports.sendToken=sendToken;
-exports.validate=validate;
