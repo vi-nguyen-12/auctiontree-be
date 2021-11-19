@@ -8,8 +8,8 @@ const sgMail = require('@sendgrid/mail');
 //@desc  Register a new user & create secret
 //@route POST /api/user/register
 const registerUser= async(req,res)=>{
-    const emailExist=await User.findOne({email:req.body.email})
-    if(emailExist){return res.status(400).send('Email already exists')}
+    const userExist=await User.findOne({$or:[{email: req.body.userName},{userName:req.body.userName}]});
+    if(userExist){return res.status(400).send('Email or user name is already exists')}
 
     const salt = await bcrypt.genSaltSync(10);
     const hashedPassword = await bcrypt.hash(req.body.password,salt)
@@ -20,7 +20,7 @@ const registerUser= async(req,res)=>{
         email:req.body.email,
         phone:req.body.phone,
         password:hashedPassword,
-        bidderName:req.body.bidderName || req.body.firstName,
+        userName:req.body.userName,
         country:req.body.country,
         city:req.body.city,
         secret:temp_secret
@@ -28,10 +28,22 @@ const registerUser= async(req,res)=>{
 
     try{
         const savedUser=await user.save();
-           const token = speakeasy.totp({
+        const token = speakeasy.totp({
         secret: savedUser.secret.base32,
-        encoding: 'base32'
+        encoding: 'base32',
+        time:300
       });
+
+      console.log('token',token)
+
+      const test=speakeasy.totp.verify({
+        secret:savedUser.secret.base32,
+         encoding:"base32",
+         token,
+         time:300
+     })
+    console.log(test)
+
       sgMail.setApiKey(process.env.SENDGRID_API_KEY)
       const msg = {
           to: user.email, 
@@ -43,7 +55,7 @@ const registerUser= async(req,res)=>{
           .then(() => {console.log('Email sent')})
           .catch((error) => {console.error(error)
   })
-        res.send({userId:savedUser._id});
+        res.send({userId:savedUser._id, secret:savedUser.secret});
     }
     catch(err){
         res.status(400).send(err.message)
@@ -55,19 +67,43 @@ const registerUser= async(req,res)=>{
 const verify=async(req,res)=>{
     const {token, email}=req.body;
     try{
-        const user=await User.findOne({email})
+        const user=await User.findOne({email});
         const {base32:secret}=user.secret;
+
         const verified = speakeasy.totp.verify({
             secret,
             encoding: 'base32',
-            token
+            token,
+            time:300
           }); 
+    
         if(verified) {
             user.isActive=true;
             await user.save();
-            return res.json({verified: true});
+            sgMail.setApiKey(process.env.SENDGRID_API_KEY)
+            const msg = {
+                to: user.email, 
+                from: 'info@auction10x.com', 
+                subject: 'Auction 10X Successful Registration',
+                text: `Hi ${user.firstName} ${user.lastName}, We are delighted to have you join us. Welcome to AUCTION10X. Your email has been successfully verified. Thanks. The Auction10X Team`,
+                }
+            sgMail.send(msg)
+                .then(() => {console.log('Email sent')})
+                .catch((error) => {console.error(error)})
+            return res.json(
+                {message:"User has been successfully verified",
+                data:{
+                _id:user.id, 
+                firstName:user.firstName,
+                lastName:user.lastName,
+                email:user.email,
+                phone:user.phone,
+                country:user.country,
+                city:user.city,
+                isActive:user.isActive,
+                KYC:user.isKYC}})
         }else{
-            return res.json({verified: false})
+            return res.json({message:"User has not verified yet"})
         }
     }
     catch(error){
@@ -76,14 +112,15 @@ const verify=async(req,res)=>{
 }
 
 //@desc  Log in
-//@route POST /api/user/login
+//@route POST /api/user/login data:{userName,password}
 const login=async(req,res)=>{
-    const user=await User.findOne({email:req.body.email})
+    const user=await User.findOne({$or:[{email: req.body.userName},{userName:req.body.userName}]});
+
     if(!user){return res.status(400).send("Email is not found")}
    
     const validPass=await bcrypt.compare(req.body.password,user.password)
     if(!validPass){return res.status(400).send("Invalid password")}
-    if(!user.isActive){return res.status(400).send("User is verified")}
+    if(!user.isActive){return res.status(400).send("User has not been verified")}
     return res.status(200).json({userId:_id})
 }
 
