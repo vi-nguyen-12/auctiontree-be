@@ -126,7 +126,7 @@ const login=async(req,res)=>{
     res.cookie("userId", user._id,{httpOnly:true})
     res.cookie("userName", user.userName,{httpOnly:true})
 
-    const token=jwt.sign({userId:user._id, email}, process.env.TOKEN_KEY, {expiresIn: "2h"});
+    const token=jwt.sign({userId:user._id, email:user.email}, process.env.TOKEN_KEY, {expiresIn: "2h"});
     res.cookie("auth-token",token)
     return res.status(200).json(
         {message:"Login successful", 
