@@ -116,31 +116,36 @@ const verify=async(req,res)=>{
 //@desc  Log in
 //@route POST /api/user/login data:{userName,password}
 const login=async(req,res)=>{
-    const user=await User.findOne({$or:[{email: req.body.userName},{userName:req.body.userName}]});
+    try{
+        const user=await User.findOne({$or:[{email: req.body.userName},{userName:req.body.userName}]});
 
-    if(!user){return res.status(400).send("Email is not found")}
+        if(!user){return res.status(400).send("Email is not found")}
+       
+        const validPass=await bcrypt.compare(req.body.password,user.password)
+        if(!validPass){return res.status(400).send("Invalid password")}
+        if(!user.isActive){return res.status(400).send("User has not been verified")}
+        res.cookie("userId", user._id)
+        res.cookie("userName", user.userName)
+    
+        const token=jwt.sign({userId:user._id, email:user.email}, process.env.TOKEN_KEY, {expiresIn: "5h"});
+        res.cookie("auth-token",token, {expires:new Date(Date.now()+18000)});
+        res.status(200).send(
+            {message:"Login successful", 
+            data:{ 
+                _id:user._id, 
+                email:user.email,
+                firstName:user.firstName,
+                lastName:user.lastName,
+                phone:user.phone,
+                userName:user.userName,
+                country:user.country,
+                city:user.city,
+                isActive:user.isActive,
+                KYC:user.isKYC}})
+    }catch(error){
+        res.status(400).send({error})
+    }
    
-    const validPass=await bcrypt.compare(req.body.password,user.password)
-    if(!validPass){return res.status(400).send("Invalid password")}
-    if(!user.isActive){return res.status(400).send("User has not been verified")}
-    res.cookie("userId", user._id,{httpOnly:true})
-    res.cookie("userName", user.userName,{httpOnly:true})
-
-    const token=jwt.sign({userId:user._id, email:user.email}, process.env.TOKEN_KEY, {expiresIn: "2h"});
-    res.cookie("auth-token",token)
-    return res.status(200).json(
-        {message:"Login successful", 
-        data:{ 
-            _id:user._id, 
-            email:user.email,
-            firstName:user.firstName,
-            lastName:user.lastName,
-            phone:user.phone,
-            userName:user.userName,
-            country:user.country,
-            city:user.city,
-            isActive:user.isActive,
-            KYC:user.isKYC}})
 }
 
 //@desc  KYC is approved, send email notification
