@@ -2,8 +2,10 @@ const express=require('express');
 const mongoose=require('mongoose')
 const dotenv=require('dotenv');
 const userRoutes=require("./routes/userRoutes");
+const cookieparser=require("cookie-parser");
 
 const app =express();
+app.use(cookieparser());
 dotenv.config();
 
 mongoose.connect(process.env.DB_CONNECT,{

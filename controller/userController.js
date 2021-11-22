@@ -4,7 +4,6 @@ const bcrypt= require('bcryptjs');
 const jwt=require("jsonwebtoken");
 const speakeasy = require("speakeasy");
 const sgMail = require('@sendgrid/mail');
-const session=require("cookie-session");
 
 //@desc  Register a new user & create secret
 //@route POST /api/user/register
