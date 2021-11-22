@@ -80,6 +80,7 @@ const verify=async(req,res)=>{
         if(verified) {
             user.isActive=true;
             await user.save();
+
             sgMail.setApiKey(process.env.SENDGRID_API_KEY)
             const msg = {
                 to: user.email, 
@@ -96,6 +97,7 @@ const verify=async(req,res)=>{
                 _id:user.id, 
                 firstName:user.firstName,
                 lastName:user.lastName,
+                userName:user.userName,
                 email:user.email,
                 phone:user.phone,
                 country:user.country,
@@ -121,7 +123,19 @@ const login=async(req,res)=>{
     const validPass=await bcrypt.compare(req.body.password,user.password)
     if(!validPass){return res.status(400).send("Invalid password")}
     if(!user.isActive){return res.status(400).send("User has not been verified")}
-    return res.status(200).json({userId:_id})
+    return res.status(200).json(
+        {message:"Login successful", 
+        data:{ 
+            _id:user._id, 
+            email:user.email,
+            firstName:user.firstName,
+            lastName:user.lastName,
+            phone:user.phone,
+            userName:user.userName,
+            country:user.country,
+            city:user.city,
+            isActive:user.isActive,
+            KYC:user.isKYC}})
 }
 
 //@desc  KYC is approved, send email notification
