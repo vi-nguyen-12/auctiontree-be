@@ -124,8 +124,8 @@ const login=async(req,res)=>{
         const validPass=await bcrypt.compare(req.body.password,user.password)
         if(!validPass){return res.status(400).send("Invalid password")}
         if(!user.isActive){return res.status(400).send("User has not been verified")}
-        res.cookie("userId", user._id)
-        res.cookie("userName", user.userName,{sameSite:"none", secure:true})
+        
+        res.cookie("user", JSON.stringify({firstName: user.firstName, lastName: user.lastName}),{expires:new Date(Date.now()+18000), httpOnly:true,sameSite:"strict", secure:true})
     
         const token=jwt.sign({userId:user._id, email:user.email}, process.env.TOKEN_KEY, {expiresIn: "5h"});
         res.cookie("auth-token",token, {expires:new Date(Date.now()+18000), httpOnly:true,sameSite:"strict", secure:true});
@@ -145,8 +145,7 @@ const login=async(req,res)=>{
                 KYC:user.isKYC}})
     }catch(error){
         res.status(400).send({error})
-    }
-   
+    }  
 }
 
 //@desc  KYC is approved, send email notification
