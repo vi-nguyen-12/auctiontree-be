@@ -129,7 +129,7 @@ const login=async(req,res)=>{
         // res.cookie("user", JSON.stringify({firstName: user.firstName, lastName: user.lastName}),{expires:new Date(Date.now()+18000), httpOnly:true,sameSite:"strict", secure:true})
 
      
-        const token=jwt.sign({...user}, process.env.TOKEN_KEY, {expiresIn: "5h"});
+        const token=jwt.sign({userId: user._id}, process.env.TOKEN_KEY, {expiresIn: "5h"});
         res.cookie("auth-token",token, {expires:new Date(Date.now()+18000000), httpOnly:false,sameSite:"strict", secure:true});
       
         res.status(200).send(
@@ -153,14 +153,19 @@ const login=async(req,res)=>{
 ////@desc  Check JWT
 //@route POST /api/user/verifyJWT data:{authToken}
 const checkJWT=async(req,res)=>{
-    const token=req.body.authToken;
-    const verified=jwt.verify(token,process.env.TOKEN_KEY);
-    if(verified){
-        return res.status(200).send({message:"User Logged In",user:verified})
-    }
-    else {
-        return res.status(200).send({message:"User Logged Out"})
-    }
+    try{
+        const token=req.body.authToken;
+        const verified=jwt.verify(token,process.env.TOKEN_KEY);
+    
+        if(verified){
+            const user=await User.findOne({_id:verified.userId})
+            return res.status(200).send({message:"User Logged In",user})
+        }
+        else {
+            return res.status(200).send({message:"User not logged in"})
+        }
+    }catch(error){res.status(400).json(error)}
+    
 }
 
 //@desc  KYC is approved, send email notification
