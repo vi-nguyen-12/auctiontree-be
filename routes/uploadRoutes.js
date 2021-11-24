@@ -4,4 +4,4 @@ const uploadController =require("../controller/uploadController")
 
 router.route("/").post(uploadController.uploadFile);
 
-module.exports=router
+
