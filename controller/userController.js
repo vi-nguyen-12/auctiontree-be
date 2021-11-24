@@ -4,6 +4,7 @@ const bcrypt= require('bcryptjs');
 const jwt=require("jsonwebtoken");
 const speakeasy = require("speakeasy");
 const sgMail = require('@sendgrid/mail');
+const { response } = require('express');
 
 //@desc  Register a new user & create secret
 //@route POST /api/user/register
@@ -125,9 +126,9 @@ const login=async(req,res)=>{
         if(!validPass){return res.status(400).send("Invalid password")}
         if(!user.isActive){return res.status(400).send("User has not been verified")}
         
-        res.cookie("user", JSON.stringify({firstName: user.firstName, lastName: user.lastName}),{expires:new Date(Date.now()+18000), httpOnly:true,sameSite:"strict", secure:true})
+        // res.cookie("user", JSON.stringify({firstName: user.firstName, lastName: user.lastName}),{expires:new Date(Date.now()+18000), httpOnly:true,sameSite:"strict", secure:true})
     
-        const token=jwt.sign({userId:user._id, email:user.email}, process.env.TOKEN_KEY, {expiresIn: "5h"});
+        const token=jwt.sign(user, process.env.TOKEN_KEY, {expiresIn: "5h"});
         res.cookie("auth-token",token, {expires:new Date(Date.now()+18000), httpOnly:true,sameSite:"strict", secure:true});
       
         res.status(200).send(
@@ -148,10 +149,24 @@ const login=async(req,res)=>{
     }  
 }
 
+////@desc  Check JWT
+//@route POST /api/user/verifyJWT data:{authToken}
+const checkJWT=async(req,res)=>{
+    const token=req.body.authToken;
+    const verified=jwt.verify(token,process.env.TOKEN_KEY);
+    if(verified){
+        return res.status(200).send({message:"User Logged In",user:verified})
+    }
+    else {
+        return res.status(200).send({message:"User Logged Out"})
+    }
+}
+
 //@desc  KYC is approved, send email notification
 //@route POST /api/user/login
 
 
 exports.registerUser=registerUser;
 exports.login=login;
+exports.checkJWT=checkJWT;
 exports.verify=verify;
