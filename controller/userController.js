@@ -127,9 +127,10 @@ const login=async(req,res)=>{
         if(!user.isActive){return res.status(400).send("User has not been verified")}
         
         // res.cookie("user", JSON.stringify({firstName: user.firstName, lastName: user.lastName}),{expires:new Date(Date.now()+18000), httpOnly:true,sameSite:"strict", secure:true})
-    
-        const token=jwt.sign(user, process.env.TOKEN_KEY, {expiresIn: "5h"});
-        res.cookie("auth-token",token, {expires:new Date(Date.now()+18000000), httpOnly:true,sameSite:"strict", secure:true});
+
+     
+        const token=jwt.sign({...user}, process.env.TOKEN_KEY, {expiresIn: "5h"});
+        res.cookie("auth-token",token, {expires:new Date(Date.now()+18000000), httpOnly:false,sameSite:"strict", secure:true});
       
         res.status(200).send(
             {message:"Login successful", 

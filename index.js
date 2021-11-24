@@ -23,6 +23,6 @@ app.use(function(req, res, next) {
     next();
   });
 app.use('/api/user',userRoutes)
-app.use("/api/upload", uploadRoutes)
+// app.use("/api/upload", uploadRoutes)
 
 app.listen(5000,()=>console.log("Server is running..."))
