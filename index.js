@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const userRoutes = require("./routes/userRoutes");
 const propertyRoutes = require("./routes/propertyRoutes");
+const kycRoute=require("./routes/kycRoutes");
 const cookieparser = require("cookie-parser");
 const cors = require("cors");
 
@@ -33,5 +34,6 @@ app.use(function (req, res, next) {
 });
 app.use("/api/user", userRoutes);
 app.use("/api/properties", propertyRoutes);
+app.use('/api/kyc',kycRoute)
 
 app.listen(5000, () => console.log("Server is running..."));
