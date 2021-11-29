@@ -187,10 +187,18 @@ const checkJWT = async (req, res) => {
   }
 };
 
+//@desc  Log out
+//@route GET /api/user/logout
+const logout = async (req, res) => {
+  res.clearCookie("auth-token");
+  res.redirect("/");
+};
+
 //@desc  KYC is approved, send email notification
 //@route POST /api/user/login
 
 exports.registerUser = registerUser;
 exports.login = login;
+exports.logout = logout;
 exports.checkJWT = checkJWT;
 exports.verify = verify;
