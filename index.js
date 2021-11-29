@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const userRoutes = require("./routes/userRoutes");
-const uploadRoutes = require("./routes/uploadRoutes");
+const propertyRoutes = require("./routes/propertyRoutes");
 const cookieparser = require("cookie-parser");
 const cors = require("cors");
 
@@ -32,6 +32,6 @@ app.use(function (req, res, next) {
   next();
 });
 app.use("/api/user", userRoutes);
-app.use("/api/upload", uploadRoutes);
+app.use("/api/properties", propertyRoutes);
 
 app.listen(5000, () => console.log("Server is running..."));
