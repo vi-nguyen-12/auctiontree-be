@@ -8,7 +8,7 @@ const uuid = require("uuid/v4");
 //@route POST /api/user/fetchKycStatus data:{userId}
 
 const fetchKycStatus = async (req, res) => {   
-  const user = await User.findById(req.body.userId);  
+  const user = await User.findById(req.query.userId);  
   return res.status(200).json({ kyc_status: user.KYC }); 
 }
 
@@ -18,7 +18,7 @@ const fetchKycStatus = async (req, res) => {
 const verifyKyc = async (req, res) => {
   let resp;
   try {
-    let userId = req.body.userId
+    let userId =req.query.userId
     if (!userId) {
       return res.send({
         error: true,
