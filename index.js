@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
+dotenv.config();
 const userRoutes = require("./routes/userRoutes");
 const propertyRoutes = require("./routes/propertyRoutes");
 const cookieparser = require("cookie-parser");
@@ -9,8 +10,6 @@ const cors = require("cors");
 const app = express();
 app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
 app.use(cookieparser());
-
-dotenv.config();
 
 mongoose.connect(
   process.env.DB_CONNECT,

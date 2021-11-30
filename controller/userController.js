@@ -137,8 +137,6 @@ const login = async (req, res) => {
       return res.status(400).send("User has not been verified");
     }
 
-    // res.cookie("user", JSON.stringify({firstName: user.firstName, lastName: user.lastName}),{expires:new Date(Date.now()+18000), httpOnly:true,sameSite:"strict", secure:true})
-
     const token = jwt.sign({ userId: user._id }, process.env.TOKEN_KEY, {
       expiresIn: "5h",
     });
