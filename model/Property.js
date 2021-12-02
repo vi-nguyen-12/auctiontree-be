@@ -9,8 +9,10 @@ const propertySchema = new Schema(
       enum: ["real-estate", "jet", "car", "yacht"],
     },
     createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    //   details: {tyoe: Object} details of property: key-value
-    // files:{type: Object} array of locations in S3
+    //   details: {type: Object} details of property: key-value
+    // images:array of locations in S3
+    //videos: array of locations in S3
+    // documents: [{name, location, verified}]
   },
   { timestamp: true }
 );

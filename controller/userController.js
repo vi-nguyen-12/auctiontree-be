@@ -1,10 +1,8 @@
-const router = require("express").Router();
 const User = require("../model/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const speakeasy = require("speakeasy");
 const sgMail = require("@sendgrid/mail");
-const { response } = require("express");
 
 //@desc  Register a new user & create secret
 //@route POST /api/user/register

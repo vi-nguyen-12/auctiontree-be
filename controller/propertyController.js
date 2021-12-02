@@ -1,11 +1,24 @@
 const AWS = require("aws-sdk");
-const e = require("express");
+const Property = require("../model/Property");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
 const uuid = require("uuid/v4");
+const axios = require("axios");
+
+//@desc  Search a real-estate with an address
+//@route POST /api/properties/real-estates/search?street_address=&city=&state=&zip_code=
+const search = async (req, res) => {
+  const { street_address, city, state } = req.query;
+  const response = await axios.get(process.env.THIRD_PARTY_API, {
+    params: { street_address, city, state },
+  });
+  console.log(response.data);
+  res.status(200).json({ data: response.data.data });
+  // res.status(200).json({ message: "Get info from Estated works correctly !" });
+};
 
 //@desc  Create a property
-//@route POST /api/properties body:{type, description, images}
+//@route POST /api/properties/real-estates/ body:{type, description, images}
 
 //need to check if body has images or not, if not don't need to create s3 object, go directly to save info to db
 const config = {
@@ -32,4 +45,4 @@ const upload = multer({
   }),
 });
 
-module.exports = { upload };
+module.exports = { upload, search };
