@@ -1,18 +1,29 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
+const documentSchema = new Schema({
+  name: { type: String, required: true },
+  isVerified: {
+    type: String,
+    required: true,
+    enum: ["pending", "success", "fail"],
+    default: "pending",
+  },
+  details: Object,
+});
+
 const propertySchema = new Schema(
   {
+    createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
     type: {
       type: String,
       required: true,
       enum: ["real-estate", "jet", "car", "yacht"],
     },
-    createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    //   details: {type: Object} details of property: key-value
-    // images:array of locations in S3
-    //videos: array of locations in S3
-    // documents: [{name, location, verified}]
+    details: { type: Object },
+    images: Array,
+    videos: Array,
+    documents: [documentSchema],
   },
   { timestamp: true }
 );

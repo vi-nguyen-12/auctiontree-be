@@ -1,21 +1,18 @@
 const router = require("express").Router();
 const { auth } = require("../middleware/verifyToken");
-const {
-  upload,
-  search,
-  createNewEstates,
-} = require("../controller/propertyController");
-
-router.get("/search", search);
+const { upload } = require("../controller/propertyController");
 
 router.post(
-  "/",
+  "/upload",
   auth,
   upload.fields([
     { name: "images" },
     { name: "videos" },
     { name: "documents" },
   ]),
-  createNewEstates
+  (req, res) => {
+    res.send(req.files);
+  }
 );
+
 module.exports = router;
