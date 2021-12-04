@@ -64,6 +64,11 @@ const createNewEstates = async (req, res) => {
   newEstates.details.structure.beds_count = beds_count;
   newEstates.details.structure.baths = baths;
 
+  //create documents
+  // if(req.files?.documents?.length){
+  //   for (let i )
+  // }
+
   const savedNewEstates = await newEstates.save();
 
   res.status(200).send(savedNewEstates);
