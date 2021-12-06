@@ -4,7 +4,10 @@ const {
   upload,
   search,
   createNewEstates,
+  getRealEstates,
 } = require("../controller/propertyController");
+
+router.get("/", getRealEstates);
 
 router.get("/search", search);
 

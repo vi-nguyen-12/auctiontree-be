@@ -76,4 +76,11 @@ const createNewEstates = async (req, res) => {
   res.status(200).send({ data: savedNewEstates });
 };
 
-module.exports = { upload, search, createNewEstates };
+//@desc  List real-estates
+//@route GET /api/properties/real-estates
+const getRealEstates = async (req, res) => {
+  const results = await Property.find({ type: "real-estate" });
+  res.status(200).send({ data: results });
+};
+
+module.exports = { upload, search, createNewEstates, getRealEstates };
