@@ -34,12 +34,12 @@ const upload = multer({
 //@route POST /api/properties/real-estates/search query params:{street_address, city, state}
 const search = async (req, res) => {
   const { street_address, city, state } = req.query;
-  // const response = await axios.get(process.env.THIRD_PARTY_API, {
-  //   params: { street_address, city, state },
-  // });
-  // console.log(response.data);
-  // res.status(200).json({ data: response.data.data });
-  res.status(200).json({ message: "Get info from Estated works correctly !" });
+  const response = await axios.get(process.env.THIRD_PARTY_API, {
+    params: { street_address, city, state },
+  });
+  console.log(response.data);
+  res.status(200).json({ data: response.data.data });
+  // res.status(200).json({ message: "Get info from Estated works correctly !" });
 };
 
 //@desc  Create a property
@@ -52,26 +52,28 @@ const createNewEstates = async (req, res) => {
     params: { street_address, city, state },
   });
 
+  let documents = [];
+  if (req.files?.documents?.length) {
+    documents = req.files.documents.map((item) => {
+      return { name: item.originalname, details: item };
+    });
+  }
+
   const newEstates = new Property({
     createdBy: req.user.userId,
     type,
     details: response.data.data,
     images: req.files ? req.files.images : [],
     videos: req.files ? req.files.videos : [],
-    documents: req.files ? req.files.documents : [],
+    documents,
   });
   newEstates.details.structure.rooms_count = rooms_count;
   newEstates.details.structure.beds_count = beds_count;
   newEstates.details.structure.baths = baths;
 
-  //create documents
-  // if(req.files?.documents?.length){
-  //   for (let i )
-  // }
-
   const savedNewEstates = await newEstates.save();
 
-  res.status(200).send(savedNewEstates);
+  res.status(200).send({ data: savedNewEstates });
 };
 
 module.exports = { upload, search, createNewEstates };

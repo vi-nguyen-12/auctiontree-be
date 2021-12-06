@@ -6,43 +6,29 @@ const Property = require("../model/Property");
 
 router.post(
   "/upload",
-  auth,
   upload.fields([
     { name: "images" },
     { name: "videos" },
     { name: "documents" },
   ]),
   async (req, res) => {
+    console.log(req.files);
     if (req.files?.documents?.length) {
-      const documents = [];
-
-      const createNewDocument = async (item) => {
-        const document = new Document({
-          name: item.originalname,
-          details: item,
-        });
-        await document.save();
-      };
-
-      for (const item of req.files.documents) {
+      const documents = req.files.documents.map((item) => {
         console.log(item);
-        const document = createNewDocument(item);
-        documents.push(document);
-      }
-      // const property = new Property({
-      //   type: "real-estate",
-      //   createdBy: "test",
-      //   documents,
-      // });
-      // await property.save();
-      res.status(200).send({ data: documents });
+        return { name: item.originalname, details: item };
+      });
+      const property = new Property({
+        type: "real-estate",
+        createdBy: "test",
+        documents,
+      });
+      const savedProperty = await property.save();
+      res.status(200).send({ data: savedProperty });
     } else {
       res.status(200).send("no files");
     }
   }
-  // (req, res) => {
-  //   res.send(req.files);
-  // }
 );
 
 module.exports = router;
