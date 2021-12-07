@@ -1,7 +1,9 @@
 const express = require("express");
+const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 dotenv.config();
+
 const userRoutes = require("./routes/userRoutes");
 const propertyRoutes = require("./routes/propertyRoutes");
 const kycRoute = require("./routes/kycRoutes");
@@ -11,6 +13,10 @@ const cors = require("cors");
 
 const app = express();
 app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieparser());
 
 mongoose.connect(

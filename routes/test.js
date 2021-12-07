@@ -15,16 +15,9 @@ router.post(
     console.log(req.files);
     if (req.files?.documents?.length) {
       const documents = req.files.documents.map((item) => {
-        console.log(item);
         return { name: item.originalname, details: item };
       });
-      const property = new Property({
-        type: "real-estate",
-        createdBy: "test",
-        documents,
-      });
-      const savedProperty = await property.save();
-      res.status(200).send({ data: savedProperty });
+      res.status(200).send({ data: req.files });
     } else {
       res.status(200).send("no files");
     }

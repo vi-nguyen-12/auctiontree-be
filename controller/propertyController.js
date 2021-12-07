@@ -34,12 +34,27 @@ const upload = multer({
 //@route POST /api/properties/real-estates/search query params:{street_address, city, state}
 const search = async (req, res) => {
   const { street_address, city, state } = req.query;
-  const response = await axios.get(process.env.THIRD_PARTY_API, {
-    params: { street_address, city, state },
-  });
-  console.log(response.data);
-  res.status(200).json({ data: response.data.data });
-  // res.status(200).json({ message: "Get info from Estated works correctly !" });
+  try {
+    const response = await axios.get(process.env.THIRD_PARTY_API, {
+      params: { street_address, city, state },
+    });
+    // const addressExist = await Property.findOne({
+    //   type: "real-estate",
+    //   "details.address.formatted_street_address": response.data.data.address.formatted_street_address,
+    // });
+    // console.log(addressExist.createdAt);
+    // if (
+    //   addressExist
+    //   //   && addressExit.createdAt - Date.now() > 182 * 24 * 60 * 60 * 1000
+    // ) {
+    //   res.status(200).send({ data: "This address is already registed to sell" });
+    // } else {
+    //   res.status(200).send({ data: response.data.data });
+    // }
+    res.status(200).send({ data: response.data.data });
+  } catch (error) {
+    res.send(error);
+  }
 };
 
 //@desc  Create a property
