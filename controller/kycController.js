@@ -1,4 +1,3 @@
-const router = require("express").Router();
 const Kyc = require("../model/kyc");
 const User = require("../model/User");
 const axios = require("axios");
@@ -88,8 +87,6 @@ const verifyKyc = async (req, res) => {
     });
   }
 };
-
-const success = () => {};
 
 exports.fetchKycStatus = fetchKycStatus;
 exports.verifyKyc = verifyKyc;

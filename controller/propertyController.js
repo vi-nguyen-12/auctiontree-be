@@ -34,7 +34,17 @@ const upload = async (req, res) => {
   const data = req.files.map((item) => {
     return { name: item.originalname, url: item.location };
   });
-  res.status(200).send({ data });
+  res.status(200).send(data);
+};
+
+const uploadAll = async (req, res) => {
+  let result = {};
+  for (let key in req.files) {
+    result[key] = req.files[key].map((item) => {
+      return { name: item.originalname, url: item.location };
+    });
+  }
+  res.status(200).send(result);
 };
 
 //@desc  Search a real-estate with an address
@@ -58,14 +68,14 @@ const search = async (req, res) => {
     // } else {
     //   res.status(200).send({ data: response.data.data });
     // }
-    res.status(200).send({ data: response.data.data });
+    res.status(200).send(response.data.data);
   } catch (error) {
     res.send(error);
   }
 };
 
 //@desc  Create a property
-//@route POST /api/properties/real-estates/ body:{type, street_address, city, state, images, videos, documents,fields}
+//@route POST /api/properties/real-estates/ body:{type, street_address, city, state, images, videos, documents}
 const createNewEstates = async (req, res) => {
   const { type, street_address, city, state, images, videos, documents } =
     req.body;
@@ -89,7 +99,7 @@ const createNewEstates = async (req, res) => {
 
   const savedNewEstates = await newEstates.save();
 
-  res.status(200).send({ data: savedNewEstates });
+  res.status(200).send(savedNewEstates);
 };
 
 //@desc  List real-estates
@@ -99,4 +109,11 @@ const getRealEstates = async (req, res) => {
   res.status(200).send({ data: results });
 };
 
-module.exports = { uploadS3, upload, search, createNewEstates, getRealEstates };
+module.exports = {
+  uploadS3,
+  upload,
+  uploadAll,
+  search,
+  createNewEstates,
+  getRealEstates,
+};
