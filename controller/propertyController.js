@@ -16,7 +16,7 @@ const bucket = process.env.AWS_BUCKET_NAME;
 
 const s3 = new AWS.S3(config);
 
-const upload = multer({
+const uploadS3 = multer({
   storage: multerS3({
     s3,
     bucket,
@@ -29,6 +29,13 @@ const upload = multer({
     },
   }),
 });
+
+const upload = async (req, res) => {
+  const data = req.files.map((item) => {
+    return { name: item.originalname, url: item.location };
+  });
+  res.status(200).send({ data });
+};
 
 //@desc  Search a real-estate with an address
 //@route POST /api/properties/real-estates/search query params:{street_address, city, state}
@@ -60,31 +67,25 @@ const search = async (req, res) => {
 //@desc  Create a property
 //@route POST /api/properties/real-estates/ body:{type, street_address, city, state, images, videos, documents,fields}
 const createNewEstates = async (req, res) => {
-  const { type, street_address, city, state, fields } = req.body;
-  const { rooms_count, beds_count, baths } = fields;
+  const { type, street_address, city, state, images, videos, documents } =
+    req.body;
+  // const { rooms_count, beds_count, baths } = fields;
 
   const response = await axios.get(process.env.THIRD_PARTY_API, {
     params: { street_address, city, state },
   });
 
-  let documents = [];
-  if (req.files?.documents?.length) {
-    documents = req.files.documents.map((item) => {
-      return { name: item.originalname, details: item };
-    });
-  }
-
   const newEstates = new Property({
     createdBy: req.user.userId,
     type,
     details: response.data.data,
-    images: req.files ? req.files.images : [],
-    videos: req.files ? req.files.videos : [],
+    images,
+    videos,
     documents,
   });
-  newEstates.details.structure.rooms_count = rooms_count;
-  newEstates.details.structure.beds_count = beds_count;
-  newEstates.details.structure.baths = baths;
+  // newEstates.details.structure.rooms_count = rooms_count;
+  // newEstates.details.structure.beds_count = beds_count;
+  // newEstates.details.structure.baths = baths;
 
   const savedNewEstates = await newEstates.save();
 
@@ -98,4 +99,4 @@ const getRealEstates = async (req, res) => {
   res.status(200).send({ data: results });
 };
 
-module.exports = { upload, search, createNewEstates, getRealEstates };
+module.exports = { uploadS3, upload, search, createNewEstates, getRealEstates };

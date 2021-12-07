@@ -10,18 +10,18 @@ const propertySchema = new Schema(
       enum: ["real-estate", "jet", "car", "yacht"],
     },
     details: { type: Object },
-    images: Array,
-    videos: Array,
+    images: [{ name: String, url: String }],
+    videos: [{ name: String, url: String }],
     documents: [
       {
         name: String,
+        url: String,
         isVerified: {
           type: String,
           required: true,
           enum: ["pending", "success", "fail"],
           default: "pending",
         },
-        details: Object,
       },
     ],
   },
