@@ -88,5 +88,7 @@ const verifyKyc = async (req, res) => {
   }
 };
 
+const success = () => {};
+
 exports.fetchKycStatus = fetchKycStatus;
 exports.verifyKyc = verifyKyc;
