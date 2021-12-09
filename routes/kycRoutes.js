@@ -1,7 +1,8 @@
-const router= require('express').Router();
-const kycController =require("../controller/kycController")
+const router = require("express").Router();
+const { auth } = require("../middleware/verifyToken");
+const { verifyKyc } = require("../controller/kycController");
 
-router.route("/fetchKycStatus").get(kycController.fetchKycStatus)
-router.route("/verifyKyc").get(kycController.verifyKyc)
+router.route("/verifyKyc").get(verifyKyc);
+router.route("/hook/callback", () => {});
 
-module.exports=router
+module.exports = router;
