@@ -2,7 +2,7 @@ const Kyc = require("../model/kyc");
 const User = require("../model/User");
 const axios = require("axios");
 const uuid = require("uuid/v4");
-const sgMail = require("@sendgrid/mail");
+const { sendEmail } = require("../helper");
 
 //@desc  Verify user KYC
 //@route GET /api/kyc/verifyKyc params:{userId:...}
@@ -81,21 +81,11 @@ const callback = async (req, res) => {
         { KYC: true }
       );
       let email = user.email;
-      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-      const msg = {
-        to: email,
-        from: "info@auction10x.com",
+      sendEmail({
+        email,
         subject: "Auction 10X- KYC approved",
-        text: `Thank you for completing KYC. Your ID is successfuly approved.`,
-      };
-      sgMail
-        .send(msg)
-        .then(() => {
-          console.log("Email sent");
-        })
-        .catch((error) => {
-          console.error(error);
-        });
+        text: "Thank you for completing KYC. Your ID is successfuly approved",
+      });
     }
   } catch (error) {
     return res

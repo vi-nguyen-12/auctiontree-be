@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const speakeasy = require("speakeasy");
 const sgMail = require("@sendgrid/mail");
+const { sendEmail } = require("../helper");
 
 //@desc  Register a new user & create secret
 //@route POST /api/user/register
@@ -36,22 +37,11 @@ const registerUser = async (req, res) => {
       encoding: "base32",
       time: 300,
     });
-
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-    const msg = {
-      to: user.email,
-      from: "info@auction10x.com",
+    sendEmail({
+      email: user.email,
       subject: "Auction 10X Register",
       text: `Verify Code: ${token}`,
-    };
-    sgMail
-      .send(msg)
-      .then(() => {
-        console.log("Email sent");
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+    });
     res.send({ userId: savedUser._id, secret: savedUser.secret });
   } catch (err) {
     res.status(400).send(err.message);
@@ -77,21 +67,12 @@ const verify = async (req, res) => {
       user.isActive = true;
       await user.save();
 
-      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-      const msg = {
-        to: user.email,
-        from: "info@auction10x.com",
+      sendEmail({
+        email: user.email,
         subject: "Auction 10X Successful Registration",
         text: `Hi ${user.firstName} ${user.lastName}, We are delighted to have you join us. Welcome to AUCTION10X. Your email has been successfully verified. Thanks. The Auction10X Team`,
-      };
-      sgMail
-        .send(msg)
-        .then(() => {
-          console.log("Email sent");
-        })
-        .catch((error) => {
-          console.error(error);
-        });
+      });
+
       return res.json({
         message: "User has been successfully verified",
         data: {

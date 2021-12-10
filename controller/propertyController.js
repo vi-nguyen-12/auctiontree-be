@@ -4,6 +4,7 @@ const multer = require("multer");
 const multerS3 = require("multer-s3");
 const uuid = require("uuid/v4");
 const axios = require("axios");
+const { sendEmail } = require("../helper");
 
 //@desc  upload images, videos and documents to AWS S3
 const config = {
@@ -98,6 +99,14 @@ const createNewEstates = async (req, res) => {
   // newEstates.details.structure.baths = baths;
 
   const savedNewEstates = await newEstates.save();
+
+  const email = await User.findOne({ _id: req.user.userId }, "email");
+  sendEmail({
+    email,
+    subject: "Auction 10X-Listing real-estate status",
+    message:
+      "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
+  });
 
   res.status(200).send(savedNewEstates);
 };
