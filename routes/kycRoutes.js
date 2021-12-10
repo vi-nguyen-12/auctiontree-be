@@ -1,8 +1,8 @@
 const router = require("express").Router();
 const { auth } = require("../middleware/verifyToken");
-const { verifyKyc } = require("../controller/kycController");
+const { verifyKyc, callback } = require("../controller/kycController");
 
-router.route("/verifyKyc").get(verifyKyc);
-router.route("/hook/callback", () => {});
+router.get("/verifyKyc", auth, verifyKyc);
+router.get("/hook/callback", callback);
 
 module.exports = router;

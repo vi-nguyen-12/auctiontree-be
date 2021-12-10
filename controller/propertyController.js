@@ -109,6 +109,22 @@ const getRealEstates = async (req, res) => {
   res.status(200).send({ data: results });
 };
 
+//@desc  Get information of a real estate
+//@route GET /api/properties/real-estates/:id
+const getRealEstate = async (req, res) => {
+  try {
+    const realEstate = await Property.findOne({
+      _id: req.params.id,
+      type: "real-estate",
+    });
+    if (!realEstate) {
+      return res.status(200).send("No real-estate found");
+    }
+    res.status(200).send(realEstate);
+  } catch (error) {
+    res.send(error);
+  }
+};
 module.exports = {
   uploadS3,
   upload,
@@ -116,4 +132,5 @@ module.exports = {
   search,
   createNewEstates,
   getRealEstates,
+  getRealEstate,
 };

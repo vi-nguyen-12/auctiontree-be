@@ -7,8 +7,10 @@ const {
   search,
   createNewEstates,
   getRealEstates,
+  getRealEstate,
 } = require("../controller/propertyController");
 
+router.get("/:id", getRealEstate);
 router.get("/", getRealEstates);
 
 router.get("/search", search);

@@ -8,15 +8,9 @@ const sgMail = require("@sendgrid/mail");
 //@route GET /api/kyc/verifyKyc params:{userId:...}
 
 const verifyKyc = async (req, res) => {
+  let userId = req.user.userId;
   let resp;
   try {
-    let userId = req.query.userId;
-    if (!userId) {
-      return res.send({
-        error: true,
-        message: "Invalid request",
-      });
-    }
     let ref = uuid();
     let data = {
       userReference: userId,
@@ -37,8 +31,7 @@ const verifyKyc = async (req, res) => {
 
     let baseUrl = process.env.KYC_BASE_URL;
     let redirectUrl;
-    var kycDet = await Kyc.findOne({ userId: userId });
-    console.log(kycDet);
+    var kycDet = await Kyc.findOne({ userId });
     if (!kycDet) {
       resp = await jumio.post(baseUrl, data);
       console.log(resp);
@@ -57,10 +50,7 @@ const verifyKyc = async (req, res) => {
         kycDet.status == "PENDING"
       ) {
         resp = await jumio.post(baseUrl, data);
-        await Kyc.updateOne(
-          { userId: userId },
-          { $set: { result: resp.data } }
-        );
+        await Kyc.updateOne({ userId }, { $set: { result: resp.data } });
         redirectUrl = resp.data.redirectUrl;
       } else {
         redirectUrl = kycDet.result.redirectUrl;
