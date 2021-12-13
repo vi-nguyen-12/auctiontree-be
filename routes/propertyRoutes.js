@@ -10,10 +10,8 @@ const {
   getRealEstate,
 } = require("../controller/propertyController");
 
-router.get("/:id", getRealEstate);
-router.get("/", getRealEstates);
-
 router.get("/search", search);
+router.get("/:id", getRealEstate);
 
 router.post("/images/upload", auth, uploadS3.array("images"), upload);
 router.post("/videos/upload", auth, uploadS3.array("videos"), upload);
@@ -28,6 +26,6 @@ router.post(
   ]),
   uploadAll
 );
-
+router.get("/", getRealEstates);
 router.post("/", auth, createNewEstates);
 module.exports = router;

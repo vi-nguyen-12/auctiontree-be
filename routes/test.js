@@ -4,6 +4,8 @@ const { uploadS3 } = require("../controller/propertyController");
 const Document = require("../model/Property");
 const Property = require("../model/Property");
 
-router.post("/", async (req, res) => {});
+router.post("/", async (req, res) => {
+  res.status(200).send("test");
+});
 
 module.exports = router;

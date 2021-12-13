@@ -52,6 +52,7 @@ const uploadAll = async (req, res) => {
 //@route POST /api/properties/real-estates/search query params:{street_address, city, state}
 const search = async (req, res) => {
   const { street_address, city, state } = req.query;
+  console.log(street_address, city, state);
   try {
     const response = await axios.get(process.env.THIRD_PARTY_API, {
       params: { street_address, city, state },
