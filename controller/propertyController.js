@@ -1,5 +1,6 @@
 const AWS = require("aws-sdk");
 const Property = require("../model/Property");
+const User = require("../model/User");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
 const uuid = require("uuid/v4");
@@ -101,12 +102,11 @@ const createNewEstates = async (req, res) => {
 
   const savedNewEstates = await newEstates.save();
 
-  const email = await User.findOne({ _id: req.user.userId }, "email");
+  const { email } = await User.findOne({ _id: req.user.userId }, "email");
   sendEmail({
     email,
     subject: "Auction 10X-Listing real-estate status",
-    message:
-      "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
+    text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
   });
 
   res.status(200).send(savedNewEstates);
@@ -115,7 +115,12 @@ const createNewEstates = async (req, res) => {
 //@desc  List real-estates
 //@route GET /api/properties/real-estates
 const getRealEstates = async (req, res) => {
-  const results = await Property.find({ type: "real-estate" });
+  const results = await Property.find({ type: "real-estate" })
+    .sort({
+      createdAt: -1,
+    })
+    .limit(10);
+
   res.status(200).send({ data: results });
 };
 
@@ -130,6 +135,7 @@ const getRealEstate = async (req, res) => {
     if (!realEstate) {
       return res.status(200).send("No real-estate found");
     }
+    console.log(realEstate.createdAt);
     res.status(200).send(realEstate);
   } catch (error) {
     res.send(error);
