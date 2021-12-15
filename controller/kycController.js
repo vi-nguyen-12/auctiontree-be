@@ -70,7 +70,7 @@ const verifyKyc = async (req, res) => {
 };
 const callback = async (req, res) => {
   try {
-    let kyc = await KYC.findOneAnUpdate(
+    let kyc = await Kyc.findOneAndUpdate(
       { kycId: req.body.customerId },
       { status: req.body.verificationStatus, result: req.body }
     );
