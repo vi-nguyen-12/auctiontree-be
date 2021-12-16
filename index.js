@@ -8,6 +8,7 @@ const userRoutes = require("./routes/userRoutes");
 const propertyRoutes = require("./routes/propertyRoutes");
 const kycRoute = require("./routes/kycRoutes");
 const buyerRoute = require("./routes/buyerRoutes");
+const auctionRoute = require("./routes/auctionRoutes");
 const testRoute = require("./routes/test");
 const cookieparser = require("cookie-parser");
 const cors = require("cors");
@@ -43,6 +44,8 @@ app.use("/api/user", userRoutes);
 app.use("/api/properties/real-estates/", propertyRoutes);
 app.use("/api/kyc", kycRoute);
 app.use("/api/buyers", buyerRoute);
+app.use("/api/auctions", auctionRoute);
+app.use("/admin/api/auctions", auctionRoute);
 app.use("/api/test", testRoute);
 
 app.listen(5000, () => console.log("Server is running..."));

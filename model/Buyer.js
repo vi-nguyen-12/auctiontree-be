@@ -26,7 +26,8 @@ const buyerSchema = new Schema(
       url: String,
       isSigned: { type: Boolean, default: false },
     },
-    approved: { type: Boolean, default: false },
+    TC: { type: Date, required: true },
+    isApproved: { type: Boolean, default: false },
   },
   { timestamp: true }
 );

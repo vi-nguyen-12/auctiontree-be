@@ -80,8 +80,16 @@ const search = async (req, res) => {
 //@desc  Create a property
 //@route POST /api/properties/real-estates/ body:{type, street_address, city, state, images, videos, documents}
 const createNewEstates = async (req, res) => {
-  const { type, street_address, city, state, images, videos, documents } =
-    req.body;
+  const {
+    type,
+    street_address,
+    city,
+    state,
+    images,
+    videos,
+    documents,
+    reservedAmount,
+  } = req.body;
   // const { rooms_count, beds_count, baths } = fields;
 
   const response = await axios.get(process.env.THIRD_PARTY_API, {
@@ -95,6 +103,7 @@ const createNewEstates = async (req, res) => {
     images,
     videos,
     documents,
+    reservedAmount,
   });
   // newEstates.details.structure.rooms_count = rooms_count;
   // newEstates.details.structure.beds_count = beds_count;
