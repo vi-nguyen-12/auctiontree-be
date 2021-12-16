@@ -47,6 +47,7 @@ const propertySchema = new Schema(
       },
     ],
     reservedAmount: { type: Number, required: true },
+    discussedAmount: { type: Number, required: true },
     isApproved: { type: Boolean, default: false },
   },
   { timestamps: true }

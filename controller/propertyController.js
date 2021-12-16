@@ -78,7 +78,7 @@ const search = async (req, res) => {
 };
 
 //@desc  Create a property
-//@route POST /api/properties/real-estates/ body:{type, street_address, city, state, images, videos, documents}
+//@route POST /api/properties/real-estates/ body:{type, street_address, city, state, images, videos, documents, reservedAmount, discussedAmount}
 const createNewEstates = async (req, res) => {
   const {
     type,
@@ -89,6 +89,7 @@ const createNewEstates = async (req, res) => {
     videos,
     documents,
     reservedAmount,
+    discussedAmount,
   } = req.body;
   // const { rooms_count, beds_count, baths } = fields;
 
@@ -104,6 +105,7 @@ const createNewEstates = async (req, res) => {
     videos,
     documents,
     reservedAmount,
+    discussedAmount,
   });
   // newEstates.details.structure.rooms_count = rooms_count;
   // newEstates.details.structure.beds_count = beds_count;
