@@ -146,7 +146,6 @@ const getRealEstate = async (req, res) => {
     if (!realEstate) {
       return res.status(200).send("No real-estate found");
     }
-    console.log(realEstate.createdAt);
     res.status(200).send(realEstate);
   } catch (error) {
     res.send(error);

@@ -10,6 +10,6 @@ const {
 // need to check if the user is admin
 router.post("/", createAuction);
 
-router.put("/bidding/:id", auth, checkKyc, placeBidding);
+router.put("/bidding/:id", auth, placeBidding);
 router.get("/:id", getCurrentAuction);
 module.exports = router;

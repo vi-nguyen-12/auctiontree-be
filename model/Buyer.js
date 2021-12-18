@@ -9,6 +9,7 @@ const buyerSchema = new Schema(
       ref: "Property",
       required: true,
     },
+    QA: [{ question: String, answers: [String], userAnswer: String }],
     documents: [
       {
         name: String,

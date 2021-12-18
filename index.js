@@ -2,6 +2,8 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
+const socket = require("socket.io");
+const { join_User, get_Current_User, user_Disconnect } = require("./dummyuser");
 dotenv.config();
 
 const userRoutes = require("./routes/userRoutes");
@@ -49,3 +51,8 @@ app.use("/admin/api/auctions", auctionRoute);
 app.use("/api/test", testRoute);
 
 app.listen(5000, () => console.log("Server is running..."));
+
+// const server = app.listen(5000, () => console.log("Server is running..."));
+
+// const io = socket(server);
+// io.on("connection", (socket) => {});

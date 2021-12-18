@@ -126,13 +126,21 @@ const placeBidding = async (req, res) => {
     if (biddingTime.getTime() > auction.auctionEndDate.getTime()) {
       return res.status(400).send("Auction was already ended");
     }
+    if (biddingPrice < auction.startingBid) {
+      return res.status(400).send("Bidding price is less than starting bid");
+    }
+    // if(auction.bids.length===0){
+    //   auction.highestBid=
+    // }
     if (biddingPrice <= auction.highestBid) {
       return res
         .status(400)
         .send("Bidding price is less than or equal to highest bid");
     }
     if (biddingPrice < auction.highestBid + auction.incrementAmount) {
-      return res.status(400).send("Increment amount is less than the ");
+      return res
+        .status(400)
+        .send("Bidding price is less than the minimum bid increment");
     }
     const newBidder = {
       userId: req.user.userId,
