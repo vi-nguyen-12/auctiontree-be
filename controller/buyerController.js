@@ -1,18 +1,46 @@
 const Buyer = require("../model/Buyer");
 const User = require("../model/User");
+const Question = require("../model/Question");
 const Property = require("../model/Property");
 const { sendEmail } = require("../helper");
 
 //@desc  Create a buyer
-//@route POST /api/buyers body:{propertyId, documents, docusign,TC } TC:ISOString format
+//@route POST /api/buyers body:{propertyId, documents, docusign,TC, answers } TC:ISOString format
 const createBuyer = async (req, res) => {
   const user = await User.findOne({ _id: req.user.userId });
-  const { propertyId, documents, docusign, TC } = req.body;
+  const { propertyId, documents, docusign, TC, answers } = req.body;
   const timeOfTC = new Date(TC);
   try {
     const property = await Property.findOne({ _id: propertyId });
     if (!property) {
       return res.status(404).send("Property not found");
+    }
+
+    const isRegisterProperty = await Buyer.findOne({
+      propertyId,
+      userId: user._id,
+    });
+    if (isRegisterProperty) {
+      return res
+        .status(404)
+        .send("This user is already registered to buy this property");
+    }
+
+    const questionIds = await Question.find({}, "_id ");
+    const checkQuestion = answers.every((item) => questionIds.includes(item));
+    if (!checkQuestion) {
+      return res.status(404).send("Question not found");
+    }
+
+    if (answers.length < questionIds.length) {
+      let numOfMissingQuestion = questionIds.length - answers.length;
+      return res
+        .status(404)
+        .send(
+          `Missing answers ${numOfMissingQuestion} confidential ${
+            numOfMissingQuestion === 1 ? "question" : "questions"
+          }`
+        );
     }
 
     const newBuyer = new Buyer({
@@ -21,6 +49,7 @@ const createBuyer = async (req, res) => {
       documents,
       docusign,
       TC: timeOfTC,
+      answers,
     });
     const savedBuyer = await newBuyer.save();
     const result = {
@@ -37,6 +66,7 @@ const createBuyer = async (req, res) => {
         videos: property.videos,
         documents: property.documents,
       },
+      answers,
     };
     sendEmail({
       email: user.email,

@@ -1,6 +1,10 @@
 const router = require("express").Router();
-const { getQuestions } = require("../controller/questionController");
+const {
+  getQuestions,
+  createQuestion,
+} = require("../controller/questionController");
 
 router.get("/", getQuestions);
+router.post("/", createQuestion);
 
 module.exports = router;

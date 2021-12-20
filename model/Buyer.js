@@ -9,7 +9,15 @@ const buyerSchema = new Schema(
       ref: "Property",
       required: true,
     },
-    QA: [{ question: String, answers: [String], userAnswer: String }],
+    answers: [
+      {
+        questionID: {
+          type: Schema.Types.ObjectId,
+          ref: "Question",
+        },
+        answer: { type: String, required: true, enum: ["yes", "no"] },
+      },
+    ],
     documents: [
       {
         name: String,
