@@ -1,6 +1,8 @@
 const express = require("express");
 const app = express();
+const server = require("http").createServer(app);
 const socket = require("socket.io");
+const io = socket(server);
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
@@ -48,6 +50,7 @@ app.use("/api/properties/real-estates/", propertyRoutes);
 app.use("/api/kyc", kycRoute);
 app.use("/api/buyers", buyerRoute);
 app.use("/api/auctions", auctionRoute);
+app.use("/api/questions", questionRoute);
 app.use("/admin/api/auctions", auctionRoute);
 app.use("/admin/api/questions", questionRoute);
 
@@ -55,9 +58,7 @@ app.use("/api/test", testRoute);
 
 // app.listen(5000, () => console.log("Server is running..."));
 
-const server = app.listen(5000, () => console.log("Server is running..."));
-
-const io = socket(server);
+// const io = socket(server);
 io.on("connection", (socket) => {
   console.log("a new user is connected");
   socket.on("bid", function ({ number, auctionId }) {
@@ -69,3 +70,5 @@ io.on("connection", (socket) => {
     socket.broadcast.emit("message", { socketId: socket.id, userId, number });
   });
 });
+
+server.listen(5000, () => console.log("Server is running..."));
