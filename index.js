@@ -1,12 +1,9 @@
 const express = require("express");
 const app = express();
-const server = require("http").createServer(app);
 const socket = require("socket.io");
-const io = socket(server);
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
-const { join_User, get_Current_User, user_Disconnect } = require("./dummyuser");
 dotenv.config();
 
 const userRoutes = require("./routes/userRoutes");
@@ -56,19 +53,25 @@ app.use("/admin/api/questions", questionRoute);
 
 app.use("/api/test", testRoute);
 
-// app.listen(5000, () => console.log("Server is running..."));
+const server = app.listen(5000, () => console.log("Server is running..."));
 
-// const io = socket(server);
+io = socket(server, {
+  cors: {
+    credentials: true,
+    origin: "http://localhost:3000",
+  },
+});
 io.on("connection", (socket) => {
   console.log("a new user is connected");
   socket.on("bid", function ({ number, auctionId }) {
     console.log("connect ok !!!");
     console.log(socket.id);
     //function of check everything if the bidding is ok
-    let userId = "123";
-    socket.emit("message", { number, auctionId });
-    socket.broadcast.emit("message", { socketId: socket.id, userId, number });
+    // let userId = "123";
+    // socket.emit("message", { number, auctionId });
+    // socket.broadcast.emit("message", { socketId: socket.id, userId, number });
+  });
+  socket.on("disconnect", function () {
+    console.log("user disconnected");
   });
 });
-
-server.listen(5000, () => console.log("Server is running..."));

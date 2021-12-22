@@ -17,4 +17,8 @@ const sendEmail = ({ email, subject, text }) => {
       console.error(error);
     });
 };
-module.exports = { sendEmail };
+
+const changeToBidderId = (userId) => {
+  return "BID" + userId;
+};
+module.exports = { sendEmail, changeToBidderId };

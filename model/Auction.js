@@ -26,14 +26,7 @@ const auctionSchema = new Schema(
       },
     ],
     winner: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-    },
-    highestBid: {
-      bidder: {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-      },
+      userId: { type: Schema.Types.ObjectId, ref: "User" },
       amount: Number,
     },
   },

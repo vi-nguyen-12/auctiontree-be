@@ -1,13 +1,15 @@
 const Auction = require("../model/Auction");
 const Property = require("../model/Property");
 const Buyer = require("../model/User");
+const { changeToBidderId } = require("../helper");
 
 //@desc  Create an auction
-//@route POST admin/api/auctions/  body:{registerStartDate,registerEndDate,auctionStartDate,auctionEndDate,startingBid,incrementBid}  all dates are in ISOString format
+//@route POST admin/api/auctions/  body:{propertyId, registerStartDate,registerEndDate,auctionStartDate,auctionEndDate,startingBid,incrementAmount}  all dates are in ISOString format
 
 const createAuction = async (req, res) => {
   try {
     const {
+      propertyId,
       registerStartDate: registerStartDateISOString,
       registerEndDate: registerEndDateISOString,
       auctionStartDate: auctionStartDateISOString,
@@ -15,6 +17,12 @@ const createAuction = async (req, res) => {
       startingBid,
       incrementAmount,
     } = req.body;
+
+    const isPropertyInAuction = await Auction.findOne({ propertyId });
+    if (isPropertyInAuction) {
+      res.status(400).send("This property is already created for auction");
+    }
+
     const registerStartDate = new Date(registerStartDateISOString);
     const registerEndDate = new Date(registerEndDateISOString);
     const auctionStartDate = new Date(auctionStartDateISOString);
@@ -70,18 +78,16 @@ const getCurrentAuction = async (req, res) => {
       res.status(400).send("Auction for this property is not found");
     }
     const property = await Property.findOne({ propertyId: auction.propertyId });
-    let numberOfBids = auction.bids.length;
-    let highestBidders;
-    if (numberOfBids !== 0) {
-      highestBidders = auction.bids
-        .sort((a, b) => b.amount - a.amount)
-        .slice(0, 5);
-    }
+    const numberOfBids = auction.bids.length;
+    const highestBid =
+      auction.bids.length === 0 ? startingBid : auction.bids.pop().amount;
+    const highestBidders = auction.bids.slice(-5);
+
     const result = {
       _id: auction._id,
       startingBid: auction.startingBid,
       incrementAmount: auction.incrementAmount,
-      highestBid: auction.highestBid,
+      highestBid,
       registerStartDate: auction.registerStartDate,
       registerEndDate: auction.registerEndDate,
       auctionStartDate: auction.auctionStartDate,
@@ -95,7 +101,6 @@ const getCurrentAuction = async (req, res) => {
         images: property.images,
         videos: property.videos,
         documents: property.documents,
-        reservedAmount: property.reservedAmount,
       },
     };
     res.status(200).send(result);
@@ -115,47 +120,57 @@ const placeBidding = async (req, res) => {
     if (!buyer) {
       res.status(400).send("User did not register to buy");
     }
-    if (buyer.isApproved) {
+    if (!buyer.isApproved) {
       res.status(400).send("User is not approved to bid yet");
     }
+
     const auction = await Auction.findOne({ _id: auctionId });
+    if (!auction) {
+      return res.status(400).send("Auction not found");
+    }
+
     const property = await Property.findOne({ _id: auction.propertyId });
+
+    //check bidding time
     if (biddingTime.getTime() < auction.auctionStartDate.getTime()) {
       return res.status(400).send("Auction is not started yet");
     }
     if (biddingTime.getTime() > auction.auctionEndDate.getTime()) {
       return res.status(400).send("Auction was already ended");
     }
-    if (biddingPrice < auction.startingBid) {
-      return res.status(400).send("Bidding price is less than starting bid");
-    }
-    // if(auction.bids.length===0){
-    //   auction.highestBid=
-    // }
-    if (biddingPrice <= auction.highestBid) {
+
+    //check bidding price
+    let highestBid =
+      auction.bids.length === 0 ? startingBid : auction.bids.pop().amount;
+    if (biddingPrice <= highestBid) {
       return res
         .status(400)
         .send("Bidding price is less than or equal to highest bid");
     }
-    if (biddingPrice < auction.highestBid + auction.incrementAmount) {
+    if (biddingPrice < highestBid + auction.incrementAmount) {
       return res
         .status(400)
         .send("Bidding price is less than the minimum bid increment");
     }
+
     const newBidder = {
       userId: req.user.userId,
       amount: biddingPrice,
       time: biddingTime,
     };
     auction.bids.push(newBidder);
-    auction.highestBid = biddingPrice;
+
     const savedAuction = await auction.save();
+
+    let numberOfBids = savedAuction.bids.length;
+    const highestBidders = savedAuction.bids.slice(-5);
+
     const result = {
       _id: savedAuction._id,
-      bidderId: `BID${req.user.userId}`,
+      bidderId: changeToBidderId(req.user.userId),
       startingBid: savedAuction.startingBid,
       incrementAmount: savedAuction.incrementAmount,
-      highestBid: savedAuction.highestBid,
+      highestBid,
       registerStartDate: savedAuction.registerStartDate,
       registerEndDate: savedAuction.registerEndDate,
       auctionStartDate: savedAuction.auctionStartDate,
@@ -169,7 +184,6 @@ const placeBidding = async (req, res) => {
         images: property.images,
         videos: property.videos,
         documents: property.documents,
-        reservedAmount: property.reservedAmount,
       },
     };
     res.status(200).send(result);

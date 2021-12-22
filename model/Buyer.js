@@ -9,7 +9,15 @@ const buyerSchema = new Schema(
       ref: "Property",
       required: true,
     },
-    QA: [{ question: String, answers: [String], userAnswer: String }],
+    answers: [
+      {
+        questionId: {
+          type: Schema.Types.ObjectId,
+          ref: "Question",
+        },
+        answer: { type: String, required: true, enum: ["yes", "no"] },
+      },
+    ],
     documents: [
       {
         name: String,
@@ -27,7 +35,10 @@ const buyerSchema = new Schema(
       url: String,
       isSigned: { type: Boolean, default: false },
     },
-    TC: { type: Date, required: true },
+    TC: {
+      time: { type: Date, required: true },
+      IPAddress: { type: String, required: true },
+    },
     isApproved: { type: Boolean, default: false },
   },
   { timestamp: true }
