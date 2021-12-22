@@ -123,7 +123,7 @@ const createNewEstates = async (req, res) => {
   res.status(200).send(savedNewEstates);
 };
 
-//@desc  List real-estates
+//@desc  List all real-estates
 //@route GET /api/properties/real-estates
 const getRealEstates = async (req, res) => {
   const results = await Property.find({ type: "real-estate" })
@@ -134,6 +134,10 @@ const getRealEstates = async (req, res) => {
 
   res.status(200).send({ data: results });
 };
+
+////@desc  List real-estates in upcoming auctions
+//@route GET /api/properties/real-estates/upcomingAuctions
+const getRealEstatesUpcomingAuctions = (req, res) => {};
 
 //@desc  Get information of a real estate
 //@route GET /api/properties/real-estates/:id
@@ -159,4 +163,5 @@ module.exports = {
   createNewEstates,
   getRealEstates,
   getRealEstate,
+  getRealEstatesUpcomingAuctions,
 };

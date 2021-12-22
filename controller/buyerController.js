@@ -9,7 +9,7 @@ const { sendEmail } = require("../helper");
 const createBuyer = async (req, res) => {
   const user = await User.findOne({ _id: req.user.userId });
   const { propertyId, documents, docusign, TC, answers } = req.body;
-  const timeOfTC = new Date(TC);
+  // const timeOfTC = new Date(TC);
   try {
     const property = await Property.findOne({ _id: propertyId });
     if (!property) {
@@ -26,14 +26,20 @@ const createBuyer = async (req, res) => {
         .send("This user is already registered to buy this property");
     }
 
-    const questionIds = await Question.find({}, "_id ");
-    const checkQuestion = answers.every((item) => questionIds.includes(item));
+    let checkQuestion = true;
+    await Promise.all(
+      answers.map(async (item) => {
+        let result = await Question.findOne({ _id: item.questionId });
+        if (!result) checkQuestion = false;
+      })
+    );
+
     if (!checkQuestion) {
       return res.status(404).send("Question not found");
     }
-
-    if (answers.length < questionIds.length) {
-      let numOfMissingQuestion = questionIds.length - answers.length;
+    let questionsTotal = await Question.count();
+    if (answers.length < questionsTotal) {
+      let numOfMissingQuestion = questionsTotal - answers.length;
       return res
         .status(404)
         .send(
@@ -48,9 +54,10 @@ const createBuyer = async (req, res) => {
       propertyId,
       documents,
       docusign,
-      TC: timeOfTC,
+      TC,
       answers,
     });
+    console.log(newBuyer);
     const savedBuyer = await newBuyer.save();
     const result = {
       _id: savedBuyer._id,

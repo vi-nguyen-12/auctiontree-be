@@ -36,7 +36,7 @@ const buyerSchema = new Schema(
       isSigned: { type: Boolean, default: false },
     },
     TC: {
-      time: { type: Date, required: true },
+      time: { type: String, required: true },
       IPAddress: { type: String, required: true },
     },
     isApproved: { type: Boolean, default: false },

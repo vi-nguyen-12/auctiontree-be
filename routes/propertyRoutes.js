@@ -26,6 +26,7 @@ router.post(
   ]),
   uploadAll
 );
+router.get("/auctions", () => {});
 router.get("/", getRealEstates);
 router.post("/", auth, createNewEstates);
 module.exports = router;
