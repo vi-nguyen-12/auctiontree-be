@@ -10,10 +10,10 @@ const auctionSchema = new Schema(
     },
     startingBid: { type: Number, required: true },
     incrementAmount: { type: Number, required: true },
-    registerStartDate: { type: Date, required: true, default: Date.now() },
-    registerEndDate: { type: Date, required: true, default: Date.now() },
-    auctionStartDate: { type: Date, required: true, default: Date.now() },
-    auctionEndDate: { type: Date, required: true, default: Date.now },
+    registerStartDate: { type: Date, required: true },
+    registerEndDate: { type: Date, required: true },
+    auctionStartDate: { type: Date, required: true },
+    auctionEndDate: { type: Date, required: true },
     bids: [
       {
         userId: {

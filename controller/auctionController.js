@@ -20,7 +20,9 @@ const createAuction = async (req, res) => {
 
     const isPropertyInAuction = await Auction.findOne({ propertyId });
     if (isPropertyInAuction) {
-      res.status(400).send("This property is already created for auction");
+      return res
+        .status(400)
+        .send("This property is already created for auction");
     }
 
     const registerStartDate = new Date(registerStartDateISOString);
@@ -78,11 +80,14 @@ const getCurrentAuction = async (req, res) => {
       res.status(400).send("Auction for this property is not found");
     }
     const property = await Property.findOne({ propertyId: auction.propertyId });
+    console.log(property);
     const numberOfBids = auction.bids.length;
     const highestBid =
-      auction.bids.length === 0 ? startingBid : auction.bids.pop().amount;
+      auction.bids.length === 0
+        ? auction.startingBid
+        : auction.bids.pop().amount;
     const highestBidders = auction.bids.slice(-5);
-
+    console.log(auction);
     const result = {
       _id: auction._id,
       startingBid: auction.startingBid,

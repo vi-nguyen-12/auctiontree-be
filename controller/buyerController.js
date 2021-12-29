@@ -57,7 +57,7 @@ const createBuyer = async (req, res) => {
       TC,
       answers,
     });
-    console.log(newBuyer);
+
     const savedBuyer = await newBuyer.save();
     const result = {
       _id: savedBuyer._id,

@@ -1,6 +1,7 @@
 const AWS = require("aws-sdk");
 const Property = require("../model/Property");
 const User = require("../model/User");
+const Auction = require("../model/Auction");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
 const uuid = require("uuid/v4");
@@ -137,7 +138,12 @@ const getRealEstates = async (req, res) => {
 
 ////@desc  List real-estates in upcoming auctions
 //@route GET /api/properties/real-estates/upcomingAuctions
-const getRealEstatesUpcomingAuctions = (req, res) => {};
+const getRealEstatesUpcomingAuctions = async (req, res) => {
+  const now = new Date().getTime();
+  const allAuctions = await Auction.find({});
+
+  res.status(200).send(allAuctions);
+};
 
 //@desc  Get information of a real estate
 //@route GET /api/properties/real-estates/:id
