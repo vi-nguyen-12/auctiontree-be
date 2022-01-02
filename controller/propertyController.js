@@ -133,16 +133,36 @@ const getRealEstates = async (req, res) => {
     })
     .limit(10);
 
-  res.status(200).send({ data: results });
+  res.status(200).send(results);
 };
 
 ////@desc  List real-estates in upcoming auctions
 //@route GET /api/properties/real-estates/upcomingAuctions
 const getRealEstatesUpcomingAuctions = async (req, res) => {
-  const now = new Date().getTime();
-  const allAuctions = await Auction.find({});
+  const date = new Date();
+  console.log(date);
+  let allAuctions = await Auction.find({
+    auctionEndDate: { $gte: new Date() },
+  });
 
-  res.status(200).send(allAuctions);
+  for (let auction of allAuctions) {
+    const property = await Property.findOne({ _id: auction.propertyId });
+    auction.property = property;
+  }
+
+  const data = allAuctions.map((auction) => {
+    return {
+      _id: auction.property._id,
+      type: auction.property.type,
+      details: auction.property.details,
+      images: auction.property.images,
+      videos: auction.property.videos,
+      documents: auction.property.documents,
+      auctionId: auction._id,
+    };
+  });
+
+  res.status(200).send(data);
 };
 
 //@desc  Get information of a real estate

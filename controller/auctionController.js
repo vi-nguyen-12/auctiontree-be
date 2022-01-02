@@ -71,23 +71,28 @@ const createAuction = async (req, res) => {
     res.status(500).send(err);
   }
 };
-////@desc  Get information of current auction
+//@desc  Get information of auction
 //@route GET /api/auctions/:id
-const getCurrentAuction = async (req, res) => {
+//@route GET /api/auction/propertyId/:propertyId
+const getAuction = async (req, res) => {
+  const url = req.originalUrl;
   try {
-    const auction = await Auction.findOne({ _id: req.params.id });
+    let auction;
+    if (url.includes("propertyId")) {
+      auction = await Auction.findOne({ property: req.params.propertyId });
+    } else {
+      auction = await Auction.findOne({ _id: req.params.id });
+    }
     if (!auction) {
       res.status(400).send("Auction for this property is not found");
     }
     const property = await Property.findOne({ propertyId: auction.propertyId });
-    console.log(property);
     const numberOfBids = auction.bids.length;
     const highestBid =
       auction.bids.length === 0
         ? auction.startingBid
         : auction.bids.pop().amount;
     const highestBidders = auction.bids.slice(-5);
-    console.log(auction);
     const result = {
       _id: auction._id,
       startingBid: auction.startingBid,
@@ -197,4 +202,4 @@ const placeBidding = async (req, res) => {
   }
 };
 
-module.exports = { createAuction, getCurrentAuction, placeBidding };
+module.exports = { createAuction, getAuction, placeBidding };
