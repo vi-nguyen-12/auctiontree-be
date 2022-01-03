@@ -1,6 +1,6 @@
 const Auction = require("../model/Auction");
 const Property = require("../model/Property");
-const Buyer = require("../model/User");
+const Buyer = require("../model/Buyer");
 const { changeToBidderId, getBidsInformation } = require("../helper");
 
 //@desc  Create an auction
@@ -221,6 +221,7 @@ const getRealEstateAuctionsStatusBuyer = async (req, res) => {
   }
   try {
     console.log("test");
+    console.log(req.user.userId);
     const registeredList = await Buyer.find({ userId: req.user.userId });
     console.log(registeredList);
     if (registeredList.length === 0) {
