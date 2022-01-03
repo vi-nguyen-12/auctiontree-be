@@ -8,7 +8,7 @@ const {
   createNewEstates,
   getRealEstates,
   getRealEstate,
-  getRealEstatesUpcomingAuctions,
+  getRealEstatesUpcomingOrOnGoingAuctions,
 } = require("../controller/propertyController");
 
 router.get("/search", search);
@@ -27,7 +27,8 @@ router.post(
   uploadAll
 );
 
-router.get("/upcomingAuctions", getRealEstatesUpcomingAuctions);
+router.get("/upcomingAuctions", getRealEstatesUpcomingOrOnGoingAuctions);
+router.get("/ongoingAuctions", getRealEstatesUpcomingOrOnGoingAuctions);
 router.get("/:id", getRealEstate);
 router.get("/", getRealEstates);
 router.post("/", auth, createNewEstates);
