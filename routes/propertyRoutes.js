@@ -8,7 +8,9 @@ const {
   createNewEstates,
   getRealEstates,
   getRealEstate,
-  getRealEstatesUpcomingOrOnGoingAuctions,
+  getRealEstatesUpcomingAuctions,
+  getRealEstatesOngoingAuctions,
+  getRealEstatesStatusBuyer,
 } = require("../controller/propertyController");
 
 router.get("/search", search);
@@ -27,8 +29,9 @@ router.post(
   uploadAll
 );
 
-router.get("/upcomingAuctions", getRealEstatesUpcomingOrOnGoingAuctions);
-router.get("/ongoingAuctions", getRealEstatesUpcomingOrOnGoingAuctions);
+router.get("/upcomingAuctions", getRealEstatesUpcomingAuctions);
+router.get("/ongoingAuctions", getRealEstatesOngoingAuctions);
+router.get("/status", auth, getRealEstatesStatusBuyer);
 router.get("/:id", getRealEstate);
 router.get("/", getRealEstates);
 router.post("/", auth, createNewEstates);

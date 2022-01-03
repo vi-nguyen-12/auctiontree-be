@@ -7,7 +7,7 @@ const multer = require("multer");
 const multerS3 = require("multer-s3");
 const uuid = require("uuid/v4");
 const axios = require("axios");
-const { sendEmail } = require("../helper");
+const { sendEmail, getBidsInformation } = require("../helper");
 
 //@desc  upload images, videos and documents to AWS S3
 const config = {
@@ -139,22 +139,12 @@ const getRealEstates = async (req, res) => {
 
 //@desc  List real-estates in upcoming auctions
 //@route GET /api/properties/real-estates/upcomingAuctions
-//@route GET /api/properties/real-estates/ongoingAuctions
-const getRealEstatesUpcomingOrOnGoingAuctions = async (req, res) => {
+const getRealEstatesUpcomingAuctions = async (req, res) => {
   const now = new Date();
-  const url = req.originalUrl;
-  let allAuctions;
-  if (url.includes("upcomingAuctions")) {
-    allAuctions = await Auction.find({
-      auctionStartDate: { $gte: now },
-    });
-  }
-  if (url.includes("ongoingAuctions")) {
-    allAuctions = await Auction.find({
-      auctionStartDate: { $lte: now },
-      auctionEndDate: { $gte: now },
-    });
-  }
+  const allAuctions = await Auction.find({
+    auctionStartDate: { $gte: now },
+  });
+
   for (let auction of allAuctions) {
     const property = await Property.findOne({ _id: auction.propertyId });
     auction.property = property;
@@ -186,15 +176,73 @@ const getRealEstatesUpcomingOrOnGoingAuctions = async (req, res) => {
   res.status(200).send(data);
 };
 
+//@desc  List real-estates in ongoing auctions
+//@route GET /api/properties/real-estates/ongoingAuctions
+const getRealEstatesOngoingAuctions = async (req, res) => {
+  const now = new Date();
+  const allAuctions = await Auction.find({
+    auctionStartDate: { $lte: now },
+    auctionEndDate: { $gte: now },
+  });
+  for (let auction of allAuctions) {
+    const property = await Property.findOne({ _id: auction.propertyId });
+    const { numberOfBids, highestBid, highesBidders } = getBidsInformation(
+      auction.bids,
+      auction.startingBid
+    );
+    auction = {
+      ...auction.toObject(),
+      property,
+      numberOfBids,
+      highestBid,
+      highesBidders,
+    };
+  }
+
+  const data = allAuctions
+    .filter((auction) => {
+      return auction.property.type === "real-estate";
+    })
+    .map((auction) => {
+      return {
+        _id: auction.property._id,
+        type: auction.property.type,
+        details: auction.property.details,
+        images: auction.property.images,
+        videos: auction.property.videos,
+        documents: auction.property.documents,
+        auctionDetails: {
+          _id: auction._id,
+          registerStartDate: auction.registerStartDate,
+          registerEndDate: auction.registerEndDate,
+          auctionStartDate: auction.auctionStartDate,
+          auctionEndDate: auction.auctionEndDate,
+          startingBid: auction.startingBid,
+          numberOfBids: auction.numberOfBids,
+          highestBid: auction.highestBid,
+          highestBidders: auction.highestBidders,
+        },
+      };
+    });
+
+  res.status(200).send(data);
+};
+
 //@desc  List real-estates registered status for a logged in buyer
 //@route GET /api/properties/real-estates/status?buyer=true
 const getRealEstatesStatusBuyer = async (req, res) => {
   const { buyer } = req.query;
+  console.log(buyer);
   if (!buyer) {
     return res.status(403).send("Please specify if user is buyer or seller");
   }
   try {
     const registeredList = await Buyer.find({ userId: req.user.userId });
+    if (registeredList.length === 0) {
+      return res
+        .status(200)
+        .send("This user has not register to buy any property");
+    }
     for (let item of registeredList) {
       const auction = await Auction.findOne({ _id: item.auctionId });
       const property = await Property.findOne({ _id: auction.propertyId });
@@ -216,6 +264,7 @@ const getRealEstatesStatusBuyer = async (req, res) => {
           auctionStartDate: item.auction.auctionStartDate,
           auctionEndDate: item.auction.auctionEndDate,
         },
+        isApproved: item.isApproved,
       };
     });
     res.status(200).send(data);
@@ -248,6 +297,7 @@ module.exports = {
   createNewEstates,
   getRealEstates,
   getRealEstate,
-  getRealEstatesUpcomingOrOnGoingAuctions,
+  getRealEstatesUpcomingAuctions,
+  getRealEstatesOngoingAuctions,
   getRealEstatesStatusBuyer,
 };

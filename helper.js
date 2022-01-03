@@ -21,4 +21,12 @@ const sendEmail = ({ email, subject, text }) => {
 const changeToBidderId = (userId) => {
   return "BID" + userId;
 };
-module.exports = { sendEmail, changeToBidderId };
+
+const getBidsInformation = (bids, startingBid) => {
+  const numberOfBids = bids.length;
+  const highestBid =
+    bids.length === 0 ? startingBid : auction.bids.pop().amount;
+  const highesBidders = bids.slice(-5);
+  return { numberOfBids, highestBid, highesBidders };
+};
+module.exports = { sendEmail, changeToBidderId, getBidsInformation };

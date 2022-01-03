@@ -1,7 +1,7 @@
 const Auction = require("../model/Auction");
 const Property = require("../model/Property");
 const Buyer = require("../model/User");
-const { changeToBidderId } = require("../helper");
+const { changeToBidderId, getBidsInformation } = require("../helper");
 
 //@desc  Create an auction
 //@route POST admin/api/auctions/  body:{propertyId, registerStartDate,registerEndDate,auctionStartDate,auctionEndDate,startingBid,incrementAmount}  all dates are in ISOString format
@@ -79,29 +79,28 @@ const getAuction = async (req, res) => {
   try {
     let auction;
     if (url.includes("propertyId")) {
-      auction = await Auction.findOne({ property: req.params.propertyId });
+      auction = await Auction.findOne({ propertyId: req.params.propertyId });
+      console.log(auction);
     } else {
       auction = await Auction.findOne({ _id: req.params.id });
     }
     if (!auction) {
       res.status(400).send("Auction for this property is not found");
     }
-    const property = await Property.findOne({ propertyId: auction.propertyId });
-    const numberOfBids = auction.bids.length;
-    const highestBid =
-      auction.bids.length === 0
-        ? auction.startingBid
-        : auction.bids.pop().amount;
-    const highestBidders = auction.bids.slice(-5);
+    const property = await Property.findOne({ _id: auction.propertyId });
+    const { numberOfBids, highestBid, highestBidders } = getBidsInformation(
+      auction.bids,
+      auction.startingBid
+    );
     const result = {
       _id: auction._id,
       startingBid: auction.startingBid,
       incrementAmount: auction.incrementAmount,
-      highestBid,
       registerStartDate: auction.registerStartDate,
       registerEndDate: auction.registerEndDate,
       auctionStartDate: auction.auctionStartDate,
       auctionEndDate: auction.auctionEndDate,
+      highestBid,
       numberOfBids,
       highestBidders,
       property: {
@@ -116,6 +115,146 @@ const getAuction = async (req, res) => {
     res.status(200).send(result);
   } catch (error) {
     res.status(500).send(error.message);
+  }
+};
+
+//@desc  Get upcoming auctions for real-estate
+//@route GET /api/auctions/real-estates/upcoming
+const getUpcomingAuctionsOfRealEstates = async (req, res) => {
+  try {
+    const now = new Date();
+    const allAuctions = await Auction.find({
+      auctionStartDate: { $gte: now },
+    });
+    for (let auction of allAuctions) {
+      const property = await Property.findOne({ _id: auction.propertyId });
+      auction.property = property;
+    }
+    const data = allAuctions
+      .filter((auction) => {
+        return auction.property.type === "real-estate";
+      })
+      .map((auction) => {
+        return {
+          _id: auction._id,
+          registerStartDate: auction.registerStartDate,
+          registerEndDate: auction.registerEndDate,
+          auctionStartDate: auction.auctionStartDate,
+          auctionEndDate: auction.auctionEndDate,
+          startingBid: auction.startingBid,
+          property: {
+            _id: auction.property._id,
+            type: auction.property.type,
+            details: auction.property.details,
+            images: auction.property.images,
+            videos: auction.property.videos,
+            documents: auction.property.documents,
+          },
+        };
+      });
+    res.status(200).send(data);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+
+//@desc  Get ongoing auctions for real-estate
+//@route GET /api/auctions/real-estates/ongoing
+const getOngoingAuctionsOfRealEstates = async (req, res) => {
+  try {
+    const now = new Date();
+    const allAuctions = await Auction.find({
+      auctionStartDate: { $lte: now },
+      auctionEndDate: { $gte: now },
+    });
+    for (let auction of allAuctions) {
+      const property = await Property.findOne({ _id: auction.propertyId });
+      const { numberOfBids, highestBid, highesBidders } = getBidsInformation(
+        auction.bids,
+        auction.startingBid
+      );
+      auction = {
+        ...auction.toObject(),
+        property,
+        numberOfBids,
+        highestBid,
+        highesBidders,
+      };
+    }
+    const data = allAuctions
+      .filter((auction) => {
+        return auction.property.type === "real-estate";
+      })
+      .map((auction) => {
+        return {
+          _id: auction._id,
+          registerStartDate: auction.registerStartDate,
+          registerEndDate: auction.registerEndDate,
+          auctionStartDate: auction.auctionStartDate,
+          auctionEndDate: auction.auctionEndDate,
+          startingBid: auction.startingBid,
+          numberOfBids: auction.numberOfBids,
+          highestBid: auction.highestBid,
+          highestBidders: auction.highestBidders,
+          property: {
+            _id: auction.property._id,
+            type: auction.property.type,
+            details: auction.property.details,
+            images: auction.property.images,
+            videos: auction.property.videos,
+            documents: auction.property.documents,
+          },
+        };
+      });
+    res.status(200).send(data);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+
+//@desc  Get status of auctions  which buyer register to buy
+//@route GET /api/auctions/real-estates/status?buyer=true
+const getRealEstateAuctionsStatusBuyer = async (req, res) => {
+  const { buyer } = req.query;
+  if (!buyer) {
+    return res.status(403).send("Please specify if user is buyer or seller");
+  }
+  try {
+    console.log("test");
+    const registeredList = await Buyer.find({ userId: req.user.userId });
+    console.log(registeredList);
+    if (registeredList.length === 0) {
+      return res
+        .status(200)
+        .send("This user has not register to buy any property");
+    }
+    for (let item of registeredList) {
+      const auction = await Auction.findOne({ _id: item.auctionId });
+      const property = await Property.findOne({ _id: auction.propertyId });
+      item.auction = auction;
+      item.property = property;
+    }
+    const data = registeredList.map((item) => {
+      return {
+        _id: item.auction._id,
+        registerStartDate: item.auction.registerStartDate,
+        registerEndDate: item.auction.registerEndDate,
+        auctionStartDate: item.auction.auctionStartDate,
+        auctionEndDate: item.auction.auctionEndDate,
+        property: {
+          _id: item.property._id,
+          type: item.auction.type,
+          details: item.property.details,
+          images: item.property.images,
+          videos: item.property.videos,
+          documents: item.property.documents,
+        },
+        isApproved: item.isApproved,
+      };
+    });
+    res.status(200).send(data);
+  } catch (err) {
+    res.status(500).send(err.message);
   }
 };
 
@@ -202,4 +341,11 @@ const placeBidding = async (req, res) => {
   }
 };
 
-module.exports = { createAuction, getAuction, placeBidding };
+module.exports = {
+  createAuction,
+  getAuction,
+  placeBidding,
+  getUpcomingAuctionsOfRealEstates,
+  getOngoingAuctionsOfRealEstates,
+  getRealEstateAuctionsStatusBuyer,
+};
