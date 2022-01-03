@@ -178,6 +178,7 @@ const getRealEstatesUpcomingOrOnGoingAuctions = async (req, res) => {
           registerEndDate: auction.registerEndDate,
           auctionStartDate: auction.auctionStartDate,
           auctionEndDate: auction.auctionEndDate,
+          startingBid: auction.startingBid,
         },
       };
     });
@@ -187,34 +188,41 @@ const getRealEstatesUpcomingOrOnGoingAuctions = async (req, res) => {
 
 //@desc  List real-estates registered status for a logged in buyer
 //@route GET /api/properties/real-estates/status?buyer=true
-// const getRealEstatesStatusBuyer = async (req, res) => {
-//   const { buyer } = req.query;
-//   if (!buyer) {
-//     return res.status(403).send("Please specify if user is buyer or seller");
-//   }
-//   const registeredList = await Buyer.find({ userId: req.user.userId });
-//   for (let item of registeredAuctions) {
-//     const  = await .findOne({ _id: auction.auctionId });
-//     auction.property = property;
-//   }
-//   const data = registeredAuctions.map((auction) => {
-//     return {
-//       _id: auction.propertyId,
-//       type: auction.property.type,
-//       details: auction.property.details,
-//       images: auction.property.images,
-//       videos: auction.property.videos,
-//       documents: auction.property.documents,
-//       auctionDetails: {
-//         _id: auction._id,
-//         registerStartDate: auction.registerStartDate,
-//         registerEndDate: auction.registerEndDate,
-//         auctionStartDate: auction.auctionStartDate,
-//         auctionEndDate: auction.auctionEndDate,
-//       },
-//     };
-//   );
-// };
+const getRealEstatesStatusBuyer = async (req, res) => {
+  const { buyer } = req.query;
+  if (!buyer) {
+    return res.status(403).send("Please specify if user is buyer or seller");
+  }
+  try {
+    const registeredList = await Buyer.find({ userId: req.user.userId });
+    for (let item of registeredList) {
+      const auction = await Auction.findOne({ _id: item.auctionId });
+      const property = await Property.findOne({ _id: auction.propertyId });
+      item.auction = auction;
+      item.property = property;
+    }
+    const data = registeredList.map((item) => {
+      return {
+        _id: item.property._id,
+        type: item.property.type,
+        details: item.property.details,
+        images: item.property.images,
+        videos: item.property.videos,
+        documents: item.property.documents,
+        auctionDetails: {
+          _id: item.auction._id,
+          registerStartDate: item.auction.registerStartDate,
+          registerEndDate: item.auction.registerEndDate,
+          auctionStartDate: item.auction.auctionStartDate,
+          auctionEndDate: item.auction.auctionEndDate,
+        },
+      };
+    });
+    res.status(200).send(data);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
 
 //@desc  Get information of a real estate
 //@route GET /api/properties/real-estates/:id
@@ -241,4 +249,5 @@ module.exports = {
   getRealEstates,
   getRealEstate,
   getRealEstatesUpcomingOrOnGoingAuctions,
+  getRealEstatesStatusBuyer,
 };
