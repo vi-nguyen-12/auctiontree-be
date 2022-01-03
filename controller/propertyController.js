@@ -1,6 +1,7 @@
 const AWS = require("aws-sdk");
 const Property = require("../model/Property");
 const User = require("../model/User");
+const Buyer = require("../model/Buyer");
 const Auction = require("../model/Auction");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
@@ -136,7 +137,7 @@ const getRealEstates = async (req, res) => {
   res.status(200).send(results);
 };
 
-////@desc  List real-estates in upcoming auctions
+//@desc  List real-estates in upcoming auctions
 //@route GET /api/properties/real-estates/upcomingAuctions
 const getRealEstatesUpcomingAuctions = async (req, res) => {
   const date = new Date();
@@ -150,19 +151,42 @@ const getRealEstatesUpcomingAuctions = async (req, res) => {
     auction.property = property;
   }
 
-  const data = allAuctions.map((auction) => {
-    return {
-      _id: auction.property._id,
-      type: auction.property.type,
-      details: auction.property.details,
-      images: auction.property.images,
-      videos: auction.property.videos,
-      documents: auction.property.documents,
-      auctionId: auction._id,
-    };
-  });
+  const data = allAuctions
+    .filter((auction) => {
+      return auction.property.type === "real-estate";
+    })
+    .map((auction) => {
+      return {
+        _id: auction.property._id,
+        type: auction.property.type,
+        details: auction.property.details,
+        images: auction.property.images,
+        videos: auction.property.videos,
+        documents: auction.property.documents,
+        auctionDetails: {
+          _id: auction._id,
+          registerStartDate: auction.registerStartDate,
+          registerEndDate: auction.registerEndDate,
+          auctionStartDate: auction.auctionStartDate,
+          auctionEndDate: auction.auctionEndDate,
+        },
+      };
+    });
 
   res.status(200).send(data);
+};
+
+//@desc  List real-estates registered status for a logged in buyer
+//@route GET /api/properties/real-estates/status?buyer=true
+const getRealEstatesStatusBuyer = async (req, res) => {
+  const { buyer } = req.query;
+  if (!buyer) {
+    return res.status(403).send("Please specify if user is buyer or seller");
+  }
+  const auctions = await Buyer.find({ userId: req.user.userId });
+  for(let auction of auctions){
+    const property
+  }
 };
 
 //@desc  Get information of a real estate
