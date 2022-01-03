@@ -2,25 +2,26 @@ const Buyer = require("../model/Buyer");
 const User = require("../model/User");
 const Question = require("../model/Question");
 const Property = require("../model/Property");
+const Auction = require("../model/Auction");
 const { sendEmail } = require("../helper");
 
 //@desc  Create a buyer
-//@route POST /api/buyers body:{propertyId, documents, docusign,TC, answers } TC:ISOString format
+//@route POST /api/buyers body:{auctionId, documents, docusign,TC, answers:[{questionId, answer: "yes"/"no"}] } TC:ISOString format
 const createBuyer = async (req, res) => {
   const user = await User.findOne({ _id: req.user.userId });
-  const { propertyId, documents, docusign, TC, answers } = req.body;
+  const { auctionId, documents, docusign, TC, answers } = req.body;
   // const timeOfTC = new Date(TC);
   try {
-    const property = await Property.findOne({ _id: propertyId });
-    if (!property) {
-      return res.status(404).send("Property not found");
+    const auction = await Auction.findOne({ _id: auctionId });
+    if (!auction) {
+      return res.status(404).send("Auction not found");
     }
 
-    const isRegisterProperty = await Buyer.findOne({
-      propertyId,
+    const isRegisteredAuction = await Buyer.findOne({
+      auctionId,
       userId: user._id,
     });
-    if (isRegisterProperty) {
+    if (isRegisteredAuction) {
       return res
         .status(404)
         .send("This user is already registered to buy this property");
@@ -51,7 +52,7 @@ const createBuyer = async (req, res) => {
 
     const newBuyer = new Buyer({
       userId: user._id,
-      propertyId,
+      auctionId,
       documents,
       docusign,
       TC,
@@ -59,12 +60,16 @@ const createBuyer = async (req, res) => {
     });
 
     const savedBuyer = await newBuyer.save();
+
+    const property = await Property.findOne({ _id: auction.propertyId });
+
     const result = {
       _id: savedBuyer._id,
       documents: savedBuyer.documents,
       docusign: savedBuyer.docusign,
       TC: savedBuyer.TC,
       isApproved: savedBuyer.isApproved,
+      auctionId: savedBuyer.auctionId,
       property: {
         _id: property._id,
         type: property.type,

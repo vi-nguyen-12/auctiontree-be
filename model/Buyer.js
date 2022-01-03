@@ -4,9 +4,9 @@ const Schema = mongoose.Schema;
 const buyerSchema = new Schema(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    propertyId: {
+    auctionId: {
       type: Schema.Types.ObjectId,
-      ref: "Property",
+      ref: "Auction",
       required: true,
     },
     answers: [
