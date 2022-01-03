@@ -1,7 +1,7 @@
 const Auction = require("../model/Auction");
 const Property = require("../model/Property");
 const Buyer = require("../model/Buyer");
-const { changeToBidderId, getBidsInformation } = require("../helper");
+const { getBidsInformation } = require("../helper");
 
 //@desc  Create an auction
 //@route POST admin/api/auctions/  body:{propertyId, registerStartDate,registerEndDate,auctionStartDate,auctionEndDate,startingBid,incrementAmount}  all dates are in ISOString format
@@ -110,6 +110,7 @@ const getAuction = async (req, res) => {
         images: property.images,
         videos: property.videos,
         documents: property.documents,
+        reservedAmount: property.reservedAmount,
       },
     };
     res.status(200).send(result);
@@ -142,6 +143,7 @@ const getUpcomingAuctionsOfRealEstates = async (req, res) => {
           auctionStartDate: auction.auctionStartDate,
           auctionEndDate: auction.auctionEndDate,
           startingBid: auction.startingBid,
+          incrementAmount: auction.incrementAmount,
           property: {
             _id: auction.property._id,
             type: auction.property.type,
@@ -193,6 +195,7 @@ const getOngoingAuctionsOfRealEstates = async (req, res) => {
           auctionStartDate: auction.auctionStartDate,
           auctionEndDate: auction.auctionEndDate,
           startingBid: auction.startingBid,
+          incrementAmount: auction.incrementAmount,
           numberOfBids: auction.numberOfBids,
           highestBid: auction.highestBid,
           highestBidders: auction.highestBidders,
@@ -314,10 +317,10 @@ const placeBidding = async (req, res) => {
 
     let numberOfBids = savedAuction.bids.length;
     const highestBidders = savedAuction.bids.slice(-5);
+    highestBid = savedAuction.bids.pop().amount;
 
     const result = {
       _id: savedAuction._id,
-      bidderId: changeToBidderId(req.user.userId),
       startingBid: savedAuction.startingBid,
       incrementAmount: savedAuction.incrementAmount,
       highestBid,
@@ -337,6 +340,26 @@ const placeBidding = async (req, res) => {
       },
     };
     res.status(200).send(result);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+
+//@desc Update and get result of auction
+//@route PUT /api/auctions/result/:id
+const updateAndGetAuctionResult = async (req, res) => {
+  try {
+    const auction = await Auction.findOne({ _id: req.params.id });
+    if (!auction) {
+      return res.status(404).send("Auction not found!");
+    }
+    const property = await Property.findOne({ _id: auction.propertyId });
+    if (new Date().getTime() > auction.auctionEndDate.getTime()) {
+      let highestBid =
+        auction.bids.length === 0
+          ? auction.startingBid
+          : auction.bids.pop().amount;
+    }
   } catch (err) {
     res.status(500).send(err.message);
   }

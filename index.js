@@ -63,7 +63,7 @@ io = socket(server, {
 });
 io.on("connection", (socket) => {
   console.log("a new user is connected");
-  socket.on("bid", function ({ number, auctionId }) {
+  socket.on("bid", function ({ auctionId, number }) {
     console.log("connect ok !!!");
     console.log(socket.id);
     //function of check everything if the bidding is ok
