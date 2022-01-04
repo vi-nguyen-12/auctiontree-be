@@ -55,23 +55,27 @@ app.use("/api/test", testRoute);
 
 const server = app.listen(5000, () => console.log("Server is running..."));
 
-io = socket(server, {
+const io = socket(server, {
   cors: {
     credentials: true,
     origin: "http://localhost:3000",
   },
 });
-io.on("connection", (socket) => {
-  console.log("a new user is connected");
-  socket.on("bid", function ({ auctionId, number }) {
-    console.log("connect ok !!!");
-    console.log(socket.id);
-    //function of check everything if the bidding is ok
-    // let userId = "123";
-    // socket.emit("message", { number, auctionId });
-    // socket.broadcast.emit("message", { socketId: socket.id, userId, number });
-  });
-  socket.on("disconnect", function () {
-    console.log("user disconnected");
-  });
-});
+app.set("socket_io", io);
+// io.on("connection", (socket) => {
+//   console.log("a new user is connected");
+//   socket.on("bid", function ({ auctionId, number }) {
+//     console.log("connect ok !!!");
+//     console.log(socket.id);
+//     console.log(number, auctionId);
+
+//   });
+//   socket.on("disconnect", function () {
+//     console.log("user disconnected");
+//   });
+// });
+
+//function of check everything if the bidding is ok
+// let userId = "123";
+// socket.emit("message", { number, auctionId });
+// socket.broadcast.emit("message", { socketId: socket.id, userId, number });

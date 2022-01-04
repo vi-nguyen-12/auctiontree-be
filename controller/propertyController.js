@@ -190,13 +190,10 @@ const getRealEstatesOngoingAuctions = async (req, res) => {
       auction.bids,
       auction.startingBid
     );
-    auction = {
-      ...auction.toObject(),
-      property,
-      numberOfBids,
-      highestBid,
-      highesBidders,
-    };
+    auction.property = property;
+    auction.numberOfBids = numberOfBids;
+    auction.highestBid = highestBid;
+    auction.highestBidders = highesBidders;
   }
 
   const data = allAuctions
