@@ -17,6 +17,16 @@ const cookieparser = require("cookie-parser");
 const cors = require("cors");
 
 app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
+
+const allowedDomains = ["http://localhost:3000", "http://localhost:3001"];
+const corsOptions = {
+  credentials: true,
+  origin: (origin, callback) => {
+    if (allowedDomains.includes(origin)) return callback(null, true);
+    callback(new Error("Not allowed by CORS"));
+  },
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -35,7 +45,11 @@ mongoose.connect(
 
 app.use(express.json());
 app.use(function (req, res, next) {
-  res.header("Access-Control-Allow-Origin", "http://localhost:3000");
+  // res.header("Access-Control-Allow-Origin", "http://localhost:3000");
+  const origin = req.headers.origin;
+  if (allowedDomains.indexOf(origin) > -1) {
+    res.header("Access-Control-Allow-Origin", origin);
+  }
   res.header(
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content-Type, Accept"
@@ -46,22 +60,26 @@ app.use("/api/user", userRoutes);
 app.use("/api/properties/real-estates/", propertyRoutes);
 app.use("/api/kyc", kycRoute);
 app.use("/api/buyers", buyerRoute);
-app.use("/api/auctions", auctionRoute);
 app.use("/api/questions", questionRoute);
 app.use("/admin/api/auctions", auctionRoute);
 app.use("/admin/api/questions", questionRoute);
-
-app.use("/api/test", testRoute);
 
 const server = app.listen(5000, () => console.log("Server is running..."));
 
 const io = socket(server, {
   cors: {
     credentials: true,
-    origin: "http://localhost:3000",
+    origin: ["http://localhost:3000", "http://localhost:3001"],
   },
 });
-app.set("socket_io", io);
+
+app.use(function (req, res, next) {
+  req.io = io;
+  next();
+});
+
+app.use("/api/auctions", auctionRoute);
+app.use("/api/test", testRoute);
 // io.on("connection", (socket) => {
 //   console.log("a new user is connected");
 //   socket.on("bid", function ({ auctionId, number }) {

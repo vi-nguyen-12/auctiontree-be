@@ -268,10 +268,10 @@ const placeBidding = async (req, res) => {
   try {
     const buyer = await Buyer.findOne({ userId: req.user.userId });
     if (!buyer) {
-      res.status(400).send("User did not register to buy");
+      return res.status(400).send("User did not register to buy");
     }
     if (!buyer.isApproved) {
-      res.status(400).send("User is not approved to bid yet");
+      return res.status(400).send("User is not approved to bid yet");
     }
 
     const auction = await Auction.findOne({ _id: auctionId });
@@ -286,12 +286,14 @@ const placeBidding = async (req, res) => {
       return res.status(400).send("Auction is not started yet");
     }
     if (biddingTime.getTime() > auction.auctionEndDate.getTime()) {
-      return res.status(400).send("Auction was already ended");
+      return res.status(400).send("Auction has now ended");
     }
 
     //check bidding price
     let highestBid =
-      auction.bids.length === 0 ? startingBid : auction.bids.pop().amount;
+      auction.bids.length === 0
+        ? auction.startingBid
+        : auction.bids.pop().amount;
     if (biddingPrice <= highestBid) {
       return res
         .status(400)
@@ -336,6 +338,12 @@ const placeBidding = async (req, res) => {
         documents: property.documents,
       },
     };
+    req.io.emit("bid", {
+      auctionId: savedAuction._id,
+      highestBid,
+      numberOfBids,
+      highestBidders,
+    });
     res.status(200).send(result);
   } catch (err) {
     res.status(500).send(err.message);
