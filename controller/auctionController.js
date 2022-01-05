@@ -293,7 +293,7 @@ const placeBidding = async (req, res) => {
     let highestBid =
       auction.bids.length === 0
         ? auction.startingBid
-        : auction.bids.pop().amount;
+        : auction.bids.slice(-1)[0].amount;
     if (biddingPrice <= highestBid) {
       return res
         .status(400)
@@ -316,7 +316,7 @@ const placeBidding = async (req, res) => {
 
     let numberOfBids = savedAuction.bids.length;
     const highestBidders = savedAuction.bids.slice(-5);
-    highestBid = savedAuction.bids.pop().amount;
+    highestBid = savedAuction.bids.slice(-1)[0].amount;
 
     const result = {
       _id: savedAuction._id,
@@ -350,21 +350,53 @@ const placeBidding = async (req, res) => {
   }
 };
 
-//@desc Update and get result of auction
-//@route PUT /api/auctions/result/:id
-const updateAndGetAuctionResult = async (req, res) => {
+//@desc Get result of auction
+//@route GET /api/auctions/result/:id
+const getAuctionResult = async (req, res) => {
   try {
     const auction = await Auction.findOne({ _id: req.params.id });
     if (!auction) {
       return res.status(404).send("Auction not found!");
     }
-    const property = await Property.findOne({ _id: auction.propertyId });
-    if (new Date().getTime() > auction.auctionEndDate.getTime()) {
-      let highestBid =
-        auction.bids.length === 0
-          ? auction.startingBid
-          : auction.bids.pop().amount;
+
+    if (auction.winner.userId) {
+      console.log(auction.winner.userId);
+      return res.status(200).send({ _id: auction._id, winner: auction.winner });
     }
+
+    if (auction.auctionEndDate.getTime() < new Date().getTime()) {
+      return res.status(200).send({
+        _id: auction._id,
+        winner: null,
+        message: "Auction has not ended!",
+      });
+    }
+
+    if (auction.bids.length === 0) {
+      return res.status(200).send({
+        _id: auction._id,
+        winner: null,
+        message: "No one bids at this auction",
+      });
+    }
+    const property = await Property.findOne({ _id: auction.propertyId });
+    let [highestBidder] = auction.bids.slice(-1);
+
+    if (highestBidder.amount < property.reservedAmount) {
+      return res.status(200).send({
+        _id: auction._id,
+        winner: null,
+        highestBidder,
+        reservedAmount: property.reservedAmount,
+        message: "Reserved not met",
+      });
+    }
+    auction.winner = {
+      userId: highestBidder.userId,
+      amount: highestBidder.amount,
+    };
+    const savedAuction = await auction.save();
+    res.status(200).send({ _id: savedAuction.id, winner: savedAuction.winner });
   } catch (err) {
     res.status(500).send(err.message);
   }
@@ -377,4 +409,5 @@ module.exports = {
   getUpcomingAuctionsOfRealEstates,
   getOngoingAuctionsOfRealEstates,
   getRealEstateAuctionsStatusBuyer,
+  getAuctionResult,
 };

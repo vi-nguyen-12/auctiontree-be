@@ -8,6 +8,7 @@ const {
   getUpcomingAuctionsOfRealEstates,
   getOngoingAuctionsOfRealEstates,
   getRealEstateAuctionsStatusBuyer,
+  getAuctionResult,
 } = require("../controller/auctionController");
 
 // need to check if the user is admin
@@ -16,6 +17,7 @@ router.put("/bidding/:id", auth, placeBidding);
 router.get("/real-estates/upcoming", getUpcomingAuctionsOfRealEstates);
 router.get("/real-estates/ongoing", getOngoingAuctionsOfRealEstates);
 router.get("/real-estates/status", auth, getRealEstateAuctionsStatusBuyer);
+router.get("/result/:id", getAuctionResult);
 router.get("/propertyId/:propertyId", getAuction);
 router.get("/:id", getAuction);
 
