@@ -24,8 +24,7 @@ const changeToBidderId = (userId) => {
 
 const getBidsInformation = (bids, startingBid) => {
   const numberOfBids = bids.length;
-  const highestBid =
-    bids.length === 0 ? startingBid : auction.bids.slice(-1)[0].amount;
+  const highestBid = bids.length === 0 ? startingBid : bids.slice(-1)[0].amount;
   const highesBidders = bids.slice(-5);
   return { numberOfBids, highestBid, highesBidders };
 };

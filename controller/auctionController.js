@@ -169,12 +169,14 @@ const getOngoingAuctionsOfRealEstates = async (req, res) => {
       auctionStartDate: { $lte: now },
       auctionEndDate: { $gte: now },
     });
+
     for (let auction of allAuctions) {
       const property = await Property.findOne({ _id: auction.propertyId });
       const { numberOfBids, highestBid, highesBidders } = getBidsInformation(
         auction.bids,
         auction.startingBid
       );
+      console.log(numberOfBids, highestBid, highesBidders);
       auction.property = property;
       auction.numberOfBids = numberOfBids;
       auction.highestBid = highestBid;
