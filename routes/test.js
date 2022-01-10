@@ -3,9 +3,44 @@ const axios = require("axios");
 const jwt = require("jsonwebtoken");
 const docusign = require("docusign-esign");
 
-router.get("/", async (req, res) => {
-  const consentURI =
-    "https://account-d.docusign.com/oauth/auth?response_type=code&scope=signature%20impersonation&client_id=54bc1507-9cbe-4119-916f-ec1073bf7b48&redirect_uri=http://localhost:3000/";
+// const consentURI =
+//   "https://account-d.docusign.com/oauth/auth?response_type=code&scope=signature%20impersonation&client_id=54bc1507-9cbe-4119-916f-ec1073bf7b48&redirect_uri=http://localhost:3000/";
+
+const getUserInfo = async (access_token) => {
+  const response = await axios.get(
+    "https://account-d.docusign.com/oauth/userinfo",
+    { headers: { Authorization: `Bearer ${access_token}` } }
+  );
+  return response.data;
+};
+const makeEnvelope = (args) => {
+  // Create the envelope definition
+  let env = new docusign.EnvelopeDefinition();
+  env.templateId = args.templateId;
+
+  let signer1 = docusign.TemplateRole.constructFromObject({
+    email: args.signerEmail,
+    name: args.signerName,
+    clientUserId: "100abc",
+    roleName: "signer",
+  });
+  env.templateRoles = [signer1];
+  env.status = "sent"; // We want the envelope to be sent;
+  return env;
+};
+
+const makeRecipientViewRequest = (args) => {
+  let viewRequest = new docusign.RecipientViewRequest();
+  viewRequest.returnUrl = args.returnUrl + "?state=123";
+  viewRequest.authenticationMethod = "none";
+  viewRequest.email = args.signerEmail;
+  viewRequest.userName = args.signerName;
+  // viewRequest.clientUserId = args.signerClientId;
+  // viewRequest.pingFrequency = 600;
+
+  return viewRequest;
+};
+const getAccessToken = async () => {
   const privateKey =
     "-----BEGIN RSA PRIVATE KEY-----" +
     "\n" +
@@ -84,132 +119,59 @@ router.get("/", async (req, res) => {
   };
 
   const access_token = await getAccessToken();
-  const getUserInfo = async () => {
-    const response = await axios.get(
-      "https://account-d.docusign.com/oauth/userinfo",
-      { headers: { Authorization: `Bearer ${access_token}` } }
-    );
-    return response.data;
-  };
-  const userInfo = await getUserInfo();
-
-  //send envelope to signer email
-  const envelopeArgs = {
-    basePath: "https://demo.docusign.net/restapi",
-    accessToken: access_token,
-    accountId: "96fc7fb1-87e8-4e1a-914d-47e66a4f4ad0",
-    envelopeArgs: {
-      signerEmail: "tri.pham@labs196.com",
-      signerName: "Tri",
-      // signerClientId: "8f84e86f-d56b-4221-8818-1cd5c3b8d42d",
-      // dsReturnUrl: dsReturnUrl,
-      // dsPingUrl: dsPingUrl
-    },
-  };
-  // await createEnvelopeNode(envelopeArgs);
-
-  //create view request
-  const viewArgs = {
-    basePath: "https://demo.docusign.net/restapi",
-    accessToken: access_token,
-    accountId: "96fc7fb1-87e8-4e1a-914d-47e66a4f4ad0",
-    viewArgs: {
-      startingView: "envelope",
-      envelopeId: "82d115ca-40c9-4541-9271-b0e8c437642c",
-    },
-  };
-
-  const response = await embeddedConsoleViewRequest(viewArgs);
-  console.log(response);
-
-  res.status(200).send("done");
-});
-
-const makeEnvelope = async () => {
-  // Create the envelope definition
-  let env = new docusign.EnvelopeDefinition();
-  env.templateId = "bd152cb4-2387-466a-a080-e74e37864be7";
-
-  let signer1 = docusign.TemplateRole.constructFromObject({
-    email: "tri.pham@labs196.com",
-    name: "Tri",
-    roleName: "signer",
-  });
-  env.templateRoles = [signer1];
-  env.status = "sent"; // We want the envelope to be sent;
-  return env;
+  return access_token;
 };
-const createEnvelopeNode = async (args) => {
+router.get("/uiviews/envelopes/buyerSellerContract", async (req, res) => {
+  const accessToken = await getAccessToken();
+  const envelopeArgs = {
+    templateId: "bd152cb4-2387-466a-a080-e74e37864be7",
+    signerEmail: "nguyen.vi.1292@gmail.com",
+    signerName: "Tri Pham",
+    signerClientId: "100abc",
+  };
+  const apiArgs = {
+    basePath: "https://demo.docusign.net/restapi",
+    accessToken,
+    accountId: "96fc7fb1-87e8-4e1a-914d-47e66a4f4ad0",
+  };
+  const recipientViewArgs = {
+    returnUrl: "http://localhost:3000/",
+    signerEmail: "nguyen.vi.1292@gmail.com",
+    signerName: " Tri Pham",
+    signerClientId: "100abc",
+  };
   let dsApiClient = new docusign.ApiClient();
-  dsApiClient.setBasePath(args.basePath);
-  dsApiClient.addDefaultHeader("Authorization", "Bearer " + args.accessToken);
+  dsApiClient.setBasePath(apiArgs.basePath);
+  dsApiClient.addDefaultHeader(
+    "Authorization",
+    "Bearer " + apiArgs.accessToken
+  );
   let envelopesApi = new docusign.EnvelopesApi(dsApiClient),
-    results = null;
+    envelopeResult = null;
 
-  let envelope = await makeEnvelope(args.envelopeArgs);
-
-  results = await envelopesApi.createEnvelope(args.accountId, {
+  let envelope = makeEnvelope(envelopeArgs);
+  envelopeResult = await envelopesApi.createEnvelope(apiArgs.accountId, {
     envelopeDefinition: envelope,
   });
-
-  let envelopeId = results.envelopeId;
-  console.log(`Envelope was created. EnvelopeId ${envelopeId}`);
+  let envelopeId = envelopeResult.envelopeId;
+  let viewRequest = makeRecipientViewRequest(recipientViewArgs),
+    viewResult = null;
+  viewResult = await envelopesApi.createRecipientView(
+    apiArgs.accountId,
+    envelopeId,
+    { recipientViewRequest: viewRequest }
+  );
 
   const recipientsResult = await envelopesApi.listRecipients(
-    args.accountId,
+    apiArgs.accountId,
     envelopeId,
     null
   );
-  const recipients = recipientsResult.signers;
-  console.log(recipients);
-
-  let viewRequest = makeRecipientViewRequest(args.envelopeArgs);
-  const viewResult = await envelopesApi.createRecipientView(
-    args.accountId,
-    envelopeId,
-    {
-      recipientViewRequest: viewRequest,
-    }
-  );
-
-  return { envelopeId: envelopeId, redirectUrl: results.url };
-};
-
-const embeddedConsoleViewRequest = async (args) => {
-  let dsApiClient = new docusign.ApiClient();
-  dsApiClient.setBasePath(args.basePath);
-  dsApiClient.addDefaultHeader("Authorization", "Bearer " + args.accessToken);
-  let envelopesApi = new docusign.EnvelopesApi(dsApiClient);
-
-  let viewRequest = makeConsoleViewRequest(args.viewArgs);
-
-  let results = await envelopesApi.createConsoleView(args.accountId, {
-    consoleViewRequest: viewRequest,
-  });
-  let url = results.url;
-  return { redirectUrl: url };
-};
-
-function makeConsoleViewRequest(args) {
-  let viewRequest = new docusign.ConsoleViewRequest();
-  viewRequest.returnUrl = "http://localhost:3000";
-  if (args.startingView == "envelope" && args.envelopeId) {
-    viewRequest.envelopeId = args.envelopeId;
-  }
-  return viewRequest;
-}
-
-function makeRecipientViewRequest(args) {
-  let viewRequest = new docusign.RecipientViewRequest();
-  viewRequest.returnUrl = "http://localhost:3000/" + "?state=123";
-  viewRequest.authenticationMethod = "none";
-  viewRequest.email = args.signerEmail;
-  viewRequest.userName = args.signerName;
-  // viewRequest.clientUserId = args.signerClientId;
-
-  // viewRequest.pingFrequency = 600;
-
-  return viewRequest;
-}
-
+  console.log(recipientsResult);
+  res.status(200).send({ envelopeId, redirectUrl: viewResult.url });
+});
+//question: docusign: sign with us (Auction10X) or sign with seller
+//assume with us: show on FE ->user sign -> save that documents where? -> show in the future.
+//https://stackoverflow.com/questions/57358821/display-particular-signed-contract-in-docusign
+//assume with seller: we send to buyer for sign -> we send that contract to seller to sign
 module.exports = router;
