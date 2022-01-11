@@ -80,7 +80,6 @@ const getAuction = async (req, res) => {
     let auction;
     if (url.includes("propertyId")) {
       auction = await Auction.findOne({ propertyId: req.params.propertyId });
-      console.log(auction);
     } else {
       auction = await Auction.findOne({ _id: req.params.id });
     }
@@ -172,15 +171,14 @@ const getOngoingAuctionsOfRealEstates = async (req, res) => {
 
     for (let auction of allAuctions) {
       const property = await Property.findOne({ _id: auction.propertyId });
-      const { numberOfBids, highestBid, highesBidders } = getBidsInformation(
+      const { numberOfBids, highestBid, highestBidders } = getBidsInformation(
         auction.bids,
         auction.startingBid
       );
-      console.log(numberOfBids, highestBid, highesBidders);
       auction.property = property;
       auction.numberOfBids = numberOfBids;
       auction.highestBid = highestBid;
-      auction.highesBidders = highesBidders;
+      auction.highestBidders = highestBidders;
     }
     const data = allAuctions
       .filter((auction) => {
@@ -222,10 +220,8 @@ const getRealEstateAuctionsStatusBuyer = async (req, res) => {
     return res.status(403).send("Please specify if user is buyer or seller");
   }
   try {
-    console.log("test");
-    console.log(req.user.userId);
     const registeredList = await Buyer.find({ userId: req.user.userId });
-    console.log(registeredList);
+
     if (registeredList.length === 0) {
       return res
         .status(200)
@@ -362,7 +358,6 @@ const getAuctionResult = async (req, res) => {
     }
 
     if (auction.winner.userId) {
-      console.log(auction.winner.userId);
       return res.status(200).send({ _id: auction._id, winner: auction.winner });
     }
 

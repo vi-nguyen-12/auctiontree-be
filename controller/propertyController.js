@@ -139,6 +139,22 @@ const getRealEstates = async (req, res) => {
   res.status(200).send(results);
 };
 
+//@desc  Get real estates not approved
+//@route GET /api/properties/real-estates/notApproved
+const getRealEstatesNotApproved = async (req, res) => {
+  try {
+    const data = await Property.find({
+      type: "real-estate",
+      isApproved: false,
+    }).sort({
+      createdAt: -1,
+    });
+    res.status(200).send(data);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
 //@desc  List real-estates in upcoming auctions
 //@route GET /api/properties/real-estates/upcomingAuctions
 const getRealEstatesUpcomingAuctions = async (req, res) => {
@@ -188,14 +204,14 @@ const getRealEstatesOngoingAuctions = async (req, res) => {
   });
   for (let auction of allAuctions) {
     const property = await Property.findOne({ _id: auction.propertyId });
-    const { numberOfBids, highestBid, highesBidders } = getBidsInformation(
+    const { numberOfBids, highestBid, highestBidders } = getBidsInformation(
       auction.bids,
       auction.startingBid
     );
     auction.property = property;
     auction.numberOfBids = numberOfBids;
     auction.highestBid = highestBid;
-    auction.highestBidders = highesBidders;
+    auction.highestBidders = highestBidders;
   }
 
   const data = allAuctions
@@ -231,7 +247,7 @@ const getRealEstatesOngoingAuctions = async (req, res) => {
 //@route GET /api/properties/real-estates/status?buyer=true
 const getRealEstatesStatusBuyer = async (req, res) => {
   const { buyer } = req.query;
-  console.log(buyer);
+
   if (!buyer) {
     return res.status(403).send("Please specify if user is buyer or seller");
   }
@@ -289,17 +305,6 @@ const getRealEstate = async (req, res) => {
   }
 };
 
-//@desc  Get real estates not approved
-//@route GET /api/properties/real-estates/notApproved
-const getRealEstateNotApproved = async (req, res) => {
-  try {
-    const data = await Property.find({ isApproved: false });
-    res.status(200).send(data);
-  } catch (error) {
-    res.status(500).send(error.message);
-  }
-};
-
 //@desc  Approve a property
 //@route PUT /api/properties/real-estates/:id/approved
 const approveProperty = async (req, res) => {
@@ -317,7 +322,7 @@ const approveProperty = async (req, res) => {
 };
 //@desc  Disapprove a property
 //@route PUT /api/properties/real-estates/:id/disapproved
-const disapprovedProperty = async (req, res) => {
+const disapproveProperty = async (req, res) => {
   try {
     const property = await Property.findOne({ _id: req.params.id });
     if (!property) {
@@ -342,7 +347,7 @@ module.exports = {
   getRealEstatesUpcomingAuctions,
   getRealEstatesOngoingAuctions,
   getRealEstatesStatusBuyer,
-  getRealEstateNotApproved,
+  getRealEstatesNotApproved,
   approveProperty,
-  disapprovedProperty,
+  disapproveProperty,
 };
