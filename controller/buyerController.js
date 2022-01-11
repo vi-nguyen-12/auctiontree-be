@@ -92,4 +92,105 @@ const createBuyer = async (req, res) => {
   }
 };
 
-module.exports = { createBuyer };
+//@desc  Approve a buyer
+//@route PUT /api/buyers/:id/approved
+const approveBuyer = async (req, res) => {
+  try {
+    const buyer = await Buyer.findOne({ _id: req.params.id });
+    //need to check questions ??
+    if (!buyer) {
+      return res.status(400).send("Buyer not found");
+    }
+    if (!buyer.docusign.isSigned) {
+      return res
+        .status(200)
+        .send({ message: "Approved failed. Docusign is not signed" });
+    }
+    for (let document of buyer.documents) {
+      if (document.isVerified !== "success") {
+        return res
+          .status(200)
+          .send({ message: "Approved failed. Document is not verified" });
+      }
+    }
+    buyer.isApproved = true;
+    const savedBuyer = await buyer.save();
+    res.status(200).send(savedBuyer);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
+//@desc  Disapprove a buyer
+//@route PUT /api/buyers/:id/disapproved
+const disapproveBuyer = async (req, res) => {
+  try {
+    const buyer = await Buyer.findOne({ _id: req.params.id });
+    if (!buyer) {
+      return res.status(400).send("Buyer not found");
+    }
+    buyer.isApproved = false;
+    const savedBuyer = await buyer.save();
+    res.status(200).send(savedBuyer);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
+//@desc  Verify a document
+//@route PUT /api/buyers/:buyerId/documents/:documentId/status body={status:"pending"/"success"/"fail"}
+
+const verifyDocument = async (req, res) => {
+  const { status } = req.body;
+  if (status !== "pending" && status !== "success" && status !== "fail") {
+    return res
+      .status(404)
+      .send({ message: "Status should be pending or success or fail" });
+  }
+  const { buyerId, documentId } = req.params;
+  try {
+    const buyer = await Buyer.findById(buyerId);
+    if (!buyer) {
+      return res.status(404).send("Buyer not found");
+    }
+    const document = buyer.documents.id(documentId);
+    if (!document) {
+      return res.status(404).send("Document not found");
+    }
+    document.isVerified = status;
+    const savedDocument = await document.save();
+    const savedBuyer = await buyer.save();
+    const data = {
+      _id: savedDocument._id,
+      name: savedDocument.name,
+      url: savedDocument.url,
+      isVerified: savedDocument.isVerified,
+      buyerId: savedBuyer._id,
+      auctionId: savedBuyer.auctionId,
+    };
+    res.status(200).send(data);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+
+  // Buyer.findById(buyerId)
+  //   .then((buyer) => {
+  //     if (!buyerId) throw new Error("Buyer not found");
+  //     const document = buyer.documents.id(documentId);
+  //     console.log(document);
+  //     if (!document) throw new Error("Document not found");
+  //     document.set({ isVerified: "success" });
+  //     return buyer.save();
+  //   })
+  //   .then((savedBuyer) => {
+  //     res.status(200).send(savedBuyer);
+  //   })
+  //   .catch((err) => res.status(500).send(err.message));
+};
+
+module.exports = {
+  createBuyer,
+  approveBuyer,
+  disapproveBuyer,
+  verifyDocument,
+};

@@ -20,6 +20,8 @@ const buyerSchema = new Schema(
     ],
     documents: [
       {
+        // name: { type: String, required: true },
+        // url: { type: String, required: true },
         name: String,
         url: String,
         isVerified: {

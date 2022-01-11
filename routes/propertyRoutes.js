@@ -11,6 +11,9 @@ const {
   getRealEstatesUpcomingAuctions,
   getRealEstatesOngoingAuctions,
   getRealEstatesStatusBuyer,
+  getRealEstateNotApproved,
+  approveProperty,
+  disapprovedProperty,
 } = require("../controller/propertyController");
 
 router.get("/search", search);
@@ -32,6 +35,10 @@ router.post(
 router.get("/upcomingAuctions", getRealEstatesUpcomingAuctions);
 router.get("/ongoingAuctions", getRealEstatesOngoingAuctions);
 router.get("/status", auth, getRealEstatesStatusBuyer);
+router.get("/notApproved", getRealEstateNotApproved);
+//this should be only for user is admin
+router.put("/:id/approved", approveProperty);
+router.put("/:id/disapproved", disapprovedProperty);
 router.get("/:id", getRealEstate);
 router.get("/", getRealEstates);
 router.post("/", auth, createNewEstates);

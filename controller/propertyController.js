@@ -125,15 +125,17 @@ const createNewEstates = async (req, res) => {
   res.status(200).send(savedNewEstates);
 };
 
-//@desc  List all real-estates
+//@desc  List real estates (sorting by created date) by page and limit
 //@route GET /api/properties/real-estates
 const getRealEstates = async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
   const results = await Property.find({ type: "real-estate" })
     .sort({
       createdAt: -1,
     })
-    .limit(10);
-
+    .skip((page - 1) * limit)
+    .limit(limit);
   res.status(200).send(results);
 };
 
@@ -286,6 +288,49 @@ const getRealEstate = async (req, res) => {
     res.send(error);
   }
 };
+
+//@desc  Get real estates not approved
+//@route GET /api/properties/real-estates/notApproved
+const getRealEstateNotApproved = async (req, res) => {
+  try {
+    const data = await Property.find({ isApproved: false });
+    res.status(200).send(data);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
+//@desc  Approve a property
+//@route PUT /api/properties/real-estates/:id/approved
+const approveProperty = async (req, res) => {
+  try {
+    const property = await Property.findOne({ _id: req.params.id });
+    if (!property) {
+      res.status(400).send("Property not found");
+    }
+    property.isApproved = true;
+    const savedProperty = await property.save();
+    res.status(200).send(savedProperty);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+//@desc  Disapprove a property
+//@route PUT /api/properties/real-estates/:id/disapproved
+const disapprovedProperty = async (req, res) => {
+  try {
+    const property = await Property.findOne({ _id: req.params.id });
+    if (!property) {
+      res.status(400).send("Property not found");
+    }
+    property.isApproved = false;
+    const savedProperty = await property.save();
+    res.status(200).send(savedProperty);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
 module.exports = {
   uploadS3,
   upload,
@@ -297,4 +342,7 @@ module.exports = {
   getRealEstatesUpcomingAuctions,
   getRealEstatesOngoingAuctions,
   getRealEstatesStatusBuyer,
+  getRealEstateNotApproved,
+  approveProperty,
+  disapprovedProperty,
 };
