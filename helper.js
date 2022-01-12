@@ -24,14 +24,20 @@ const changeToBidderId = (userId) => {
   return "BID" + userId;
 };
 
-const getBidsInformation = (bids, startingBid) => {
+const getBidsInformation = async (bids, startingBid) => {
   const numberOfBids = bids.length;
   const highestBid = bids.length === 0 ? startingBid : bids.slice(-1)[0].amount;
   let highestBidders = bids.slice(-5);
-  highestBidders = highestBidders.map(async (bidder) => {
-    const user = await User.findById(bidder.userId);
-    bidder.userName = user.userName;
-  });
+  highestBidders = await Promise.all(
+    highestBidders.map(async (bidder) => {
+      const user = await User.findById(bidder.userId);
+      return {
+        amount: bidder.amount,
+        time: bidder.time,
+        userName: user.userName,
+      };
+    })
+  );
   return { numberOfBids, highestBid, highestBidders };
 };
 module.exports = { sendEmail, changeToBidderId, getBidsInformation };

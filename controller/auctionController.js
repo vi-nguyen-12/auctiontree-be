@@ -1,6 +1,7 @@
 const Auction = require("../model/Auction");
 const Property = require("../model/Property");
 const Buyer = require("../model/Buyer");
+const User = require("../model/User");
 const { getBidsInformation } = require("../helper");
 
 //@desc  Create an auction
@@ -87,10 +88,8 @@ const getAuction = async (req, res) => {
       res.status(400).send("Auction for this property is not found");
     }
     const property = await Property.findOne({ _id: auction.propertyId });
-    const { numberOfBids, highestBid, highestBidders } = getBidsInformation(
-      auction.bids,
-      auction.startingBid
-    );
+    const { numberOfBids, highestBid, highestBidders } =
+      await getBidsInformation(auction.bids, auction.startingBid);
     const result = {
       _id: auction._id,
       startingBid: auction.startingBid,
@@ -171,10 +170,8 @@ const getOngoingAuctionsOfRealEstates = async (req, res) => {
 
     for (let auction of allAuctions) {
       const property = await Property.findOne({ _id: auction.propertyId });
-      const { numberOfBids, highestBid, highestBidders } = getBidsInformation(
-        auction.bids,
-        auction.startingBid
-      );
+      const { numberOfBids, highestBid, highestBidders } =
+        await getBidsInformation(auction.bids, auction.startingBid);
       auction.property = property;
       auction.numberOfBids = numberOfBids;
       auction.highestBid = highestBid;
@@ -311,22 +308,27 @@ const placeBidding = async (req, res) => {
     auction.bids.push(newBidder);
 
     const savedAuction = await auction.save();
+    let numberOfBids, highestBidders;
 
-    let numberOfBids = savedAuction.bids.length;
-    const highestBidders = savedAuction.bids.slice(-5);
-    highestBid = savedAuction.bids.slice(-1)[0].amount;
+    ({ numberOfBids, highestBid, highestBidders } = await getBidsInformation(
+      savedAuction.bids,
+      savedAuction.startingBid
+    ));
+    let isReservedMet = highestBid >= property.reservedAmount;
+    console.log(isReservedMet);
 
     const result = {
       _id: savedAuction._id,
       startingBid: savedAuction.startingBid,
       incrementAmount: savedAuction.incrementAmount,
-      highestBid,
       registerStartDate: savedAuction.registerStartDate,
       registerEndDate: savedAuction.registerEndDate,
       auctionStartDate: savedAuction.auctionStartDate,
       auctionEndDate: savedAuction.auctionEndDate,
+      highestBid,
       numberOfBids,
       highestBidders,
+      isReservedMet,
       property: {
         _id: property._id,
         type: property.type,
@@ -336,11 +338,13 @@ const placeBidding = async (req, res) => {
         documents: property.documents,
       },
     };
+
     req.io.emit("bid", {
       auctionId: savedAuction._id,
       highestBid,
       numberOfBids,
       highestBidders,
+      isReservedMet,
     });
     res.status(200).send(result);
   } catch (err) {
