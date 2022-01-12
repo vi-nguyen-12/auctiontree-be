@@ -154,6 +154,21 @@ const getRealEstatesNotApproved = async (req, res) => {
     res.status(500).send(error.message);
   }
 };
+//@desc  Get real estates :approved & not in auction
+//@route GET /api/properties/real-estates/approved/notAuction
+const getRealEstatesApprovedNotAuction = async (req, res) => {
+  let result = [];
+  const approvedReaEstates = await Property.find({
+    type: "real-estate",
+    isApproved: true,
+  });
+  for (let item of approvedReaEstates) {
+    if (!(await Auction.findOne({ propertyId: item._id }))) {
+      result.push(item);
+    }
+  }
+  res.status(200).send(result);
+};
 
 //@desc  List real-estates in upcoming auctions
 //@route GET /api/properties/real-estates/upcomingAuctions
@@ -350,4 +365,5 @@ module.exports = {
   getRealEstatesNotApproved,
   approveProperty,
   disapproveProperty,
+  getRealEstatesApprovedNotAuction,
 };
