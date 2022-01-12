@@ -11,7 +11,7 @@ const {
   getRealEstatesUpcomingAuctions,
   getRealEstatesOngoingAuctions,
   getRealEstatesStatusBuyer,
-  getRealEstatesNotApproved,
+  getRealEstatesApprovedOrNot,
   getRealEstatesApprovedNotAuction,
   approveProperty,
   disapproveProperty,
@@ -37,7 +37,8 @@ router.get("/upcomingAuctions", getRealEstatesUpcomingAuctions);
 router.get("/ongoingAuctions", getRealEstatesOngoingAuctions);
 router.get("/status", auth, getRealEstatesStatusBuyer);
 router.get("/approved/notAuction", getRealEstatesApprovedNotAuction);
-router.get("/notApproved", getRealEstatesNotApproved);
+router.get("/notApproved", getRealEstatesApprovedOrNot);
+router.get("/approved", getRealEstatesApprovedOrNot);
 //this should be only for user is admin
 router.put("/:id/approved", approveProperty);
 router.put("/:id/disapproved", disapproveProperty);

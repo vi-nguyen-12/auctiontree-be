@@ -141,11 +141,19 @@ const getRealEstates = async (req, res) => {
 
 //@desc  Get real estates not approved
 //@route GET /api/properties/real-estates/notApproved
-const getRealEstatesNotApproved = async (req, res) => {
+//@route GET /api/properties/real-estates/approved
+const getRealEstatesApprovedOrNot = async (req, res) => {
+  const url = req.originalUrl;
+  let isApproved;
+  if (url.includes("approved")) {
+    isApproved = true;
+  } else if (url.includes("notApproved")) {
+    isApproved = false;
+  }
   try {
     const data = await Property.find({
       type: "real-estate",
-      isApproved: false,
+      isApproved,
     }).sort({
       createdAt: -1,
     });
@@ -362,7 +370,7 @@ module.exports = {
   getRealEstatesUpcomingAuctions,
   getRealEstatesOngoingAuctions,
   getRealEstatesStatusBuyer,
-  getRealEstatesNotApproved,
+  getRealEstatesApprovedOrNot,
   approveProperty,
   disapproveProperty,
   getRealEstatesApprovedNotAuction,
