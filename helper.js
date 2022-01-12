@@ -1,6 +1,5 @@
 const User = require("./model/User");
 const sgMail = require("@sendgrid/mail");
-const { LookoutMetrics } = require("aws-sdk");
 
 const sendEmail = ({ email, subject, text }) => {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -20,10 +19,6 @@ const sendEmail = ({ email, subject, text }) => {
     });
 };
 
-const changeToBidderId = (userId) => {
-  return "BID" + userId;
-};
-
 const getBidsInformation = async (bids, startingBid) => {
   const numberOfBids = bids.length;
   const highestBid = bids.length === 0 ? startingBid : bids.slice(-1)[0].amount;
@@ -40,4 +35,4 @@ const getBidsInformation = async (bids, startingBid) => {
   );
   return { numberOfBids, highestBid, highestBidders };
 };
-module.exports = { sendEmail, changeToBidderId, getBidsInformation };
+module.exports = { sendEmail, getBidsInformation };

@@ -2,7 +2,7 @@ const Auction = require("../model/Auction");
 const Property = require("../model/Property");
 const Buyer = require("../model/Buyer");
 const User = require("../model/User");
-const { getBidsInformation } = require("../helper");
+const { sendEmail, getBidsInformation } = require("../helper");
 
 //@desc  Create an auction
 //@route POST admin/api/auctions/  body:{propertyId, registerStartDate,registerEndDate,auctionStartDate,auctionEndDate,startingBid,incrementAmount}  all dates are in ISOString format
@@ -300,6 +300,13 @@ const placeBidding = async (req, res) => {
         .send("Bidding price is less than the minimum bid increment");
     }
 
+    //send email;
+    let user = await User.findById(req.user.userId);
+    let email = user.email;
+    let subject = "Auction10X- Bidding completed successfully";
+    let text = `Hi ${user.firstName} ${user.lastName} Thank you for your bid. Your price is highest with ${biddingPrice} at ${biddingTime}`;
+    sendEmail({ email, subject, text });
+
     const newBidder = {
       userId: req.user.userId,
       amount: biddingPrice,
@@ -315,7 +322,6 @@ const placeBidding = async (req, res) => {
       savedAuction.startingBid
     ));
     let isReservedMet = highestBid >= property.reservedAmount;
-    console.log(isReservedMet);
 
     const result = {
       _id: savedAuction._id,
@@ -362,7 +368,11 @@ const getAuctionResult = async (req, res) => {
     }
 
     if (auction.winner.userId) {
-      return res.status(200).send({ _id: auction._id, winner: auction.winner });
+      let user = await User.findOne({ _id: auction.winner.userId });
+      return res.status(200).send({
+        _id: auction._id,
+        winner: { userName: user.userName, amount: auction.winner.amount },
+      });
     }
 
     if (auction.auctionEndDate.getTime() < new Date().getTime()) {
@@ -381,23 +391,51 @@ const getAuctionResult = async (req, res) => {
       });
     }
     const property = await Property.findOne({ _id: auction.propertyId });
-    let [highestBidder] = auction.bids.slice(-1);
+    let highestBidder = auction.bids.slice(-1)[0];
 
-    if (highestBidder.amount < property.reservedAmount) {
+    if (highestBidder.amount >= property.reservedAmount) {
+      auction.winner = {
+        userId: highestBidder.userId,
+        amount: highestBidder.amount,
+      };
+      const savedAuction = await auction.save();
+      const user = await User.findById(savedAuction.winner.userId);
+      //send email
+      let email = user.email;
+      let subject = "Auction10X- Congratulation for winning an auction";
+      let text = `Congratulation for winning auction for property with id number ${property._id}`;
+      sendEmail({ email, subject, text });
+
       return res.status(200).send({
-        _id: auction._id,
-        winner: null,
-        highestBidder,
-        reservedAmount: property.reservedAmount,
-        message: "Reserved not met",
+        _id: savedAuction.id,
+        winner: {
+          userName: user.userName,
+          amount: savedAuction.winner.amount,
+        },
       });
     }
-    auction.winner = {
-      userId: highestBidder.userId,
-      amount: highestBidder.amount,
-    };
-    const savedAuction = await auction.save();
-    res.status(200).send({ _id: savedAuction.id, winner: savedAuction.winner });
+
+    //send email to bidders between disscussedAmount and reservedAmount
+    let discussedBidders = auction.bids.filter(
+      (item) => item.amount >= property.discussedAmount
+    );
+    if (discussedBidders.length !== 0) {
+      for (let item of discussedBidders) {
+        const user = await User.findById(item.userId);
+        let email = user.email;
+        let subject = "Auction10X- Discuss auction price";
+        let text = `Thank you for bidding for real-estate with id number ${property._id}. Your bid is ${item.amount} is not met reserved amount. However, our seller is willing to discuss more about the price.`;
+
+        sendEmail({ email, subject, text });
+      }
+    }
+    res.status(200).send({
+      _id: auction._id,
+      winner: null,
+      highestBidder,
+      reservedAmount: property.reservedAmount,
+      message: "Reserved not met",
+    });
   } catch (err) {
     res.status(500).send(err.message);
   }

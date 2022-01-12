@@ -172,20 +172,6 @@ const verifyDocument = async (req, res) => {
   } catch (err) {
     res.status(500).send(err.message);
   }
-
-  // Buyer.findById(buyerId)
-  //   .then((buyer) => {
-  //     if (!buyerId) throw new Error("Buyer not found");
-  //     const document = buyer.documents.id(documentId);
-  //     console.log(document);
-  //     if (!document) throw new Error("Document not found");
-  //     document.set({ isVerified: "success" });
-  //     return buyer.save();
-  //   })
-  //   .then((savedBuyer) => {
-  //     res.status(200).send(savedBuyer);
-  //   })
-  //   .catch((err) => res.status(500).send(err.message));
 };
 
 module.exports = {
