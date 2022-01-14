@@ -113,7 +113,7 @@ const login = async (req, res) => {
       return res.status(400).send("Invalid password");
     }
     if (!user.isActive) {
-      return res.status(400).send("User has not been verified");
+      return res.status(200).send({ message: "User has not been verified" });
     }
 
     const token = jwt.sign({ userId: user._id }, process.env.TOKEN_KEY, {

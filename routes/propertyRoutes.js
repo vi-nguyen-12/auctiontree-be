@@ -40,6 +40,8 @@ router.get("/approved/notAuction", getRealEstatesApprovedNotAuction);
 router.get("/notApproved", getRealEstatesApprovedOrNot);
 router.get("/approved", getRealEstatesApprovedOrNot);
 //this should be only for user is admin
+// router.put(":/propertyId/documents/:documentId/verifed", approveDocument);
+// router.put(":/propertyId/documents/:documentId/notVerfied", approveDocument);
 router.put("/:id/approved", approveProperty);
 router.put("/:id/disapproved", disapproveProperty);
 router.get("/:id", getRealEstate);
