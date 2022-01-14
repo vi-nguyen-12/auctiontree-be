@@ -16,17 +16,17 @@ const testRoute = require("./routes/test");
 const cookieparser = require("cookie-parser");
 const cors = require("cors");
 
-app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
+// app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
 
 const allowedDomains = ["http://localhost:3000", "http://localhost:3001"];
-// const corsOptions = {
-//   credentials: true,
-//   origin: (origin, callback) => {
-//     if (allowedDomains.includes(origin)) return callback(null, true);
-//     callback(new Error("Not allowed by CORS"));
-//   },
-// };
-// app.use(cors(corsOptions));
+const corsOptions = {
+  credentials: true,
+  origin: (origin, callback) => {
+    if (allowedDomains.includes(origin)) return callback(null, true);
+    callback(new Error("Not allowed by CORS"));
+  },
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -61,7 +61,6 @@ app.use("/api/properties/real-estates/", propertyRoutes);
 app.use("/api/kyc", kycRoute);
 app.use("/api/buyers", buyerRoute);
 app.use("/api/questions", questionRoute);
-app.use("/admin/api/auctions", auctionRoute);
 app.use("/admin/api/questions", questionRoute);
 
 const server = app.listen(5000, () => console.log("Server is running..."));
