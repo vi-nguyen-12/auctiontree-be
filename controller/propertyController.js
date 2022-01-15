@@ -367,17 +367,18 @@ const verifyDocument = async (req, res) => {
     });
   }
   const { propertyId, documentId } = req.params;
+
   try {
-    const property = await Buyer.findById(propertyId);
+    const property = await Property.findById(propertyId);
     if (!property) {
       return res.status(404).send("Property not found");
     }
-    const document = buyer.documents.id(documentId);
+    const document = property.documents.id(documentId);
     if (!document) {
       return res.status(404).send("Document not found");
     }
     document.isVerified = status;
-    const savedDocument = await document.save();
+    const savedDocument = await document.save({ suppressWarning: true });
     const savedProperty = await property.save();
     const data = {
       _id: savedDocument._id,
