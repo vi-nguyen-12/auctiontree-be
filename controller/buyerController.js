@@ -145,7 +145,9 @@ const verifyDocument = async (req, res) => {
   if (status !== "pending" && status !== "success" && status !== "fail") {
     return res
       .status(404)
-      .send({ message: "Status should be pending or success or fail" });
+      .send({
+        message: "Status value must be 'pending' or 'success' or 'fail'",
+      });
   }
   const { buyerId, documentId } = req.params;
   try {

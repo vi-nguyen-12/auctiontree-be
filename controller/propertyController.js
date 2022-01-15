@@ -357,6 +357,41 @@ const disapproveProperty = async (req, res) => {
   }
 };
 
+//@desc  Verify a document
+//@route PUT /:propertyId/documents/:documentId/status"
+const verifyDocument = async (req, res) => {
+  const { status } = req.body;
+  if (status !== "pending" && status !== "success" && status !== "fail") {
+    return res.status(404).send({
+      message: "Status value must be 'pending' or 'success' or 'fail'",
+    });
+  }
+  const { propertyId, documentId } = req.params;
+  try {
+    const property = await Buyer.findById(propertyId);
+    if (!property) {
+      return res.status(404).send("Property not found");
+    }
+    const document = buyer.documents.id(documentId);
+    if (!document) {
+      return res.status(404).send("Document not found");
+    }
+    document.isVerified = status;
+    const savedDocument = await document.save();
+    const savedProperty = await property.save();
+    const data = {
+      _id: savedDocument._id,
+      name: savedDocument.name,
+      url: savedDocument.url,
+      isVerified: savedDocument.isVerified,
+      propertyId: savedProperty._id,
+    };
+    res.status(200).send(data);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+
 module.exports = {
   uploadS3,
   upload,
@@ -372,4 +407,5 @@ module.exports = {
   approveProperty,
   disapproveProperty,
   getRealEstatesApprovedNotAuction,
+  verifyDocument,
 };

@@ -85,7 +85,7 @@ const getAuction = async (req, res) => {
       auction = await Auction.findOne({ _id: req.params.id });
     }
     if (!auction) {
-      res.status(400).send("Auction for this property is not found");
+      return res.status(400).send("Auction for this property is not found");
     }
     const property = await Property.findOne({ _id: auction.propertyId });
     const { numberOfBids, highestBid, highestBidders } =
@@ -124,7 +124,7 @@ const getUpcomingAuctionsOfRealEstates = async (req, res) => {
     const now = new Date();
     const allAuctions = await Auction.find({
       auctionStartDate: { $gte: now },
-    });
+    }).sort({ auctionStartDate: 1 });
     for (let auction of allAuctions) {
       const property = await Property.findOne({ _id: auction.propertyId });
       auction.property = property;
@@ -166,7 +166,7 @@ const getOngoingAuctionsOfRealEstates = async (req, res) => {
     const allAuctions = await Auction.find({
       auctionStartDate: { $lte: now },
       auctionEndDate: { $gte: now },
-    });
+    }).sort({ auctionStartDate: 1 });
 
     for (let auction of allAuctions) {
       const property = await Property.findOne({ _id: auction.propertyId });
