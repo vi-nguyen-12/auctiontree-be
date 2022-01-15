@@ -5,20 +5,20 @@ const User = require("../model/User");
 const { sendEmail, getBidsInformation } = require("../helper");
 
 //@desc  Create an auction
-//@route POST admin/api/auctions/  body:{propertyId, registerStartDate,registerEndDate,auctionStartDate,auctionEndDate,startingBid,incrementAmount}  all dates are in ISOString format
+//@route POST api/auctions/  body:{propertyId, registerStartDate,registerEndDate,auctionStartDate,auctionEndDate,startingBid,incrementAmount}  all dates are in ISOString format
 
 const createAuction = async (req, res) => {
+  const {
+    propertyId,
+    registerStartDate: registerStartDateISOString,
+    registerEndDate: registerEndDateISOString,
+    auctionStartDate: auctionStartDateISOString,
+    auctionEndDate: auctionEndDateISOString,
+    startingBid,
+    incrementAmount,
+  } = req.body;
   try {
-    const {
-      propertyId,
-      registerStartDate: registerStartDateISOString,
-      registerEndDate: registerEndDateISOString,
-      auctionStartDate: auctionStartDateISOString,
-      auctionEndDate: auctionEndDateISOString,
-      startingBid,
-      incrementAmount,
-    } = req.body;
-
+    console.log(propertyId, startingBid, incrementAmount);
     const isPropertyInAuction = await Auction.findOne({ propertyId });
     if (isPropertyInAuction) {
       return res
@@ -32,6 +32,7 @@ const createAuction = async (req, res) => {
     const auctionEndDate = new Date(auctionEndDateISOString);
 
     const property = await Property.findOne({ _id: req.body.propertyId });
+
     if (!property) {
       return res.status(400).send("Property not found");
     }
