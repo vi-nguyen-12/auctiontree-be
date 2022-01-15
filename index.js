@@ -16,9 +16,9 @@ const testRoute = require("./routes/test");
 const cookieparser = require("cookie-parser");
 const cors = require("cors");
 
-app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
+// app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
 
-// const allowedDomains = ["http://localhost:3000", "http://localhost:3001"];
+const allowedDomains = ["http://localhost:3000", "http://localhost:3001"];
 const corsOptions = {
   credentials: true,
   origin: (origin, callback) => {
