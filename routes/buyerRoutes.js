@@ -6,6 +6,9 @@ const {
   approveBuyer,
   disapproveBuyer,
   verifyDocument,
+  getBuyers,
+  getApprovedBuyers,
+  getNotApprovedBuyers,
 } = require("../controller/buyerController");
 
 router.post("/", auth, checkKyc, createBuyer);
@@ -14,4 +17,7 @@ router.post("/", auth, checkKyc, createBuyer);
 router.put("/:buyerId/documents/:documentId/status", verifyDocument);
 router.put("/:id/approved", approveBuyer);
 router.put("/:id/disapproved", disapproveBuyer);
+router.get("/", getBuyers);
+router.get("/approved", getApprovedBuyers);
+router.get("/notApproved", getNotApprovedBuyers);
 module.exports = router;

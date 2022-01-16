@@ -143,11 +143,9 @@ const disapproveBuyer = async (req, res) => {
 const verifyDocument = async (req, res) => {
   const { status } = req.body;
   if (status !== "pending" && status !== "success" && status !== "fail") {
-    return res
-      .status(404)
-      .send({
-        message: "Status value must be 'pending' or 'success' or 'fail'",
-      });
+    return res.status(404).send({
+      message: "Status value must be 'pending' or 'success' or 'fail'",
+    });
   }
   const { buyerId, documentId } = req.params;
   try {
@@ -176,9 +174,43 @@ const verifyDocument = async (req, res) => {
   }
 };
 
+//@desc  Get all buyers
+//@route GET /api/buyers
+const getBuyers = async (req, res) => {
+  try {
+    const buyers = await Buyer.find({});
+    res.status(200).send(buyers);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+//@desc  Get not approved buyers
+//@route GET /api/buyers/notApproved
+const getNotApprovedBuyers = async (req, res) => {
+  try {
+    const buyers = await Buyer.find({ isApproved: false });
+    res.status(200).send(buyers);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+//@desc  Get approved buyers
+//@route GET /api/buyers/approved
+const getApprovedBuyers = async (req, res) => {
+  try {
+    const buyers = await Buyer.find({ isApproved: true });
+    res.status(200).send(buyers);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+
 module.exports = {
   createBuyer,
   approveBuyer,
   disapproveBuyer,
   verifyDocument,
+  getBuyers,
+  getApprovedBuyers,
+  getNotApprovedBuyers,
 };
