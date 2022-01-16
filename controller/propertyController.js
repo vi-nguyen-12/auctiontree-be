@@ -25,10 +25,11 @@ const uploadS3 = multer({
     s3,
     bucket,
     acl: "public-read",
+    contentType: multerS3.AUTO_CONTENT_TYPE,
+    contentDisposition: "inline",
     metadata: function (req, file, cb) {
       cb(null, {
         fieldName: file.fieldname,
-        contentType: "application/pdf",
       });
     },
     key: function (req, file, cb) {
