@@ -1,5 +1,6 @@
 const User = require("../model/User");
 const Buyer = require("../model/Buyer");
+const Property = require("../model/Property");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const speakeasy = require("speakeasy");
@@ -179,9 +180,36 @@ const getUserByBuyerId = async (req, res) => {
   try {
     const buyer = await Buyer.findById(buyerId);
     if (!buyer) {
-      res.status(400).send("No buyer found with id " + buyerId);
+      return res.status(400).send("No buyer found with id " + buyerId);
     }
     const user = await User.findById(buyer.userId);
+    const result = {
+      _id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+    };
+    res.status(200).send(result);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+
+//@desc  Get user based on propertyId
+// @route GET /api/users/propertyId/:propertyId
+const getUserByPropertyId = async (req, res) => {
+  const { propertyId } = req.params;
+  try {
+    const property = await Property.findById(propertyId);
+    if (!property) {
+      return res.status(400).send("No property found with id " + propertyId);
+    }
+    const user = await User.findById(property.createdBy);
+    if (!user) {
+      return res
+        .status(400)
+        .send("No usr not found for this property with id " + propertyId);
+    }
     const result = {
       _id: user.id,
       firstName: user.firstName,
@@ -204,4 +232,5 @@ module.exports = {
   checkJWT,
   verify,
   getUserByBuyerId,
+  getUserByPropertyId,
 };

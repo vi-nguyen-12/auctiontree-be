@@ -6,6 +6,7 @@ const {
   verify,
   checkJWT,
   getUserByBuyerId,
+  getUserByPropertyId,
 } = require("../controller/userController");
 
 router.route("/register").post(registerUser);
@@ -15,5 +16,6 @@ router.route("/verify").post(verify);
 router.route("/checkJWT").post(checkJWT);
 //only allow for admin user
 router.get("/buyerId/:buyerId", getUserByBuyerId);
+router.get("/propertyId/:propertyId", getUserByPropertyId);
 
 module.exports = router;
