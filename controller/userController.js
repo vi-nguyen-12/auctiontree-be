@@ -187,7 +187,6 @@ const getUserByBuyerId = async (req, res) => {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
-      buyerId: buyerId,
     };
     res.status(200).send(result);
   } catch (err) {
