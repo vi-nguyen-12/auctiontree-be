@@ -184,6 +184,7 @@ const getBuyers = async (req, res) => {
     res.status(500).send(err.message);
   }
 };
+
 //@desc  Get not approved buyers
 //@route GET /api/buyers/notApproved
 const getNotApprovedBuyers = async (req, res) => {

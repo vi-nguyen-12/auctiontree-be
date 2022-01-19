@@ -3,6 +3,7 @@ const app = express();
 const socket = require("socket.io");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
+const path = require("path");
 const dotenv = require("dotenv");
 dotenv.config();
 
@@ -16,22 +17,24 @@ const testRoute = require("./routes/test");
 const cookieparser = require("cookie-parser");
 const cors = require("cors");
 
-// app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
+app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
 
 const allowedDomains = ["http://localhost:3000", "http://localhost:3001"];
-const corsOptions = {
-  credentials: true,
-  origin: (origin, callback) => {
-    if (allowedDomains.includes(origin)) return callback(null, true);
-    callback(new Error("Not allowed by CORS"));
-  },
-};
-app.use(cors(corsOptions));
+// const corsOptions = {
+//   credentials: true,
+//   origin: (origin, callback) => {
+//     if (allowedDomains.includes(origin)) return callback(null, true);
+//     callback(new Error("Not allowed by CORS"));
+//   },
+// };
+// app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieparser());
+
+const port = process.env.PORT || 5000;
 
 mongoose.connect(
   process.env.DB_CONNECT,
@@ -56,14 +59,17 @@ app.use(function (req, res, next) {
   );
   next();
 });
-app.use("/api/user", userRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api/properties/real-estates/", propertyRoutes);
 app.use("/api/kyc", kycRoute);
 app.use("/api/buyers", buyerRoute);
 app.use("/api/questions", questionRoute);
 app.use("/admin/api/questions", questionRoute);
 
-const server = app.listen(5000, () => console.log("Server is running..."));
+if (process.env.NODE_ENV === "production") {
+  app.use();
+}
+const server = app.listen(port, () => console.log("Server is running..."));
 
 const io = socket(server, {
   cors: {
@@ -79,6 +85,7 @@ app.use(function (req, res, next) {
 
 app.use("/api/auctions", auctionRoute);
 app.use("/api/test", testRoute);
+
 // io.on("connection", (socket) => {
 //   console.log("a new user is connected");
 //   socket.on("bid", function ({ auctionId, number }) {

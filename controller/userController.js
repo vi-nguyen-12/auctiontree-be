@@ -1,4 +1,5 @@
 const User = require("../model/User");
+const Buyer = require("../model/Buyer");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const speakeasy = require("speakeasy");
@@ -49,7 +50,7 @@ const registerUser = async (req, res) => {
 };
 
 // @desc  Verify token and activate user
-// @route POST /api/user/verify
+// @route POST /api/users/verify
 const verify = async (req, res) => {
   const { token, email } = req.body;
   try {
@@ -97,7 +98,7 @@ const verify = async (req, res) => {
 };
 
 //@desc  Log in
-//@route POST /api/user/login data:{userName,password}
+//@route POST /api/users/login data:{userName,password}
 const login = async (req, res) => {
   try {
     const user = await User.findOne({
@@ -147,7 +148,7 @@ const login = async (req, res) => {
 };
 
 ////@desc  Check JWT
-//@route POST /api/user/verifyJWT data:{authToken}
+//@route POST /api/users/verifyJWT data:{authToken}
 const checkJWT = async (req, res) => {
   try {
     const token = req.body.authToken;
@@ -165,17 +166,43 @@ const checkJWT = async (req, res) => {
 };
 
 //@desc  Log out
-//@route GET /api/user/logout
+//@route GET /api/users/logout
 const logout = async (req, res) => {
   res.clearCookie("auth-token");
   res.redirect("/");
 };
 
-//@desc  KYC is approved, send email notification
-//@route POST /api/user/login
+//@desc  Get user based on buyerId
+// @route GET /api/users/buyerId/:buyerId
+const getUserByBuyerId = async (req, res) => {
+  const { buyerId } = req.params;
+  try {
+    const buyer = await Buyer.findById(buyerId);
+    if (!buyer) {
+      res.status(400).send("No buyer found with id " + buyerId);
+    }
+    const user = await User.findById(buyer.userId);
+    const result = {
+      _id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      buyerId: buyerId,
+    };
+    res.status(200).send(result);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
 
-exports.registerUser = registerUser;
-exports.login = login;
-exports.logout = logout;
-exports.checkJWT = checkJWT;
-exports.verify = verify;
+//@desc  KYC is approved, send email notification
+//@route POST /api/users/login
+
+module.exports = {
+  registerUser,
+  login,
+  logout,
+  checkJWT,
+  verify,
+  getUserByBuyerId,
+};
