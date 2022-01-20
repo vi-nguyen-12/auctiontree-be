@@ -6,6 +6,7 @@ const {
   uploadAll,
   search,
   createNewEstates,
+  editProperty,
   getRealEstates,
   getRealEstate,
   getRealEstatesUpcomingAuctions,
@@ -51,4 +52,5 @@ router.put("/:id/disapproved", disapproveProperty);
 router.get("/:id", getRealEstate);
 router.get("/", getRealEstates);
 router.post("/", auth, createNewEstates);
+router.put("/:id", auth, editProperty);
 module.exports = router;

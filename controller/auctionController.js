@@ -73,6 +73,79 @@ const createAuction = async (req, res) => {
     res.status(500).send(err);
   }
 };
+//@desc  Edit an auction
+//@route PUT api/auctions/:id  body:{propertyId, registerStartDate,registerEndDate,auctionStartDate,auctionEndDate,startingBid,incrementAmount}  all dates are in ISOString format
+
+const editAuction = async (req, res) => {
+  const auction = await Auction.findById(req.params.id);
+  if (!auction) return res.status(400).send("Auction not found!");
+  const {
+    propertyId,
+    registerStartDate: registerStartDateISOString,
+    registerEndDate: registerEndDateISOString,
+    auctionStartDate: auctionStartDateISOString,
+    auctionEndDate: auctionEndDateISOString,
+    startingBid,
+    incrementAmount,
+  } = req.body;
+  try {
+    const auctionWithPropertyId = await Auction.findOne({ propertyId });
+    if (
+      auctionWithPropertyId !== null &&
+      auctionWithPropertyId._id !== auction._id
+    ) {
+      return res
+        .status(400)
+        .send("This property is already created for auction");
+    }
+
+    const registerStartDate = new Date(registerStartDateISOString);
+    const registerEndDate = new Date(registerEndDateISOString);
+    const auctionStartDate = new Date(auctionStartDateISOString);
+    const auctionEndDate = new Date(auctionEndDateISOString);
+
+    const property = await Property.findOne({ _id: req.body.propertyId });
+
+    if (!property) {
+      return res.status(400).send("Property not found");
+    }
+    if (!property.isApproved) {
+      return res.status(400).send("Property is not approved");
+    }
+    if (registerStartDate.getTime() >= registerEndDate.getTime()) {
+      return res
+        .status(400)
+        .send(
+          "Register end time is earlier than or equal to register start time"
+        );
+    }
+    if (auctionStartDate.getTime() >= auctionEndDate.getTime()) {
+      return res
+        .status(400)
+        .send(
+          "Auction end time is earlier than or equal to auction start time"
+        );
+    }
+    if (registerEndDate.getTime() > auctionStartDate.getTime()) {
+      return res
+        .status(400)
+        .send("Auction start time is earlier than register end time");
+    }
+    auction.propertyId = property._id;
+    auction.registerStartDate = registerStartDate;
+    auction.registerEndDate = registerEndDate;
+    auction.auctionStartDate = auctionStartDate;
+    auction.auctionEndDate = auctionEndDate;
+    auction.startingBid = startingBid;
+    auction.incrementAmount = incrementAmount;
+
+    const updatedAuction = await auction.save();
+    res.status(200).send(updatedAuction);
+  } catch (err) {
+    res.status(500).send(err);
+  }
+};
+
 //@desc  Get information of auction
 //@route GET /api/auctions/:id
 //@route GET /api/auction/propertyId/:propertyId
@@ -450,4 +523,5 @@ module.exports = {
   getOngoingAuctionsOfRealEstates,
   getRealEstateAuctionsStatusBuyer,
   getAuctionResult,
+  editAuction,
 };

@@ -162,17 +162,27 @@ const editProperty = async (req, res) => {
   const response = await axios.get(process.env.THIRD_PARTY_API, {
     params: { street_address, city, state },
   });
+  console.log(response.data);
 
-  const newEstates = new Property({
-    createdBy: req.user.userId,
-    type,
-    details: response.data.data,
-    images,
-    videos,
-    documents,
-    reservedAmount,
-    discussedAmount,
+  property.type = type;
+  property.street_address = street_address;
+  property.city = city;
+  property.state = state;
+  property.images = images;
+  property.videos = videos;
+  property.documents = documents;
+  property.reservedAmount = reservedAmount;
+  property.discussedAmount = discussedAmount;
+
+  const updatedProperty = property.save();
+  const { email } = await User.findOne({ _id: req.user.userId }, "email");
+  sendEmail({
+    email,
+    subject: "Auction 10X- Updating property",
+    text: "Thank you for updating your property. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
   });
+
+  res.status(200).send(updatedProperty);
 };
 
 //@desc  List real estates (sorting by created date) by page and limit
@@ -521,6 +531,7 @@ module.exports = {
   uploadAll,
   search,
   createNewEstates,
+  editProperty,
   getRealEstates,
   getRealEstate,
   getRealEstatesUpcomingAuctions,
