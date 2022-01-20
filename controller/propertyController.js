@@ -397,6 +397,78 @@ const verifyDocument = async (req, res) => {
   }
 };
 
+//@desc  Verify a video
+//@route PUT /:propertyId/videos/:videoId/status"
+const verifyVideo = async (req, res) => {
+  const { status } = req.body;
+  if (status !== "pending" && status !== "success" && status !== "fail") {
+    return res.status(404).send({
+      message: "Status value must be 'pending' or 'success' or 'fail'",
+    });
+  }
+  const { propertyId, videoId } = req.params;
+  console.log(videoId);
+
+  try {
+    const property = await Property.findById(propertyId);
+    if (!property) {
+      return res.status(404).send("Property not found");
+    }
+    const video = property.videos.id(videoId);
+    if (!video) {
+      return res.status(404).send("Video not found");
+    }
+    video.isVerified = status;
+    const savedVideo = await video.save({ suppressWarning: true });
+    const savedProperty = await property.save();
+    const data = {
+      _id: savedVideo._id,
+      name: savedVideo.name,
+      url: savedVideo.url,
+      isVerified: savedVideo.isVerified,
+      propertyId: savedProperty._id,
+    };
+    res.status(200).send(data);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+//@desc  Verify an image
+//@route PUT /:propertyId/images/:imageId/status"
+const verifyImage = async (req, res) => {
+  const { status } = req.body;
+  if (status !== "pending" && status !== "success" && status !== "fail") {
+    return res.status(404).send({
+      message: "Status value must be 'pending' or 'success' or 'fail'",
+    });
+  }
+  const { propertyId, imageId } = req.params;
+
+  try {
+    const property = await Property.findById(propertyId);
+    if (!property) {
+      return res.status(404).send("Property not found");
+    }
+    const image = property.images.id(imageId);
+    if (!image) {
+      return res.status(404).send("Image not found");
+    }
+    image.isVerified = status;
+    const savedImage = await image.save({ suppressWarning: true });
+    const savedProperty = await property.save();
+    const data = {
+      _id: savedImage._id,
+      name: savedImage.name,
+      url: savedImage.url,
+      isVerified: savedImage.isVerified,
+      propertyId: savedProperty._id,
+    };
+    res.status(200).send(data);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+
 module.exports = {
   uploadS3,
   upload,
@@ -413,4 +485,6 @@ module.exports = {
   disapproveProperty,
   getRealEstatesApprovedNotAuction,
   verifyDocument,
+  verifyImage,
+  verifyVideo,
 };
