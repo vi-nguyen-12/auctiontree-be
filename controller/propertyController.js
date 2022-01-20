@@ -99,6 +99,12 @@ const createNewEstates = async (req, res) => {
   } = req.body;
   // const { rooms_count, beds_count, baths } = fields;
 
+  if (discussedAmount > reservedAmount) {
+    return res
+      .status(400)
+      .send("Discussed amount must be less than or equal to reserved amount");
+  }
+
   const response = await axios.get(process.env.THIRD_PARTY_API, {
     params: { street_address, city, state },
   });
@@ -127,6 +133,46 @@ const createNewEstates = async (req, res) => {
   });
 
   res.status(200).send(savedNewEstates);
+};
+
+//@desc  Edit a property
+//@route PUT /api/properties/real-estates/:id body:{type, street_address, city, state, images, videos, documents, reservedAmount, discussedAmount}
+const editProperty = async (req, res) => {
+  const property = await Property.findById(req.params.id);
+  if (!property) return res.status(404).send("No property is found!");
+  const {
+    type,
+    street_address,
+    city,
+    state,
+    images,
+    videos,
+    documents,
+    reservedAmount,
+    discussedAmount,
+  } = req.body;
+  // const { rooms_count, beds_count, baths } = fields;
+
+  if (discussedAmount > reservedAmount) {
+    return res
+      .status(400)
+      .send("Discussed amount must be less than or equal to reserved amount");
+  }
+
+  const response = await axios.get(process.env.THIRD_PARTY_API, {
+    params: { street_address, city, state },
+  });
+
+  const newEstates = new Property({
+    createdBy: req.user.userId,
+    type,
+    details: response.data.data,
+    images,
+    videos,
+    documents,
+    reservedAmount,
+    discussedAmount,
+  });
 };
 
 //@desc  List real estates (sorting by created date) by page and limit
