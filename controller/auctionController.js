@@ -358,7 +358,7 @@ const placeBidding = async (req, res) => {
   const { biddingTime: biddingTimeISOString, biddingPrice } = req.body;
   const biddingTime = new Date(biddingTimeISOString);
   try {
-    const buyer = await Buyer.findOne({ userId: req.user.userId });
+    const buyer = await Buyer.findOne({ userId: req.user.userId, auctionId });
     if (!buyer) {
       return res.status(200).send({ error: "User did not register to buy" });
     }

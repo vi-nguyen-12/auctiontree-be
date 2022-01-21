@@ -244,7 +244,7 @@ const getUserByPropertyId = async (req, res) => {
 //@route POST /api/users/login
 
 //@desc  Send email for forgot password
-//@route POST /api/users/sendEmailForgotPassword data:{email}
+//@route PUT /api/users/password data:{email}
 const sendEmailForgotPassword = async (req, res) => {
   const email = req.body.email;
   try {
