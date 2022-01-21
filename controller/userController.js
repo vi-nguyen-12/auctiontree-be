@@ -114,6 +114,24 @@ const verify = async (req, res) => {
   }
 };
 
+////@desc  Check JWT
+//@route POST /api/users/verifyJWT data:{authToken}
+const checkJWT = async (req, res) => {
+  try {
+    const token = req.body.authToken;
+    const verified = jwt.verify(token, process.env.TOKEN_KEY);
+
+    if (verified) {
+      const user = await User.findOne({ _id: verified.userId });
+      return res.status(200).send({ message: "User Logged In", user });
+    } else {
+      return res.status(200).send({ message: "User not logged in" });
+    }
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
 //@desc  Log in
 //@route POST /api/users/login data:{userName,password}
 const login = async (req, res) => {
@@ -225,6 +243,14 @@ const getUserByPropertyId = async (req, res) => {
 //@desc  KYC is approved, send email notification
 //@route POST /api/users/login
 
+//@desc  Send email for reset password
+//@route POST /api/users/sendEmailResetPassword data:{email}
+const sendEmailResetPassword = async (req, res) => {
+  const email = req.body.email;
+  const user = await User.findOne({ email });
+  if (!user) return res.status(200).send({ error: "Email does not exist" });
+};
+
 module.exports = {
   registerUser,
   login,
@@ -232,4 +258,5 @@ module.exports = {
   verify,
   getUserByBuyerId,
   getUserByPropertyId,
+  checkJWT,
 };
