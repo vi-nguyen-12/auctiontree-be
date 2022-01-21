@@ -58,6 +58,9 @@ const verify = async (req, res) => {
   const { token, email } = req.body;
   try {
     const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(200).send({ error: "Email not found" });
+    }
     const { base32: secret } = user.secret;
 
     const verified = speakeasy.totp.verify({
@@ -67,7 +70,20 @@ const verify = async (req, res) => {
       time: 300,
     });
     if (!verified) {
-      return res.status(200).send({ error: "Invalid code" });
+      const token = speakeasy.totp({
+        secret: user.secret.base32,
+        encoding: "base32",
+        time: 300,
+      });
+      sendEmail({
+        email: user.email,
+        subject: "Auction 10X Register",
+        text: `Verify Code: ${token}`,
+      });
+
+      return res
+        .status(200)
+        .send({ error: "Invalid code. Check email for new code" });
     }
     user.isActive = true;
     await user.save();
