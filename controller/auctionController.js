@@ -31,7 +31,9 @@ const createAuction = async (req, res) => {
     const auctionStartDate = new Date(auctionStartDateISOString);
     const auctionEndDate = new Date(auctionEndDateISOString);
 
-    const property = await Property.findOne({ _id: req.body.propertyId });
+    const property = await Property.findOne({
+      _id: req.body.propertyId,
+    }).populate("createdBy");
 
     if (!property) {
       return res.status(200).send({ error: "Property not found" });
@@ -39,6 +41,7 @@ const createAuction = async (req, res) => {
     if (!property.isApproved) {
       return res.status(200).send({ error: "Property is not approved" });
     }
+
     if (registerStartDate.getTime() >= registerEndDate.getTime()) {
       return res.status(200).send({
         error:
@@ -66,6 +69,13 @@ const createAuction = async (req, res) => {
       incrementAmount,
     });
     const savedAuction = await newAuction.save();
+
+    let email = property.createdBy.email;
+    let subject = "Auction10X - Create an auction for your property";
+    let text = `We create an auction for your property with starting register date ${registerStartDate} and auction start date ${auctionStartDate}.
+    Starting bid is ${startingBid} and increment amount is ${incrementAmount}
+     `;
+    sendEmail({ email, subject, text });
     res.status(200).send(savedAuction);
   } catch (err) {
     res.status(500).send(err);
