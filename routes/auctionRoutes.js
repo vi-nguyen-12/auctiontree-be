@@ -10,6 +10,7 @@ const {
   getOngoingAuctionsOfRealEstates,
   getRealEstateAuctionsStatusBuyer,
   getAuctionResult,
+  deleteAuction,
 } = require("../controller/auctionController");
 
 // need to check if the user is admin
@@ -22,6 +23,6 @@ router.get("/result/:id", getAuctionResult);
 router.get("/propertyId/:propertyId", getAuction);
 router.get("/:id", getAuction);
 router.put("/:id", editAuction);
-// router.delete("/:id", deleteAuction);
+router.delete("/:id", deleteAuction);
 
 module.exports = router;

@@ -100,9 +100,9 @@ const createNewEstates = async (req, res) => {
   // const { rooms_count, beds_count, baths } = fields;
 
   if (discussedAmount > reservedAmount) {
-    return res
-      .status(400)
-      .send("Discussed amount must be less than or equal to reserved amount");
+    return res.status(200).send({
+      error: "Discussed amount must be less than or equal to reserved amount",
+    });
   }
 
   const response = await axios.get(process.env.THIRD_PARTY_API, {
@@ -154,9 +154,9 @@ const editProperty = async (req, res) => {
   // const { rooms_count, beds_count, baths } = fields;
 
   if (discussedAmount > reservedAmount) {
-    return res
-      .status(400)
-      .send("Discussed amount must be less than or equal to reserved amount");
+    return res.status(200).send({
+      error: "Discussed amount must be less than or equal to reserved amount",
+    });
   }
 
   const response = await axios.get(process.env.THIRD_PARTY_API, {
@@ -392,8 +392,28 @@ const approveProperty = async (req, res) => {
   try {
     const property = await Property.findOne({ _id: req.params.id });
     if (!property) {
-      res.status(400).send("Property not found");
+      res.status(200).send({ error: "Property not found" });
     }
+
+    for (let image of property.images) {
+      if (image.isVerified !== "success")
+        return res
+          .status(200)
+          .send({ error: `Image ${image.name}is not verified` });
+    }
+    for (let video of property.videos) {
+      if (video.isVerified !== "success")
+        return res
+          .status(200)
+          .send({ error: `Video ${video.name}is not verified` });
+    }
+    for (let document of property.documents) {
+      if (document.isVerified !== "success")
+        return res
+          .status(200)
+          .send({ error: `Document ${document.name}is not verified` });
+    }
+
     property.isApproved = true;
     const savedProperty = await property.save();
     res.status(200).send(savedProperty);
@@ -407,7 +427,7 @@ const disapproveProperty = async (req, res) => {
   try {
     const property = await Property.findOne({ _id: req.params.id });
     if (!property) {
-      res.status(400).send("Property not found");
+      res.status(200).send({ error: "Property not found" });
     }
     property.isApproved = false;
     const savedProperty = await property.save();

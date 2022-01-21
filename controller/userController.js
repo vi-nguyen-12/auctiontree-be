@@ -14,7 +14,9 @@ const registerUser = async (req, res) => {
     $or: [{ email: req.body.userName }, { userName: req.body.userName }],
   });
   if (userExist) {
-    return res.status(400).send("Email or user name is already exists");
+    return res
+      .status(200)
+      .send({ error: "Email or user name is already exists" });
   }
 
   const salt = await bcrypt.genSaltSync(10);
@@ -46,7 +48,7 @@ const registerUser = async (req, res) => {
     });
     res.send({ userId: savedUser._id, secret: savedUser.secret });
   } catch (err) {
-    res.status(400).send(err.message);
+    res.status(500).send(err.message);
   }
 };
 
@@ -107,15 +109,15 @@ const login = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(400).send("Email is not found");
+      return res.status(200).send({ error: "Email is not found" });
     }
 
     const validPass = await bcrypt.compare(req.body.password, user.password);
     if (!validPass) {
-      return res.status(400).send("Invalid password");
+      return res.status(200).send({ error: "Invalid password" });
     }
     if (!user.isActive) {
-      return res.status(200).send({ message: "User has not been verified" });
+      return res.status(200).send({ error: "User has not been verified" });
     }
 
     const token = jwt.sign({ userId: user._id }, process.env.TOKEN_KEY, {
@@ -144,7 +146,7 @@ const login = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(400).send({ error });
+    res.status(500).send(error.message);
   }
 };
 
@@ -162,7 +164,7 @@ const checkJWT = async (req, res) => {
       return res.status(200).send({ message: "User not logged in" });
     }
   } catch (error) {
-    res.status(400).json(error);
+    res.status(500).send(error.message);
   }
 };
 
@@ -180,7 +182,7 @@ const getUserByBuyerId = async (req, res) => {
   try {
     const buyer = await Buyer.findById(buyerId);
     if (!buyer) {
-      return res.status(400).send("No buyer found with id " + buyerId);
+      return res.status(200).send({ error: `No buyer found` });
     }
     const user = await User.findById(buyer.userId);
     const result = {
@@ -202,13 +204,15 @@ const getUserByPropertyId = async (req, res) => {
   try {
     const property = await Property.findById(propertyId);
     if (!property) {
-      return res.status(400).send("No property found with id " + propertyId);
+      return res
+        .status(200)
+        .send({ error: `No property found with id ${propertyId}` });
     }
     const user = await User.findById(property.createdBy);
     if (!user) {
-      return res
-        .status(400)
-        .send("No usr not found for this property with id " + propertyId);
+      return res.status(200).send({
+        error: `No user found for this property with id ${propertyId}`,
+      });
     }
     const result = {
       _id: user.id,
