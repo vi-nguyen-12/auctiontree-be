@@ -11,7 +11,7 @@ const { sendEmail } = require("../helper");
 //@route POST /api/user/register
 const registerUser = async (req, res) => {
   const userExist = await User.findOne({
-    $or: [{ email: req.body.userName }, { userName: req.body.userName }],
+    $or: [{ email: req.body.email }, { userName: req.body.userName }],
   });
   if (userExist) {
     return res
@@ -243,13 +243,34 @@ const getUserByPropertyId = async (req, res) => {
 //@desc  KYC is approved, send email notification
 //@route POST /api/users/login
 
-//@desc  Send email for reset password
-//@route POST /api/users/sendEmailResetPassword data:{email}
-const sendEmailResetPassword = async (req, res) => {
+//@desc  Send email for forgot password
+//@route POST /api/users/sendEmailForgotPassword data:{email}
+const sendEmailForgotPassword = async (req, res) => {
   const email = req.body.email;
-  const user = await User.findOne({ email });
-  if (!user) return res.status(200).send({ error: "Email does not exist" });
+  try {
+    const user = await User.findOne({ email });
+    if (!user)
+      return res
+        .status(200)
+        .send({ error: "Email is not registed for an account" });
+    const token = speakeasy.totp({
+      secret: user.secret.base32,
+      encoding: "base32",
+      time: 300,
+    });
+    sendEmail({
+      email,
+      subject: "Auction10X- Reset password",
+      text: `Code for verify email: ${token}`,
+    });
+    res.status(200).send({ message: "Sent code to email" });
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
 };
+
+//@desc  Reset password
+//@route POST /api/users/sendEmailResetPassword data:{email, token, password}
 
 module.exports = {
   registerUser,
@@ -259,4 +280,5 @@ module.exports = {
   getUserByBuyerId,
   getUserByPropertyId,
   checkJWT,
+  sendEmailForgotPassword,
 };
