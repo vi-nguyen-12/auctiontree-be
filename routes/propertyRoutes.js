@@ -6,6 +6,7 @@ const {
   uploadAll,
   search,
   createNewEstates,
+  editProperty,
   getRealEstates,
   getRealEstate,
   getRealEstatesUpcomingAuctions,
@@ -16,6 +17,8 @@ const {
   approveProperty,
   disapproveProperty,
   verifyDocument,
+  verifyImage,
+  verifyVideo,
 } = require("../controller/propertyController");
 
 router.get("/search", search);
@@ -42,9 +45,12 @@ router.get("/notApproved", getRealEstatesApprovedOrNot);
 router.get("/approved", getRealEstatesApprovedOrNot);
 //this should be only for user is admin
 router.put("/:propertyId/documents/:documentId/status", verifyDocument);
+router.put("/:propertyId/images/:imageId/status", verifyImage);
+router.put("/:propertyId/videos/:videoId/status", verifyVideo);
 router.put("/:id/approved", approveProperty);
 router.put("/:id/disapproved", disapproveProperty);
 router.get("/:id", getRealEstate);
 router.get("/", getRealEstates);
 router.post("/", auth, createNewEstates);
+router.put("/:id", auth, editProperty);
 module.exports = router;

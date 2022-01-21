@@ -14,7 +14,7 @@ const createBuyer = async (req, res) => {
   try {
     const auction = await Auction.findOne({ _id: auctionId });
     if (!auction) {
-      return res.status(404).send("Auction not found");
+      return res.status(200).send({ error: "Auction not found" });
     }
 
     const isRegisteredAuction = await Buyer.findOne({
@@ -22,9 +22,9 @@ const createBuyer = async (req, res) => {
       userId: user._id,
     });
     if (isRegisteredAuction) {
-      return res
-        .status(404)
-        .send("This user is already registered to buy this property");
+      return res.status(200).send({
+        error: "This user is already registered to buy this property",
+      });
     }
 
     let checkQuestion = true;
@@ -41,13 +41,11 @@ const createBuyer = async (req, res) => {
     let questionsTotal = await Question.count();
     if (answers.length < questionsTotal) {
       let numOfMissingQuestion = questionsTotal - answers.length;
-      return res
-        .status(404)
-        .send(
-          `Missing answers ${numOfMissingQuestion} confidential ${
-            numOfMissingQuestion === 1 ? "question" : "questions"
-          }`
-        );
+      return res.status(200).send({
+        error: `Missing answers ${numOfMissingQuestion} confidential ${
+          numOfMissingQuestion === 1 ? "question" : "questions"
+        }`,
+      });
     }
 
     const newBuyer = new Buyer({
@@ -99,18 +97,18 @@ const approveBuyer = async (req, res) => {
     const buyer = await Buyer.findOne({ _id: req.params.id });
     //need to check questions ??
     if (!buyer) {
-      return res.status(400).send("Buyer not found");
+      return res.status(200).send({ error: "Buyer not found" });
     }
     if (!buyer.docusign.isSigned) {
       return res
         .status(200)
-        .send({ message: "Approved failed. Docusign is not signed" });
+        .send({ error: "Approved failed. Docusign is not signed" });
     }
     for (let document of buyer.documents) {
       if (document.isVerified !== "success") {
-        return res
-          .status(200)
-          .send({ message: "Approved failed. Document is not verified" });
+        return res.status(200).send({
+          error: `Approved failed. Document ${document.name} is not verified`,
+        });
       }
     }
     buyer.isApproved = true;
@@ -127,7 +125,7 @@ const disapproveBuyer = async (req, res) => {
   try {
     const buyer = await Buyer.findOne({ _id: req.params.id });
     if (!buyer) {
-      return res.status(400).send("Buyer not found");
+      return res.status(200).send({ error: "Buyer not found" });
     }
     buyer.isApproved = false;
     const savedBuyer = await buyer.save();
@@ -143,19 +141,19 @@ const disapproveBuyer = async (req, res) => {
 const verifyDocument = async (req, res) => {
   const { status } = req.body;
   if (status !== "pending" && status !== "success" && status !== "fail") {
-    return res.status(404).send({
-      message: "Status value must be 'pending' or 'success' or 'fail'",
+    return res.status(200).send({
+      error: "Status value must be 'pending' or 'success' or 'fail'",
     });
   }
   const { buyerId, documentId } = req.params;
   try {
     const buyer = await Buyer.findById(buyerId);
     if (!buyer) {
-      return res.status(404).send("Buyer not found");
+      return res.status(200).send({ error: "Buyer not found" });
     }
     const document = buyer.documents.id(documentId);
     if (!document) {
-      return res.status(404).send("Document not found");
+      return res.status(200).send({ error: "Document not found" });
     }
     document.isVerified = status;
     const savedDocument = await document.save();

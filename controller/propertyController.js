@@ -99,6 +99,12 @@ const createNewEstates = async (req, res) => {
   } = req.body;
   // const { rooms_count, beds_count, baths } = fields;
 
+  if (discussedAmount > reservedAmount) {
+    return res.status(200).send({
+      error: "Discussed amount must be less than or equal to reserved amount",
+    });
+  }
+
   const response = await axios.get(process.env.THIRD_PARTY_API, {
     params: { street_address, city, state },
   });
@@ -127,6 +133,56 @@ const createNewEstates = async (req, res) => {
   });
 
   res.status(200).send(savedNewEstates);
+};
+
+//@desc  Edit a property
+//@route PUT /api/properties/real-estates/:id body:{type, street_address, city, state, images, videos, documents, reservedAmount, discussedAmount}
+const editProperty = async (req, res) => {
+  const property = await Property.findById(req.params.id);
+  if (!property) return res.status(404).send("No property is found!");
+  const {
+    type,
+    street_address,
+    city,
+    state,
+    images,
+    videos,
+    documents,
+    reservedAmount,
+    discussedAmount,
+  } = req.body;
+  // const { rooms_count, beds_count, baths } = fields;
+
+  if (discussedAmount > reservedAmount) {
+    return res.status(200).send({
+      error: "Discussed amount must be less than or equal to reserved amount",
+    });
+  }
+
+  const response = await axios.get(process.env.THIRD_PARTY_API, {
+    params: { street_address, city, state },
+  });
+  console.log(response.data);
+
+  property.type = type;
+  property.street_address = street_address;
+  property.city = city;
+  property.state = state;
+  property.images = images;
+  property.videos = videos;
+  property.documents = documents;
+  property.reservedAmount = reservedAmount;
+  property.discussedAmount = discussedAmount;
+
+  const updatedProperty = property.save();
+  const { email } = await User.findOne({ _id: req.user.userId }, "email");
+  sendEmail({
+    email,
+    subject: "Auction 10X- Updating property",
+    text: "Thank you for updating your property. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
+  });
+
+  res.status(200).send(updatedProperty);
 };
 
 //@desc  List real estates (sorting by created date) by page and limit
@@ -336,8 +392,28 @@ const approveProperty = async (req, res) => {
   try {
     const property = await Property.findOne({ _id: req.params.id });
     if (!property) {
-      res.status(400).send("Property not found");
+      res.status(200).send({ error: "Property not found" });
     }
+
+    for (let image of property.images) {
+      if (image.isVerified !== "success")
+        return res
+          .status(200)
+          .send({ error: `Image ${image.name}is not verified` });
+    }
+    for (let video of property.videos) {
+      if (video.isVerified !== "success")
+        return res
+          .status(200)
+          .send({ error: `Video ${video.name}is not verified` });
+    }
+    for (let document of property.documents) {
+      if (document.isVerified !== "success")
+        return res
+          .status(200)
+          .send({ error: `Document ${document.name}is not verified` });
+    }
+
     property.isApproved = true;
     const savedProperty = await property.save();
     res.status(200).send(savedProperty);
@@ -351,7 +427,7 @@ const disapproveProperty = async (req, res) => {
   try {
     const property = await Property.findOne({ _id: req.params.id });
     if (!property) {
-      res.status(400).send("Property not found");
+      res.status(200).send({ error: "Property not found" });
     }
     property.isApproved = false;
     const savedProperty = await property.save();
@@ -397,12 +473,85 @@ const verifyDocument = async (req, res) => {
   }
 };
 
+//@desc  Verify a video
+//@route PUT /:propertyId/videos/:videoId/status"
+const verifyVideo = async (req, res) => {
+  const { status } = req.body;
+  if (status !== "pending" && status !== "success" && status !== "fail") {
+    return res.status(404).send({
+      message: "Status value must be 'pending' or 'success' or 'fail'",
+    });
+  }
+  const { propertyId, videoId } = req.params;
+  console.log(videoId);
+
+  try {
+    const property = await Property.findById(propertyId);
+    if (!property) {
+      return res.status(404).send("Property not found");
+    }
+    const video = property.videos.id(videoId);
+    if (!video) {
+      return res.status(404).send("Video not found");
+    }
+    video.isVerified = status;
+    const savedVideo = await video.save({ suppressWarning: true });
+    const savedProperty = await property.save();
+    const data = {
+      _id: savedVideo._id,
+      name: savedVideo.name,
+      url: savedVideo.url,
+      isVerified: savedVideo.isVerified,
+      propertyId: savedProperty._id,
+    };
+    res.status(200).send(data);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+//@desc  Verify an image
+//@route PUT /:propertyId/images/:imageId/status"
+const verifyImage = async (req, res) => {
+  const { status } = req.body;
+  if (status !== "pending" && status !== "success" && status !== "fail") {
+    return res.status(404).send({
+      message: "Status value must be 'pending' or 'success' or 'fail'",
+    });
+  }
+  const { propertyId, imageId } = req.params;
+
+  try {
+    const property = await Property.findById(propertyId);
+    if (!property) {
+      return res.status(404).send("Property not found");
+    }
+    const image = property.images.id(imageId);
+    if (!image) {
+      return res.status(404).send("Image not found");
+    }
+    image.isVerified = status;
+    const savedImage = await image.save({ suppressWarning: true });
+    const savedProperty = await property.save();
+    const data = {
+      _id: savedImage._id,
+      name: savedImage.name,
+      url: savedImage.url,
+      isVerified: savedImage.isVerified,
+      propertyId: savedProperty._id,
+    };
+    res.status(200).send(data);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+
 module.exports = {
   uploadS3,
   upload,
   uploadAll,
   search,
   createNewEstates,
+  editProperty,
   getRealEstates,
   getRealEstate,
   getRealEstatesUpcomingAuctions,
@@ -413,4 +562,6 @@ module.exports = {
   disapproveProperty,
   getRealEstatesApprovedNotAuction,
   verifyDocument,
+  verifyImage,
+  verifyVideo,
 };

@@ -22,8 +22,8 @@ const createAuction = async (req, res) => {
     const isPropertyInAuction = await Auction.findOne({ propertyId });
     if (isPropertyInAuction) {
       return res
-        .status(400)
-        .send("This property is already created for auction");
+        .status(200)
+        .send({ error: "This property is already created for auction" });
     }
 
     const registerStartDate = new Date(registerStartDateISOString);
@@ -31,32 +31,33 @@ const createAuction = async (req, res) => {
     const auctionStartDate = new Date(auctionStartDateISOString);
     const auctionEndDate = new Date(auctionEndDateISOString);
 
-    const property = await Property.findOne({ _id: req.body.propertyId });
+    const property = await Property.findOne({
+      _id: req.body.propertyId,
+    }).populate("createdBy");
 
     if (!property) {
-      return res.status(400).send("Property not found");
+      return res.status(200).send({ error: "Property not found" });
     }
     if (!property.isApproved) {
-      return res.status(400).send("Property is not approved");
+      return res.status(200).send({ error: "Property is not approved" });
     }
+
     if (registerStartDate.getTime() >= registerEndDate.getTime()) {
-      return res
-        .status(400)
-        .send(
-          "Register end time is earlier than or equal to register start time"
-        );
+      return res.status(200).send({
+        error:
+          "Register end time is earlier than or equal to register start time",
+      });
     }
     if (auctionStartDate.getTime() >= auctionEndDate.getTime()) {
-      return res
-        .status(400)
-        .send(
-          "Auction end time is earlier than or equal to auction start time"
-        );
+      return res.status(200).send({
+        error:
+          "Auction end time is earlier than or equal to auction start time",
+      });
     }
     if (registerEndDate.getTime() > auctionStartDate.getTime()) {
-      return res
-        .status(400)
-        .send("Auction start time is earlier than register end time");
+      return res.status(200).send({
+        error: "Auction start time is earlier than register end time",
+      });
     }
     const newAuction = new Auction({
       propertyId: property._id,
@@ -68,11 +69,103 @@ const createAuction = async (req, res) => {
       incrementAmount,
     });
     const savedAuction = await newAuction.save();
+
+    let email = property.createdBy.email;
+    let subject = "Auction10X - Create an auction for your property";
+    let text = `We create an auction for your property with starting register date ${registerStartDate} and auction start date ${auctionStartDate}.
+    Starting bid is ${startingBid} and increment amount is ${incrementAmount}
+     `;
+    sendEmail({ email, subject, text });
     res.status(200).send(savedAuction);
   } catch (err) {
     res.status(500).send(err);
   }
 };
+
+//@desc  Edit an auction
+//@route PUT api/auctions/:id  body:{propertyId, registerStartDate,registerEndDate,auctionStartDate,auctionEndDate,startingBid,incrementAmount}  all dates are in ISOString format
+
+const editAuction = async (req, res) => {
+  const auction = await Auction.findById(req.params.id);
+  if (!auction) return res.status(200).send({ error: "Auction not found!" });
+  const {
+    propertyId,
+    registerStartDate: registerStartDateISOString,
+    registerEndDate: registerEndDateISOString,
+    auctionStartDate: auctionStartDateISOString,
+    auctionEndDate: auctionEndDateISOString,
+    startingBid,
+    incrementAmount,
+  } = req.body;
+  try {
+    const auctionWithPropertyId = await Auction.findOne({ propertyId });
+    if (
+      auctionWithPropertyId !== null &&
+      auctionWithPropertyId._id !== auction._id
+    ) {
+      return res
+        .status(200)
+        .send({ error: "This property is already created for auction" });
+    }
+
+    const registerStartDate = new Date(registerStartDateISOString);
+    const registerEndDate = new Date(registerEndDateISOString);
+    const auctionStartDate = new Date(auctionStartDateISOString);
+    const auctionEndDate = new Date(auctionEndDateISOString);
+
+    const property = await Property.findOne({ _id: req.body.propertyId });
+
+    if (!property) {
+      return res.status(200).send({ error: "Property not found" });
+    }
+    if (!property.isApproved) {
+      return res.status(200).send({ error: "Property is not approved" });
+    }
+    if (registerStartDate.getTime() >= registerEndDate.getTime()) {
+      return res.status(200).send({
+        error:
+          "Register end time is earlier than or equal to register start time",
+      });
+    }
+    if (auctionStartDate.getTime() >= auctionEndDate.getTime()) {
+      return res.status(200).send({
+        error:
+          "Auction end time is earlier than or equal to auction start time",
+      });
+    }
+    if (registerEndDate.getTime() > auctionStartDate.getTime()) {
+      return res.status(200).send({
+        error: "Auction start time is earlier than register end time",
+      });
+    }
+    auction.propertyId = property._id;
+    auction.registerStartDate = registerStartDate;
+    auction.registerEndDate = registerEndDate;
+    auction.auctionStartDate = auctionStartDate;
+    auction.auctionEndDate = auctionEndDate;
+    auction.startingBid = startingBid;
+    auction.incrementAmount = incrementAmount;
+
+    const updatedAuction = await auction.save();
+    res.status(200).send(updatedAuction);
+  } catch (err) {
+    res.status(500).send(err);
+  }
+};
+
+//@desc  Delete an auction
+//@route DELETE api/auctions/:id
+const deleteAuction = async (req, res) => {
+  const auction = await Auction.findById(req.params.id);
+  if (!auction) return res.status(200).send({ error: "Auction not found!" });
+  try {
+    await Auction.deleteOne({ _id: auction._id });
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+
 //@desc  Get information of auction
 //@route GET /api/auctions/:id
 //@route GET /api/auction/propertyId/:propertyId
@@ -86,7 +179,9 @@ const getAuction = async (req, res) => {
       auction = await Auction.findOne({ _id: req.params.id });
     }
     if (!auction) {
-      return res.status(400).send("Auction for this property is not found");
+      return res
+        .status(200)
+        .send({ error: "Auction for this property is not found" });
     }
     const property = await Property.findOne({ _id: auction.propertyId });
     const { numberOfBids, highestBid, highestBidders } =
@@ -215,7 +310,9 @@ const getOngoingAuctionsOfRealEstates = async (req, res) => {
 const getRealEstateAuctionsStatusBuyer = async (req, res) => {
   const { buyer } = req.query;
   if (!buyer) {
-    return res.status(403).send("Please specify if user is buyer or seller");
+    return res
+      .status(200)
+      .send({ error: "Please specify if user is buyer or seller" });
   }
   try {
     const registeredList = await Buyer.find({ userId: req.user.userId });
@@ -223,7 +320,7 @@ const getRealEstateAuctionsStatusBuyer = async (req, res) => {
     if (registeredList.length === 0) {
       return res
         .status(200)
-        .send("This user has not register to buy any property");
+        .send({ error: "This user has not register to buy any property" });
     }
     for (let item of registeredList) {
       const auction = await Auction.findOne({ _id: item.auctionId });
@@ -264,25 +361,25 @@ const placeBidding = async (req, res) => {
   try {
     const buyer = await Buyer.findOne({ userId: req.user.userId });
     if (!buyer) {
-      return res.status(400).send("User did not register to buy");
+      return res.status(200).send({ error: "User did not register to buy" });
     }
     if (!buyer.isApproved) {
-      return res.status(400).send("User is not approved to bid yet");
+      return res.status(200).send({ error: "User is not approved to bid yet" });
     }
 
     const auction = await Auction.findOne({ _id: auctionId });
     if (!auction) {
-      return res.status(400).send("Auction not found");
+      return res.status(200).send({ error: "Auction not found" });
     }
 
     const property = await Property.findOne({ _id: auction.propertyId });
 
     //check bidding time
     if (biddingTime.getTime() < auction.auctionStartDate.getTime()) {
-      return res.status(400).send("Auction is not started yet");
+      return res.status(200).send({ error: "Auction is not started yet" });
     }
     if (biddingTime.getTime() > auction.auctionEndDate.getTime()) {
-      return res.status(400).send("Auction has now ended");
+      return res.status(200).send({ error: "Auction has now ended" });
     }
 
     //check bidding price
@@ -292,13 +389,13 @@ const placeBidding = async (req, res) => {
         : auction.bids.slice(-1)[0].amount;
     if (biddingPrice <= highestBid) {
       return res
-        .status(400)
-        .send("Bidding price is less than or equal to highest bid");
+        .status(200)
+        .send({ error: "Bidding price is less than or equal to highest bid" });
     }
     if (biddingPrice < highestBid + auction.incrementAmount) {
-      return res
-        .status(400)
-        .send("Bidding price is less than the minimum bid increment");
+      return res.status(200).send({
+        error: "Bidding price is less than the minimum bid increment",
+      });
     }
 
     //send email;
@@ -365,7 +462,7 @@ const getAuctionResult = async (req, res) => {
   try {
     const auction = await Auction.findOne({ _id: req.params.id });
     if (!auction) {
-      return res.status(404).send("Auction not found!");
+      return res.status(200).send({ error: "Auction not found!" });
     }
 
     if (auction.winner.userId) {
@@ -450,4 +547,6 @@ module.exports = {
   getOngoingAuctionsOfRealEstates,
   getRealEstateAuctionsStatusBuyer,
   getAuctionResult,
+  editAuction,
+  deleteAuction,
 };
