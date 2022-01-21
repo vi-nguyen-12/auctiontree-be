@@ -18,7 +18,6 @@ const createAuction = async (req, res) => {
     incrementAmount,
   } = req.body;
   try {
-    console.log(propertyId, startingBid, incrementAmount);
     const isPropertyInAuction = await Auction.findOne({ propertyId });
     if (isPropertyInAuction) {
       return res

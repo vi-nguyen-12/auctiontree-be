@@ -66,37 +66,35 @@ const verify = async (req, res) => {
       token,
       time: 300,
     });
-
-    if (verified) {
-      user.isActive = true;
-      await user.save();
-
-      sendEmail({
-        email: user.email,
-        subject: "Auction 10X Successful Registration",
-        text: `Hi ${user.firstName} ${user.lastName}, We are delighted to have you join us. Welcome to AUCTION10X. Your email has been successfully verified. Thanks. The Auction10X Team`,
-      });
-
-      return res.json({
-        message: "User has been successfully verified",
-        data: {
-          _id: user.id,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          userName: user.userName,
-          email: user.email,
-          phone: user.phone,
-          country: user.country,
-          city: user.city,
-          isActive: user.isActive,
-          KYC: user.isKYC,
-        },
-      });
-    } else {
-      return res.json({ message: "User has not verified yet" });
+    if (!verified) {
+      return res.status(200).send({ error: "Invalid code" });
     }
+    user.isActive = true;
+    await user.save();
+
+    sendEmail({
+      email: user.email,
+      subject: "Auction 10X Successful Registration",
+      text: `Hi ${user.firstName} ${user.lastName}, We are delighted to have you join us. Welcome to AUCTION10X. Your email has been successfully verified. Thanks. The Auction10X Team`,
+    });
+
+    return res.status(200).send({
+      message: "User has been successfully verified",
+      data: {
+        _id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        userName: user.userName,
+        email: user.email,
+        phone: user.phone,
+        country: user.country,
+        city: user.city,
+        isActive: user.isActive,
+        KYC: user.isKYC,
+      },
+    });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return res.status(500).send(error.message);
   }
 };
 
@@ -114,7 +112,7 @@ const login = async (req, res) => {
 
     const validPass = await bcrypt.compare(req.body.password, user.password);
     if (!validPass) {
-      return res.status(200).send({ error: "Invalid password" });
+      return res.status(200).send({ error: "Invalid email or password" });
     }
     if (!user.isActive) {
       return res.status(200).send({ error: "User has not been verified" });
@@ -145,24 +143,6 @@ const login = async (req, res) => {
         KYC: user.isKYC,
       },
     });
-  } catch (error) {
-    res.status(500).send(error.message);
-  }
-};
-
-////@desc  Check JWT
-//@route POST /api/users/verifyJWT data:{authToken}
-const checkJWT = async (req, res) => {
-  try {
-    const token = req.body.authToken;
-    const verified = jwt.verify(token, process.env.TOKEN_KEY);
-
-    if (verified) {
-      const user = await User.findOne({ _id: verified.userId });
-      return res.status(200).send({ message: "User Logged In", user });
-    } else {
-      return res.status(200).send({ message: "User not logged in" });
-    }
   } catch (error) {
     res.status(500).send(error.message);
   }
@@ -233,7 +213,6 @@ module.exports = {
   registerUser,
   login,
   logout,
-  checkJWT,
   verify,
   getUserByBuyerId,
   getUserByPropertyId,
