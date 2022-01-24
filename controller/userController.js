@@ -8,7 +8,7 @@ const sgMail = require("@sendgrid/mail");
 const { sendEmail } = require("../helper");
 
 //@desc  Register a new user & create secret
-//@route POST /api/user/register
+//@route POST /api/users/register
 const registerUser = async (req, res) => {
   try {
     const userExist = await User.findOne({
@@ -46,7 +46,7 @@ const registerUser = async (req, res) => {
       subject: "Auction 10X- Confirm email",
       text: `Please click here to confirm your email: http://localhost:3000/confirm_email&?token=${token}`,
     });
-    res.send({
+    res.status(200).send({
       userId: savedUser._id,
       message: "Confirm link sent successfully",
     });
@@ -56,7 +56,7 @@ const registerUser = async (req, res) => {
 };
 
 // @desc  Verify token and activate user
-// @route POST /api/users/verify body {token}
+// @route POST /api/users/confirmation/verify body {token}
 const verify = async (req, res) => {
   const { token } = req.body;
   try {
@@ -107,6 +107,34 @@ const verify = async (req, res) => {
     });
   } catch (error) {
     return res.status(500).send(error.message);
+  }
+};
+
+// @desc  Resend link to confirm email
+// @route POST /api/users/confirmation/email body {email}
+const sendConfirmEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) return res.status(200).send({ error: "Email not found" });
+    const token = speakeasy.totp({
+      secret: user.secret.base32,
+      encoding: "base32",
+      time: 300,
+    });
+    user.temp_token = token;
+    const savedUser = await user.save();
+    sendEmail({
+      email: user.email,
+      subject: "Auction 10X- Confirm email",
+      text: `Please click here to confirm your email: http://localhost:3000/confirm_email&?token=${token}`,
+    });
+    res.status(200).send({
+      userId: savedUser._id,
+      message: "Confirm link sent successfully",
+    });
+  } catch (err) {
+    res.status(500).send(err.message);
   }
 };
 
@@ -298,9 +326,6 @@ const resetForgotPassword = async (req, res) => {
   }
 };
 
-//@desc  Change password
-//@route POST /api/users/password data:{email}
-
 module.exports = {
   registerUser,
   login,
@@ -310,4 +335,5 @@ module.exports = {
   getUserByPropertyId,
   checkJWT,
   resetForgotPassword,
+  sendConfirmEmail,
 };
