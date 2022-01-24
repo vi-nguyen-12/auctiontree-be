@@ -8,9 +8,9 @@ const checkKyc = async (req, res, next) => {
   } else {
     const kyc = await Kyc.findOne({ userId: req.user.userId });
     if (!kyc) {
-      return res.status(400).send("User not started Kyc yet");
+      return res.status(200).send({ error: "User not started Kyc yet" });
     }
-    res.status(400).send(`Kyc status: ${kyc.status}`);
+    res.status(200).send({ error: `Kyc status: ${kyc.status}` });
   }
 };
 module.exports = { checkKyc };

@@ -53,11 +53,6 @@ const createAuction = async (req, res) => {
           "Auction end time is earlier than or equal to auction start time",
       });
     }
-    if (registerEndDate.getTime() > auctionStartDate.getTime()) {
-      return res.status(200).send({
-        error: "Auction start time is earlier than register end time",
-      });
-    }
     const newAuction = new Auction({
       propertyId: property._id,
       registerStartDate,
@@ -372,6 +367,11 @@ const placeBidding = async (req, res) => {
     }
 
     const property = await Property.findOne({ _id: auction.propertyId });
+
+    //check wallet is sufficient
+    if (buyer.walletAmount < biddingPrice) {
+      return res.status.error({ error: "Wallet is insufficient for bid" });
+    }
 
     //check bidding time
     if (biddingTime.getTime() < auction.auctionStartDate.getTime()) {

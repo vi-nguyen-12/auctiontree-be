@@ -243,34 +243,66 @@ const getUserByPropertyId = async (req, res) => {
 //@desc  KYC is approved, send email notification
 //@route POST /api/users/login
 
-//@desc  Send email for forgot password
-//@route PUT /api/users/password data:{email}
-const sendEmailForgotPassword = async (req, res) => {
-  const email = req.body.email;
+//@desc  Reset forgot password
+//@route POST /api/users/password data:{email}
+//@route POST /api/users/password data:{token, password}
+//@route POST /api/users/password data:{old,new}
+
+const resetForgotPassword = async (req, res) => {
   try {
-    const user = await User.findOne({ email });
-    if (!user)
-      return res
-        .status(200)
-        .send({ error: "Email is not registed for an account" });
-    const token = speakeasy.totp({
-      secret: user.secret.base32,
-      encoding: "base32",
-      time: 300,
-    });
-    sendEmail({
-      email,
-      subject: "Auction10X- Reset password",
-      text: `Code for verify email: ${token}`,
-    });
-    res.status(200).send({ message: "Sent code to email" });
+    const { email, token, password } = req.body;
+    if (email) {
+      const user = await User.findOne({ email });
+      if (!user)
+        return res
+          .status(200)
+          .send({ error: "Email is not registed for an account" });
+      const token = speakeasy.totp({
+        secret: user.secret.base32,
+        encoding: "base32",
+        time: 300,
+      });
+      user.temp_token = token;
+      await user.save();
+      sendEmail({
+        email,
+        subject: "Auction10X- Reset password",
+        text: `Please click here to reset password: http://localhost:3000/reset_password?token=${token}`,
+      });
+      return res.status(200).send({ message: "Reset link sent successfully" });
+    }
+    if (token & password) {
+      const user = await User.findOne({ temp_token: token });
+      if (!user) {
+        return res.status(200).send({
+          error: "Invalid or expired token",
+        });
+      }
+      const { base32: secret } = user.secret;
+      const verified = speakeasy.totp.verify({
+        secret,
+        encoding: "base32",
+        token,
+        time: 300,
+      });
+      if (!verified) {
+        return res.status(200).send({
+          error: "Invalid or expired token",
+        });
+      }
+      const salt = await bcrypt.genSaltSync(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+      user.password = hashedPassword;
+      await user.save();
+      res.status(200).send({ message: "Reset password successfully" });
+    }
   } catch (err) {
     res.status(500).send(err.message);
   }
 };
 
-//@desc  Reset password
-//@route POST /api/users/sendEmailResetPassword data:{email, token, password}
+//@desc  Change password
+//@route POST /api/users/password data:{email}
 
 module.exports = {
   registerUser,
@@ -280,5 +312,5 @@ module.exports = {
   getUserByBuyerId,
   getUserByPropertyId,
   checkJWT,
-  sendEmailForgotPassword,
+  resetForgotPassword,
 };
