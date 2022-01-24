@@ -127,7 +127,7 @@ const sendConfirmEmail = async (req, res) => {
     sendEmail({
       email: user.email,
       subject: "Auction 10X- Confirm email",
-      text: `Please click here to confirm your email: http://localhost:3000/confirm_email&?token=${token}`,
+      text: `Please click here to confirm your email: http://localhost:3000/confirm_email?token=${token}`,
     });
     res.status(200).send({
       userId: savedUser._id,
