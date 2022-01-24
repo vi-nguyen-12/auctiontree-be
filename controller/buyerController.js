@@ -9,6 +9,7 @@ const { sendEmail } = require("../helper");
 //@route POST /api/buyers body:{auctionId, documents, docusign,TC, answers:[{questionId, answer: "yes"/"no"}] } TC:ISOString format
 const createBuyer = async (req, res) => {
   const user = await User.findOne({ _id: req.user.userId });
+
   const { auctionId, documents, docusign, TC, answers } = req.body;
   // const timeOfTC = new Date(TC);
   try {
@@ -91,10 +92,13 @@ const createBuyer = async (req, res) => {
 };
 
 //@desc  Approve a buyer
-//@route PUT /api/buyers/:id/approved
+//@route PUT /api/buyers/:id/approved body: {walletAmount:...}
 const approveBuyer = async (req, res) => {
+  const { walletAmount } = req.body;
   try {
-    const buyer = await Buyer.findOne({ _id: req.params.id });
+    const buyer = await Buyer.findOne({ _id: req.params.id }).populate(
+      "userId"
+    );
     //need to check questions ??
     if (!buyer) {
       return res.status(200).send({ error: "Buyer not found" });
@@ -111,7 +115,13 @@ const approveBuyer = async (req, res) => {
         });
       }
     }
+    sendEmail({
+      email: buyer.userId.email,
+      subject: "Auction10X- Buyer Application Approved",
+      text: `Congratulation, your application application is approved with $${walletAmount} in your wallet. This amount is available for your bidding.`,
+    });
     buyer.isApproved = true;
+    buyer.walletAmount = walletAmount;
     const savedBuyer = await buyer.save();
     res.status(200).send(savedBuyer);
   } catch (error) {
@@ -120,14 +130,23 @@ const approveBuyer = async (req, res) => {
 };
 
 //@desc  Disapprove a buyer
-//@route PUT /api/buyers/:id/disapproved
+//@route PUT /api/buyers/:id/disapproved body: {rejectedReason: ... }
 const disapproveBuyer = async (req, res) => {
+  const { rejectedReason } = req.body;
   try {
-    const buyer = await Buyer.findOne({ _id: req.params.id });
+    const buyer = await Buyer.findOne({ _id: req.params.id }).populate(
+      "userId"
+    );
     if (!buyer) {
       return res.status(200).send({ error: "Buyer not found" });
     }
+    sendEmail({
+      email: buyer.userId.email,
+      subject: "Auction10x: Reject buyer application",
+      text: rejectedReason,
+    });
     buyer.isApproved = false;
+    buyer.rejectedReason = rejectedReason;
     const savedBuyer = await buyer.save();
     res.status(200).send(savedBuyer);
   } catch (error) {

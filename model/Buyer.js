@@ -40,6 +40,8 @@ const buyerSchema = new Schema(
       IPAddress: { type: String, required: true },
     },
     isApproved: { type: Boolean, default: false },
+    walletAmount: Number,
+    rejectedReason: String,
   },
   { timestamp: true }
 );
