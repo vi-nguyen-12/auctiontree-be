@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema({
   secret: { type: Object },
   isActive: { type: Boolean, required: true, default: false },
   KYC: { type: Boolean, required: true, default: false },
+  temp_token: String,
 });
 
 module.exports = mongoose.model("User", userSchema);
