@@ -10,56 +10,59 @@ const { sendEmail } = require("../helper");
 //@desc  Register a new user & create secret
 //@route POST /api/user/register
 const registerUser = async (req, res) => {
-  const userExist = await User.findOne({
-    $or: [{ email: req.body.email }, { userName: req.body.userName }],
-  });
-  if (userExist) {
-    return res
-      .status(200)
-      .send({ error: "Email or user name is already exists" });
-  }
-
-  const salt = await bcrypt.genSaltSync(10);
-  const hashedPassword = await bcrypt.hash(req.body.password, salt);
-  const temp_secret = speakeasy.generateSecret();
-  const user = new User({
-    firstName: req.body.firstName,
-    lastName: req.body.lastName,
-    email: req.body.email,
-    phone: req.body.phone,
-    password: hashedPassword,
-    userName: req.body.userName,
-    country: req.body.country,
-    city: req.body.city,
-    secret: temp_secret,
-  });
-
   try {
-    const savedUser = await user.save();
+    const userExist = await User.findOne({
+      $or: [{ email: req.body.email }, { userName: req.body.userName }],
+    });
+    if (userExist) {
+      return res
+        .status(200)
+        .send({ error: "Email or user name is already exists" });
+    }
+
+    const salt = await bcrypt.genSaltSync(10);
+    const hashedPassword = await bcrypt.hash(req.body.password, salt);
+    const secret = speakeasy.generateSecret();
     const token = speakeasy.totp({
-      secret: savedUser.secret.base32,
+      secret: secret.secret.base32,
       encoding: "base32",
       time: 300,
     });
+    const user = new User({
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      email: req.body.email,
+      phone: req.body.phone,
+      password: hashedPassword,
+      userName: req.body.userName,
+      country: req.body.country,
+      city: req.body.city,
+      secret,
+      temp_token: token,
+    });
+    const savedUser = await user.save();
     sendEmail({
       email: user.email,
-      subject: "Auction 10X Register",
-      text: `Verify Code: ${token}`,
+      subject: "Auction 10X- Confirm email",
+      text: `Please click here to confirm your email: http://localhost:3000/confirm_email&?token=${token}`,
     });
-    res.send({ userId: savedUser._id, secret: savedUser.secret });
+    res.send({
+      userId: savedUser._id,
+      message: "Confirm link sent successfully",
+    });
   } catch (err) {
     res.status(500).send(err.message);
   }
 };
 
 // @desc  Verify token and activate user
-// @route POST /api/users/verify
+// @route POST /api/users/verify body {token}
 const verify = async (req, res) => {
-  const { token, email } = req.body;
+  const { token } = req.body;
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ temp_token: token });
     if (!user) {
-      return res.status(200).send({ error: "Email not found" });
+      return res.status(200).send({ error: "Invalid or expired token" });
     }
     const { base32: secret } = user.secret;
 
@@ -75,17 +78,10 @@ const verify = async (req, res) => {
         encoding: "base32",
         time: 300,
       });
-      sendEmail({
-        email: user.email,
-        subject: "Auction 10X Register",
-        text: `Verify Code: ${token}`,
-      });
-
-      return res
-        .status(200)
-        .send({ error: "Invalid code. Check email for new code" });
+      return res.status(200).send({ error: "Invalid or expired token" });
     }
     user.isActive = true;
+    user.temp_token = undefined;
     await user.save();
 
     sendEmail({
@@ -293,6 +289,7 @@ const resetForgotPassword = async (req, res) => {
       const salt = await bcrypt.genSaltSync(10);
       const hashedPassword = await bcrypt.hash(password, salt);
       user.password = hashedPassword;
+      user.temp_token = undefined;
       await user.save();
       res.status(200).send({ message: "Reset password successfully" });
     }
