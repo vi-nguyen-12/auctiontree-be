@@ -48,7 +48,13 @@ const propertySchema = new Schema(
     ],
     reservedAmount: { type: Number, required: true },
     discussedAmount: { type: Number, required: true },
-    isApproved: { type: Boolean, default: false },
+    isApproved: {
+      type: String,
+      required: true,
+      enum: ["pending", "success", "fail"],
+      default: "pending",
+    },
+    rejectedReason: String,
   },
   { timestamps: true }
 );

@@ -1,4 +1,5 @@
 const router = require("express").Router();
+const { auth } = require("../middleware/verifyToken");
 const {
   registerUser,
   login,
@@ -9,6 +10,8 @@ const {
   checkJWT,
   resetForgotPassword,
   sendConfirmEmail,
+  suspendUserAccount,
+  deleteUserAccount,
 } = require("../controller/userController");
 
 router.route("/register").post(registerUser);
@@ -18,7 +21,11 @@ router.post("/confirmation/email", sendConfirmEmail);
 router.post("/confirmation/verify", verify);
 router.post("/checkJWT", checkJWT);
 router.post("/password", resetForgotPassword);
-//only allow for admin user
+//only for login user
+router.put("/:id?suspended=true", auth, suspendUserAccount);
+router.put("/:id?suspended=false", auth, suspendUserAccount);
+router.delete("/:id", auth, deleteUserAccount);
+//only for admin
 router.get("/buyerId/:buyerId", getUserByBuyerId);
 router.get("/propertyId/:propertyId", getUserByPropertyId);
 

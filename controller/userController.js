@@ -1,6 +1,8 @@
 const User = require("../model/User");
 const Buyer = require("../model/Buyer");
 const Property = require("../model/Property");
+const Auction = require("../model/Auction");
+const Kyc = require("../model/Kyc");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const speakeasy = require("speakeasy");
@@ -326,6 +328,58 @@ const resetForgotPassword = async (req, res) => {
   }
 };
 
+//deactivate user account and other related data,
+//@route PUT /api/users/:id?suspended=true
+//@route PUT /api/users/:id?suspended=false
+const suspendUserAccount = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+    if (!user) return res.status(200).send({ error: "User not found" });
+    const { suspended } = req.query;
+    if (suspended === "true") {
+      user.isSuspended = true;
+      await User.save(user);
+      return res.status(200).send({ message: "User is now suspended" });
+    }
+    if (suspended === "false") {
+      user.isSuspended = false;
+      await User.save();
+      return res.status(200).send({ message: "User is now activated" });
+    }
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+
+//delete user account and other related data, totally complete
+//@route DELETE /api/users/:id
+const deleteUserAccount = async (req, res) => {
+  try {
+    const { id: userId } = req.params;
+    const deletedUser = await User.deleteOne({ _id: userId });
+    if (deletedUser.deletedCount === 0) {
+      return res.status(200).send({ error: "User not found" });
+    }
+    //delete Kyc
+    await Kyc.deleteOne({ userId });
+
+    //delete properties created by this user & related auctions
+    const properties = await Property.find({ createdBy: userId });
+
+    for (let property of properties) {
+      await Auction.deleteOne({ propertyId: property.id });
+      await Property.deleteOne({ _id: property.id });
+    }
+
+    // delete buyers initiated by this user
+    await Buyer.deleteMany({ userId });
+    res.status(200).send({ message: "User account successfully deleted" });
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+
 module.exports = {
   registerUser,
   login,
@@ -336,4 +390,6 @@ module.exports = {
   checkJWT,
   resetForgotPassword,
   sendConfirmEmail,
+  suspendUserAccount,
+  deleteUserAccount,
 };

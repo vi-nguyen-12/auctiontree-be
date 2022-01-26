@@ -39,7 +39,12 @@ const buyerSchema = new Schema(
       time: { type: String, required: true },
       IPAddress: { type: String, required: true },
     },
-    isApproved: { type: Boolean, default: false },
+    isApproved: {
+      type: String,
+      required: true,
+      enum: ["pending", "success", "fail"],
+      default: "pending",
+    },
     walletAmount: Number,
     rejectedReason: String,
   },

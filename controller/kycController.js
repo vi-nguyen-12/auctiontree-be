@@ -1,4 +1,4 @@
-const Kyc = require("../model/kyc");
+const Kyc = require("../model/Kyc");
 const User = require("../model/User");
 const axios = require("axios");
 const uuid = require("uuid/v4");

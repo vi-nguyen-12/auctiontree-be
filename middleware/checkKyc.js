@@ -1,5 +1,5 @@
 const User = require("../model/User");
-const Kyc = require("../model/kyc");
+const Kyc = require("../model/Kyc");
 
 const checkKyc = async (req, res, next) => {
   const user = await User.findOne({ _id: req.user.userId });

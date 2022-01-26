@@ -14,6 +14,7 @@ const userSchema = new mongoose.Schema({
   isActive: { type: Boolean, required: true, default: false },
   KYC: { type: Boolean, required: true, default: false },
   temp_token: String,
+  isSuspended: { type: Boolean, required: true, default: false },
 });
 
 module.exports = mongoose.model("User", userSchema);

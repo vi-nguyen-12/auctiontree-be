@@ -37,7 +37,7 @@ const createAuction = async (req, res) => {
     if (!property) {
       return res.status(200).send({ error: "Property not found" });
     }
-    if (!property.isApproved) {
+    if (property.isApproved !== "success") {
       return res.status(200).send({ error: "Property is not approved" });
     }
 
@@ -154,7 +154,7 @@ const deleteAuction = async (req, res) => {
   if (!auction) return res.status(200).send({ error: "Auction not found!" });
   try {
     await Auction.deleteOne({ _id: auction._id });
-    res.status(204).send();
+    res.status(204).send({ message: "Auction deleted successfully" });
   } catch (err) {
     res.status(500).send(err.message);
   }
@@ -357,7 +357,7 @@ const placeBidding = async (req, res) => {
     if (!buyer) {
       return res.status(200).send({ error: "User did not register to buy" });
     }
-    if (!buyer.isApproved) {
+    if (!buyer.isApproved === "success") {
       return res.status(200).send({ error: "User is not approved to bid yet" });
     }
 
