@@ -95,13 +95,16 @@ const getAccessToken = async () => {
     "LbFg9/h+/NyJRtQb3mmQ/dx7/WHlfL1I6Vo+MznCZwFafQcjDnEdqA==" +
     "\n" +
     "-----END RSA PRIVATE KEY-----";
+  let now = new Date();
+  let iat = now.getTime();
+  let exp = now.setHours(now.getHours() + 1);
   const token = jwt.sign(
     {
       iss: "54bc1507-9cbe-4119-916f-ec1073bf7b48",
       sub: "d723cffd-8517-4977-9441-0ed3710626fa",
       aud: "account-d.docusign.com",
-      iat: 1641531692851,
-      exp: 1673068440,
+      iat,
+      exp,
       scope: "signature",
     },
     privateKey,

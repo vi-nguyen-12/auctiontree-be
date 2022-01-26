@@ -186,56 +186,45 @@ const editProperty = async (req, res) => {
 };
 
 //@desc  List real estates (sorting by created date) by page and limit
+//@desc filter by: ?status=... & inAuction=true
 //@route GET /api/properties/real-estates
 const getRealEstates = async (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const results = await Property.find({ type: "real-estate" })
-    .sort({
-      createdAt: -1,
-    })
-    .skip((page - 1) * limit)
-    .limit(limit);
-  res.status(200).send(results);
-};
-
-//@desc  Get real estates not approved
-//@route GET /api/properties/real-estates/notApproved
-//@route GET /api/properties/real-estates/approved
-const getRealEstatesApprovedOrNot = async (req, res) => {
-  const url = req.originalUrl;
-  let isApproved;
-  if (url.includes("approved")) {
-    isApproved = true;
-  } else if (url.includes("notApproved")) {
-    isApproved = false;
-  }
   try {
-    const data = await Property.find({
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const { inAuction, status: isApproved } = req.query;
+    const filters = {
       type: "real-estate",
-      isApproved,
-    }).sort({
-      createdAt: -1,
-    });
-    res.status(200).send(data);
-  } catch (error) {
-    res.status(500).send(error.message);
-  }
-};
-//@desc  Get real estates :approved & not in auction
-//@route GET /api/properties/real-estates/approved/notAuction
-const getRealEstatesApprovedNotAuction = async (req, res) => {
-  let result = [];
-  const approvedReaEstates = await Property.find({
-    type: "real-estate",
-    isApproved: true,
-  });
-  for (let item of approvedReaEstates) {
-    if (!(await Auction.findOne({ propertyId: item._id }))) {
-      result.push(item);
+    };
+    if (isApproved) {
+      filters.isApproved = isApproved;
     }
+    let properties = [];
+    if (inAuction === "true") {
+      const auctions = await Auction.find().select("propertyId");
+      const propertyIds = auctions.map((auction) => auction.propertyId);
+      properties = await Property.find({ _id: propertyIds })
+        .find(filters)
+        .sort({
+          createdAt: -1,
+        })
+        .skip((page - 1) * limit)
+        .limit(limit);
+      console.log(properties.length);
+    } else {
+      properties = await Property.find(filters)
+        .sort({
+          createdAt: -1,
+        })
+        .skip((page - 1) * limit)
+        .limit(limit);
+      console.log(properties.length);
+    }
+
+    res.status(200).send(properties);
+  } catch (err) {
+    res.status(500).send(err.message);
   }
-  res.status(200).send(result);
 };
 
 //@desc  List real-estates in upcoming auctions
@@ -557,10 +546,9 @@ module.exports = {
   getRealEstatesUpcomingAuctions,
   getRealEstatesOngoingAuctions,
   getRealEstatesStatusBuyer,
-  getRealEstatesApprovedOrNot,
   approveProperty,
   disapproveProperty,
-  getRealEstatesApprovedNotAuction,
+  // getRealEstatesApprovedNotAuction,
   verifyDocument,
   verifyImage,
   verifyVideo,

@@ -12,8 +12,7 @@ const {
   getRealEstatesUpcomingAuctions,
   getRealEstatesOngoingAuctions,
   getRealEstatesStatusBuyer,
-  getRealEstatesApprovedOrNot,
-  getRealEstatesApprovedNotAuction,
+  // getRealEstatesApprovedNotAuction,
   approveProperty,
   disapproveProperty,
   verifyDocument,
@@ -40,9 +39,8 @@ router.post(
 router.get("/upcomingAuctions", getRealEstatesUpcomingAuctions);
 router.get("/ongoingAuctions", getRealEstatesOngoingAuctions);
 router.get("/status", auth, getRealEstatesStatusBuyer);
-router.get("/approved/notAuction", getRealEstatesApprovedNotAuction);
-router.get("/notApproved", getRealEstatesApprovedOrNot);
-router.get("/approved", getRealEstatesApprovedOrNot);
+// router.get("/approved/notAuction", getRealEstatesApprovedNotAuction);
+
 //this should be only for user is admin
 router.put("/:propertyId/documents/:documentId/status", verifyDocument);
 router.put("/:propertyId/images/:imageId/status", verifyImage);
