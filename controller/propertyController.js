@@ -376,58 +376,72 @@ const getRealEstate = async (req, res) => {
 };
 
 //@desc  Approve a property
-//@route PUT /api/properties/real-estates/:id/approved
+//@route PUT /api/properties/real-estates/:id/status body: {status: "pending"/"success"/"fail", rejectedReason:...  }
+
 const approveProperty = async (req, res) => {
   try {
+    const { status, rejectedReason } = req.body;
     const property = await Property.findOne({ _id: req.params.id });
     if (!property) {
       res.status(200).send({ error: "Property not found" });
     }
+    const user = await User.findById(property.createdBy);
 
-    for (let image of property.images) {
-      if (image.isVerified !== "success")
+    if (status === "success") {
+      for (let image of property.images) {
+        if (image.isVerified !== "success")
+          return res
+            .status(200)
+            .send({ error: `Image ${image.name}is not verified` });
+      }
+      for (let video of property.videos) {
+        if (video.isVerified !== "success")
+          return res
+            .status(200)
+            .send({ error: `Video ${video.name}is not verified` });
+      }
+      for (let document of property.documents) {
+        if (document.isVerified !== "success")
+          return res
+            .status(200)
+            .send({ error: `Document ${document.name}is not verified` });
+      }
+      sendEmail({
+        email: user.email,
+        subject: "Auction10X- Property Application Approved",
+        text: `Congratulation, your application to sell property is approved`,
+      });
+    }
+    if (status === "fail") {
+      if (!rejectedReason) {
         return res
           .status(200)
-          .send({ error: `Image ${image.name}is not verified` });
+          .send({ error: "Please specify reason for reject" });
+      }
+      property.rejectedReason = rejectedReason;
+      sendEmail({
+        email: user.email,
+        subject: "Auction10X- Property Application Rejected",
+        text: `Your application to sell property is rejected. Reason: ${rejectedReason}`,
+      });
     }
-    for (let video of property.videos) {
-      if (video.isVerified !== "success")
-        return res
-          .status(200)
-          .send({ error: `Video ${video.name}is not verified` });
-    }
-    for (let document of property.documents) {
-      if (document.isVerified !== "success")
-        return res
-          .status(200)
-          .send({ error: `Document ${document.name}is not verified` });
-    }
-
-    property.isApproved = true;
+    property.isApproved = status;
     const savedProperty = await property.save();
-    res.status(200).send(savedProperty);
-  } catch (error) {
-    res.status(500).send(error.message);
-  }
-};
-//@desc  Disapprove a property
-//@route PUT /api/properties/real-estates/:id/disapproved
-const disapproveProperty = async (req, res) => {
-  try {
-    const property = await Property.findOne({ _id: req.params.id });
-    if (!property) {
-      res.status(200).send({ error: "Property not found" });
-    }
-    property.isApproved = false;
-    const savedProperty = await property.save();
-    res.status(200).send(savedProperty);
+    const result = {
+      _id: savedProperty._id,
+      createdBy: savedProperty.createdBy,
+      type: savedProperty.type,
+      isApproved: savedProperty.isApproved,
+      rejectedReason: savedProperty.rejectedReason,
+    };
+    res.status(200).send(result);
   } catch (error) {
     res.status(500).send(error.message);
   }
 };
 
 //@desc  Verify a document
-//@route PUT /:propertyId/documents/:documentId/status"
+//@route PUT /:propertyId/documents/:documentId/status"  body: {status:"pending"/"success"/"fail"}
 const verifyDocument = async (req, res) => {
   const { status } = req.body;
   if (status !== "pending" && status !== "success" && status !== "fail") {
@@ -547,8 +561,6 @@ module.exports = {
   getRealEstatesOngoingAuctions,
   getRealEstatesStatusBuyer,
   approveProperty,
-  disapproveProperty,
-  // getRealEstatesApprovedNotAuction,
   verifyDocument,
   verifyImage,
   verifyVideo,

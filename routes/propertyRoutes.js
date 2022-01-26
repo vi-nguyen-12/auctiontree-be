@@ -12,9 +12,7 @@ const {
   getRealEstatesUpcomingAuctions,
   getRealEstatesOngoingAuctions,
   getRealEstatesStatusBuyer,
-  // getRealEstatesApprovedNotAuction,
   approveProperty,
-  disapproveProperty,
   verifyDocument,
   verifyImage,
   verifyVideo,
@@ -38,17 +36,19 @@ router.post(
 
 router.get("/upcomingAuctions", getRealEstatesUpcomingAuctions);
 router.get("/ongoingAuctions", getRealEstatesOngoingAuctions);
-router.get("/status", auth, getRealEstatesStatusBuyer);
-// router.get("/approved/notAuction", getRealEstatesApprovedNotAuction);
 
 //this should be only for user is admin
 router.put("/:propertyId/documents/:documentId/status", verifyDocument);
 router.put("/:propertyId/images/:imageId/status", verifyImage);
 router.put("/:propertyId/videos/:videoId/status", verifyVideo);
-router.put("/:id/approved", approveProperty);
-router.put("/:id/disapproved", disapproveProperty);
+router.put("/:id/status", approveProperty);
+
+//for all users
 router.get("/:id", getRealEstate);
 router.get("/", getRealEstates);
+
+//for logged in users
+router.get("/status", auth, getRealEstatesStatusBuyer);
 router.post("/", auth, createNewEstates);
 router.put("/:id", auth, editProperty);
 module.exports = router;

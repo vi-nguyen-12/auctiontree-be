@@ -54,6 +54,7 @@ const propertySchema = new Schema(
       enum: ["pending", "success", "fail"],
       default: "pending",
     },
+    rejectedReason: String,
   },
   { timestamps: true }
 );

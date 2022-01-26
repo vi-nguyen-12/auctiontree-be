@@ -92,10 +92,10 @@ const createBuyer = async (req, res) => {
 };
 
 //@desc  Approve a buyer
-//@route PUT /api/buyers/:id/approved body: {walletAmount:...}
+//@route PUT /api/buyers/:id/status body: {status:"pending"/"success"/"fail", walletAmount:...,rejectedReason:...}
 const approveBuyer = async (req, res) => {
-  const { walletAmount } = req.body;
   try {
+    const { status, walletAmount, rejectedReason } = req.body;
     const buyer = await Buyer.findOne({ _id: req.params.id }).populate(
       "userId"
     );
@@ -103,52 +103,60 @@ const approveBuyer = async (req, res) => {
     if (!buyer) {
       return res.status(200).send({ error: "Buyer not found" });
     }
-    if (!buyer.docusign.isSigned) {
-      return res
-        .status(200)
-        .send({ error: "Approved failed. Docusign is not signed" });
-    }
-    for (let document of buyer.documents) {
-      if (document.isVerified !== "success") {
-        return res.status(200).send({
-          error: `Approved failed. Document ${document.name} is not verified`,
-        });
+    if (status === "success") {
+      if (!walletAmount)
+        return res
+          .status(200)
+          .send({ error: "Please specify the amount for wallet" });
+      if (!buyer.docusign.isSigned) {
+        return res
+          .status(200)
+          .send({ error: "Approved failed. Docusign is not signed" });
       }
+      for (let document of buyer.documents) {
+        if (document.isVerified !== "success") {
+          return res.status(200).send({
+            error: `Approved failed. Document ${document.name} is not verified`,
+          });
+        }
+      }
+      sendEmail({
+        email: buyer.userId.email,
+        subject: "Auction10X- Buyer Application Approved",
+        text: `Congratulation, your application application is approved with $${walletAmount} in your wallet. This amount is available for your bidding.`,
+      });
+      buyer.walletAmount = walletAmount;
     }
-    sendEmail({
-      email: buyer.userId.email,
-      subject: "Auction10X- Buyer Application Approved",
-      text: `Congratulation, your application application is approved with $${walletAmount} in your wallet. This amount is available for your bidding.`,
-    });
-    buyer.isApproved = true;
-    buyer.walletAmount = walletAmount;
-    const savedBuyer = await buyer.save();
-    res.status(200).send(savedBuyer);
-  } catch (error) {
-    res.status(500).send(error.message);
-  }
-};
-
-//@desc  Disapprove a buyer
-//@route PUT /api/buyers/:id/disapproved body: {rejectedReason: ... }
-const disapproveBuyer = async (req, res) => {
-  const { rejectedReason } = req.body;
-  try {
-    const buyer = await Buyer.findOne({ _id: req.params.id }).populate(
-      "userId"
-    );
-    if (!buyer) {
-      return res.status(200).send({ error: "Buyer not found" });
+    if (status === "fail") {
+      if (!rejectedReason) {
+        return res
+          .status(200)
+          .send({ error: "Please specify reason for reject" });
+      }
+      sendEmail({
+        email: buyer.userId.email,
+        subject: "Auction10X- Buyer Application Rejected",
+        text: `Your application application is rejected. The reason is $${rejectedReason}`,
+      });
+      buyer.rejectedReason = rejectedReason;
     }
-    sendEmail({
-      email: buyer.userId.email,
-      subject: "Auction10x: Reject buyer application",
-      text: rejectedReason,
-    });
-    buyer.isApproved = false;
-    buyer.rejectedReason = rejectedReason;
+    buyer.isApproved = status;
     const savedBuyer = await buyer.save();
-    res.status(200).send(savedBuyer);
+    const result = {
+      _id: savedBuyer._id,
+      userId: {
+        _id: savedBuyer.userId._id,
+        firstName: savedBuyer.userId.firstName,
+        lastName: savedBuyer.userId.lastName,
+        userName: savedBuyer.userId.userName,
+      },
+      auctionId: savedBuyer.auctionId,
+      documents: savedBuyer.documents,
+      isApproved: savedBuyer.isApproved,
+      walletAmount: savedBuyer.walletAmount,
+      rejectedReason: savedBuyer.rejectedReason,
+    };
+    res.status(200).send(result);
   } catch (error) {
     res.status(500).send(error.message);
   }
@@ -191,32 +199,16 @@ const verifyDocument = async (req, res) => {
   }
 };
 
-//@desc  Get all buyers
+//@desc  Get all buyers & filter by status
 //@route GET /api/buyers
 const getBuyers = async (req, res) => {
   try {
-    const buyers = await Buyer.find({});
-    res.status(200).send(buyers);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-};
-
-//@desc  Get not approved buyers
-//@route GET /api/buyers/notApproved
-const getNotApprovedBuyers = async (req, res) => {
-  try {
-    const buyers = await Buyer.find({ isApproved: false });
-    res.status(200).send(buyers);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-};
-//@desc  Get approved buyers
-//@route GET /api/buyers/approved
-const getApprovedBuyers = async (req, res) => {
-  try {
-    const buyers = await Buyer.find({ isApproved: true });
+    const { status } = req.query;
+    let query = {};
+    if (status) {
+      query.isApproved = status;
+    }
+    const buyers = await Buyer.find(query);
     res.status(200).send(buyers);
   } catch (err) {
     res.status(500).send(err.message);
@@ -226,9 +218,6 @@ const getApprovedBuyers = async (req, res) => {
 module.exports = {
   createBuyer,
   approveBuyer,
-  disapproveBuyer,
   verifyDocument,
   getBuyers,
-  getApprovedBuyers,
-  getNotApprovedBuyers,
 };
