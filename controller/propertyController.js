@@ -212,14 +212,14 @@ const getRealEstates = async (req, res) => {
         .limit(limit);
     } else if (inAuction === "false") {
       const auctions = await Auction.find().select("propertyId");
-      const propertyIds = auctions.map((item) => item.propertyId.toString());
-      const allProperties = await Property.find();
-      properties = allProperties.reduce((prev, current) => {
-        if (propertyIds.indexOf(current._id.toString()) < 0) {
-          prev.push(current);
-        }
-        return prev;
-      }, []);
+      const propertyIds = auctions.map((auction) => auction.propertyId);
+      properties = await Property.find({ _id: { $nin: propertyIds } })
+        .find(filters)
+        .sort({
+          createdAt: -1,
+        })
+        .skip((page - 1) * limit)
+        .limit(limit);
     } else {
       properties = await Property.find(filters)
         .sort({
