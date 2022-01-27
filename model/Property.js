@@ -36,6 +36,7 @@ const propertySchema = new Schema(
     ],
     documents: [
       {
+        officialName: String,
         name: String,
         url: String,
         isVerified: {
