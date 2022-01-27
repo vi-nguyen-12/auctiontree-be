@@ -210,7 +210,16 @@ const getRealEstates = async (req, res) => {
         })
         .skip((page - 1) * limit)
         .limit(limit);
-      console.log(properties.length);
+    } else if (inAuction === "false") {
+      const auctions = await Auction.find().select("propertyId");
+      const propertyIds = auctions.map((item) => item.propertyId.toString());
+      const allProperties = await Property.find();
+      properties = allProperties.reduce((prev, current) => {
+        if (propertyIds.indexOf(current._id.toString()) < 0) {
+          prev.push(current);
+        }
+        return prev;
+      }, []);
     } else {
       properties = await Property.find(filters)
         .sort({
@@ -218,7 +227,6 @@ const getRealEstates = async (req, res) => {
         })
         .skip((page - 1) * limit)
         .limit(limit);
-      console.log(properties.length);
     }
 
     res.status(200).send(properties);
@@ -486,7 +494,6 @@ const verifyVideo = async (req, res) => {
     });
   }
   const { propertyId, videoId } = req.params;
-  console.log(videoId);
 
   try {
     const property = await Property.findById(propertyId);
