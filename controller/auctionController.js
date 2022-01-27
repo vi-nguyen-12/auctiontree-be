@@ -29,9 +29,9 @@ const createAuction = async (req, res) => {
     const registerEndDate = new Date(registerEndDateISOString);
     const auctionStartDate = new Date(auctionStartDateISOString);
     const auctionEndDate = new Date(auctionEndDateISOString);
-
+    console.log(propertyId);
     const property = await Property.findOne({
-      _id: req.body.propertyId,
+      _id: propertyId,
     }).populate("createdBy");
 
     if (!property) {
@@ -214,14 +214,13 @@ const getUpcomingAuctionsOfRealEstates = async (req, res) => {
     const now = new Date();
     const allAuctions = await Auction.find({
       auctionStartDate: { $gte: now },
-    }).sort({ auctionStartDate: 1 });
-    for (let auction of allAuctions) {
-      const property = await Property.findOne({ _id: auction.propertyId });
-      auction.property = property;
-    }
+    })
+      .populate("propertyId")
+      .sort({ auctionStartDate: 1 });
+
     const data = allAuctions
       .filter((auction) => {
-        return auction.property.type === "real-estate";
+        return auction.propertyId.type === "real-estate";
       })
       .map((auction) => {
         return {
@@ -389,7 +388,7 @@ const placeBidding = async (req, res) => {
     if (biddingPrice <= highestBid) {
       return res
         .status(200)
-        .send({ error: "Bidding price is less than or equal to highest bid" });
+        .send({ error: "Bidding price must be greater than highest bid" });
     }
     if (biddingPrice < highestBid + auction.incrementAmount) {
       return res.status(200).send({
@@ -413,7 +412,6 @@ const placeBidding = async (req, res) => {
 
     const savedAuction = await auction.save();
     let numberOfBids, highestBidders;
-
     ({ numberOfBids, highestBid, highestBidders } = await getBidsInformation(
       savedAuction.bids,
       savedAuction.startingBid
@@ -423,23 +421,11 @@ const placeBidding = async (req, res) => {
     const result = {
       _id: savedAuction._id,
       startingBid: savedAuction.startingBid,
-      incrementAmount: savedAuction.incrementAmount,
-      registerStartDate: savedAuction.registerStartDate,
-      registerEndDate: savedAuction.registerEndDate,
-      auctionStartDate: savedAuction.auctionStartDate,
-      auctionEndDate: savedAuction.auctionEndDate,
       highestBid,
       numberOfBids,
       highestBidders,
       isReservedMet,
-      property: {
-        _id: property._id,
-        type: property.type,
-        details: property.details,
-        images: property.images,
-        videos: property.videos,
-        documents: property.documents,
-      },
+      propertyId: property._id,
     };
 
     req.io.emit("bid", {

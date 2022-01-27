@@ -65,6 +65,7 @@ app.use("/api/kyc", kycRoute);
 app.use("/api/buyers", buyerRoute);
 app.use("/api/questions", questionRoute);
 app.use("/admin/api/questions", questionRoute);
+app.use("/api/test", testRoute);
 
 if (process.env.NODE_ENV === "production") {
   app.use();
@@ -84,7 +85,6 @@ app.use(function (req, res, next) {
 });
 
 app.use("/api/auctions", auctionRoute);
-app.use("/api/test", testRoute);
 
 // io.on("connection", (socket) => {
 //   console.log("a new user is connected");

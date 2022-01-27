@@ -13,6 +13,18 @@ const getUserInfo = async (access_token) => {
   );
   return response.data;
 };
+
+const signerArgs = {
+  signerEmail: "nguyen.vi.1292@gmail.com",
+  signerName: "Hello",
+};
+
+const apiArgs = {
+  basePath: "",
+  accessToken: "",
+};
+
+//request a signature by email using a template
 const makeEnvelope = (args) => {
   // Create the envelope definition
   let env = new docusign.EnvelopeDefinition();
@@ -27,6 +39,23 @@ const makeEnvelope = (args) => {
   env.templateRoles = [signer1];
   env.status = "sent"; // We want the envelope to be sent;
   return env;
+};
+const createAndSendEnvelope = async (args) => {
+  let dsApiClient = new docusign.ApiClient();
+  dsApiClient.setBasePath(args.basePath);
+  dsApiClient.addDefaultHeader("Authorization", "Bearer " + args.accessToken);
+  let envelopesApi = new docusign.EnvelopesApi(dsApiClient);
+
+  // Make the envelope request body
+  let envelope = makeEnvelope(args.envelopeArgs);
+
+  // Call Envelopes::create API method
+  // Exceptions will be caught by the calling function
+  let results = await envelopesApi.createEnvelope(args.accountId, {
+    envelopeDefinition: envelope,
+  });
+
+  return results;
 };
 
 const makeRecipientViewRequest = (args) => {

@@ -23,12 +23,10 @@ const getBidsInformation = async (bids, startingBid) => {
   const numberOfBids = bids.length;
   const highestBid = bids.length === 0 ? startingBid : bids.slice(-1)[0].amount;
   let highestBidders = bids.slice(-5);
-  console.log(highestBidders);
 
   highestBidders = await Promise.all(
     highestBidders.map(async (bidder) => {
       const user = await User.findById(bidder.userId);
-      console.log(user);
       return {
         amount: bidder.amount,
         time: bidder.time,
