@@ -232,12 +232,12 @@ const getUpcomingAuctionsOfRealEstates = async (req, res) => {
           startingBid: auction.startingBid,
           incrementAmount: auction.incrementAmount,
           property: {
-            _id: auction.property._id,
-            type: auction.property.type,
-            details: auction.property.details,
-            images: auction.property.images,
-            videos: auction.property.videos,
-            documents: auction.property.documents,
+            _id: auction.propertyId._id,
+            type: auction.propertyId.type,
+            details: auction.propertyId.details,
+            images: auction.propertyId.images,
+            videos: auction.propertyId.videos,
+            documents: auction.propertyId.documents,
           },
         };
       });
