@@ -123,7 +123,7 @@ const recipientViewArgs = {
 };
 
 const returnUrlArgs = {
-  dsReturnUrl: "http://localhost:3000/done_signing",
+  dsReturnUrl: "http://localhost:3000/docusign",
 };
 
 //request a signature by email using a template,
@@ -150,21 +150,19 @@ const createAndSendEnvelope = async (args) => {
   dsApiClient.addDefaultHeader("Authorization", "Bearer " + accessToken);
 
   let envelopesApi = new docusign.EnvelopesApi(dsApiClient);
-
-  // Make the envelope request body
   let envelope = makeEnvelope(envelopeArgs);
 
-  // Call Envelopes::create API method
-  // Exceptions will be caught by the calling function
   let results = await envelopesApi.createEnvelope(apiArgs.accountId, {
     envelopeDefinition: envelope,
   });
   return results;
 };
 
+// @desc: Request a signature through your app
+// @route: GET /docusign/signature/uiviews
 const makeRecipientViewRequest = (args) => {
   let viewRequest = new docusign.RecipientViewRequest();
-  viewRequest.returnUrl = returnUrlArgs.dsReturnUrl + "?state=123";
+  viewRequest.returnUrl = returnUrlArgs.dsReturnUrl + "?state=signing_complete";
   viewRequest.authenticationMethod = "none";
   viewRequest.email = recipientViewArgs.signerEmail;
   viewRequest.userName = recipientViewArgs.signerName;
@@ -173,6 +171,37 @@ const makeRecipientViewRequest = (args) => {
 
   return viewRequest;
 };
+
+router.get("/uiviews/envelopes/buyerSellerContract", async (req, res) => {
+  const accessToken = await getAccessToken();
+
+  let dsApiClient = new docusign.ApiClient();
+  dsApiClient.setBasePath(apiArgs.basePath);
+  dsApiClient.addDefaultHeader("Authorization", "Bearer " + accessToken);
+  let envelopesApi = new docusign.EnvelopesApi(dsApiClient),
+    envelopeResult = null;
+
+  let envelope = makeEnvelope(envelopeArgs);
+  envelopeResult = await envelopesApi.createEnvelope(apiArgs.accountId, {
+    envelopeDefinition: envelope,
+  });
+  let envelopeId = envelopeResult.envelopeId;
+  let viewRequest = makeRecipientViewRequest(),
+    viewResult = null;
+  viewResult = await envelopesApi.createRecipientView(
+    apiArgs.accountId,
+    envelopeId,
+    { recipientViewRequest: viewRequest }
+  );
+
+  const recipientsResult = await envelopesApi.listRecipients(
+    apiArgs.accountId,
+    envelopeId,
+    null
+  );
+  console.log(recipientsResult);
+  res.status(200).send({ envelopeId, redirectUrl: viewResult.url });
+});
 
 //send an envelope via your app
 // function prepareEnvelope & createEnvelope & makeSenderViewRequest & sendEnvelopeViaApp
@@ -244,8 +273,6 @@ const sendEnvelopeViaApp = async (args) => {
   // if (args.startingView === "recipient") {
   //   url = url.replace("send=1", "send=0");
   // }
-
-  console.log(results);
   return { envelopeId: envelopeId, redirectUrl: url };
 };
 
@@ -275,10 +302,8 @@ const embededConsole = async (args) => {
   let envelope = await createEnvelope(),
     envelopeId = envelope.envelopeId;
   apiArgs = { ...apiArgs, startingView: "envelope", envelopeId };
-  // Create the NDSE view
+
   let viewRequest = makeConsoleViewRequest(apiArgs);
-  // Call the CreateSenderView API
-  // Exceptions will be caught by the calling function
   let results = await envelopesApi.createConsoleView(apiArgs.accountId, {
     consoleViewRequest: viewRequest,
   });
@@ -287,38 +312,6 @@ const embededConsole = async (args) => {
   return { redirectUrl: url };
 };
 
-//Request a signature through your app
-
-router.get("/uiviews/envelopes/buyerSellerContract", async (req, res) => {
-  const accessToken = await getAccessToken();
-
-  let dsApiClient = new docusign.ApiClient();
-  dsApiClient.setBasePath(apiArgs.basePath);
-  dsApiClient.addDefaultHeader("Authorization", "Bearer " + accessToken);
-  let envelopesApi = new docusign.EnvelopesApi(dsApiClient),
-    envelopeResult = null;
-
-  let envelope = makeEnvelope(envelopeArgs);
-  envelopeResult = await envelopesApi.createEnvelope(apiArgs.accountId, {
-    envelopeDefinition: envelope,
-  });
-  let envelopeId = envelopeResult.envelopeId;
-  let viewRequest = makeRecipientViewRequest(),
-    viewResult = null;
-  viewResult = await envelopesApi.createRecipientView(
-    apiArgs.accountId,
-    envelopeId,
-    { recipientViewRequest: viewRequest }
-  );
-
-  const recipientsResult = await envelopesApi.listRecipients(
-    apiArgs.accountId,
-    envelopeId,
-    null
-  );
-  console.log(recipientsResult);
-  res.status(200).send({ envelopeId, redirectUrl: viewResult.url });
-});
 router.get("/accessToken", getAccessToken);
 router.get("/send", createAndSendEnvelope);
 router.get("/sendViaApp", sendEnvelopeViaApp);
