@@ -97,6 +97,15 @@ const createNewEstates = async (req, res) => {
     reservedAmount,
     discussedAmount,
   } = req.body;
+  const requiredDocuments = [
+    "title_report",
+    "insurance_copy",
+    "financial_document",
+    "purchase_agreement",
+    "third-party_report",
+    "demographics",
+    "market_and_valuations",
+  ];
   // const { rooms_count, beds_count, baths } = fields;
 
   if (discussedAmount > reservedAmount) {
@@ -123,6 +132,11 @@ const createNewEstates = async (req, res) => {
   // newEstates.details.structure.beds_count = beds_count;
   // newEstates.details.structure.baths = baths;
 
+  for (let item of requiredDocuments) {
+    if (!documents.find((i) => i.officialName === item)) {
+      return res.status(200).send({ error: `Document ${item} is required` });
+    }
+  }
   const savedNewEstates = await newEstates.save();
 
   const { email } = await User.findOne({ _id: req.user.userId }, "email");
