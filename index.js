@@ -13,6 +13,7 @@ const kycRoute = require("./routes/kycRoutes");
 const buyerRoute = require("./routes/buyerRoutes");
 const auctionRoute = require("./routes/auctionRoutes");
 const questionRoute = require("./routes/questionRoutes");
+const docusignRoute = require("./routes/docusignRoutes");
 const testRoute = require("./routes/test");
 const cookieparser = require("cookie-parser");
 const cors = require("cors");
@@ -65,6 +66,7 @@ app.use("/api/kyc", kycRoute);
 app.use("/api/buyers", buyerRoute);
 app.use("/api/questions", questionRoute);
 app.use("/admin/api/questions", questionRoute);
+app.use("/docusign", docusignRoute);
 app.use("/api/test", testRoute);
 
 if (process.env.NODE_ENV === "production") {

@@ -6,12 +6,14 @@ const {
   approveBuyer,
   verifyDocument,
   getBuyers,
+  approveAnswer,
 } = require("../controller/buyerController");
 
 router.post("/", auth, checkKyc, createBuyer);
 
 //this should be only for admin
 router.put("/:buyerId/documents/:documentId/status", verifyDocument);
+router.put("/:buyerId/answers/:questionId/approved", approveAnswer);
 router.put("/:id/status", approveBuyer);
 router.get("/", getBuyers);
 module.exports = router;
