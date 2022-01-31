@@ -6,11 +6,17 @@ const Auction = require("../model/Auction");
 const { sendEmail } = require("../helper");
 
 //@desc  Create a buyer
-//@route POST /api/buyers body:{auctionId, documents, docusign,TC, answers:[{questionId, answer: "yes"/"no"}] } TC:ISOString format
+//@route POST /api/buyers body:{auctionId, documents, docusign,TC, answers:[{questionId, answer: "yes"/"no", explanation:"", files:[{name:...url:...}]}] } TC:ISOString format
 const createBuyer = async (req, res) => {
   const user = await User.findOne({ _id: req.user.userId });
 
   const { auctionId, documents, docusign, TC, answers } = req.body;
+  const requiredDocuments = [
+    "bank_statement",
+    "brokerage_account_statement",
+    "crypto_account_statement",
+    "line_of_credit_doc",
+  ];
   // const timeOfTC = new Date(TC);
   try {
     const auction = await Auction.findOne({ _id: auctionId });
@@ -27,7 +33,11 @@ const createBuyer = async (req, res) => {
         error: "This user is already registered to buy this property",
       });
     }
-
+    for (let item of requiredDocuments) {
+      if (!documents.find((i) => i.officialName === item)) {
+        return res.status(200).send({ error: `Document ${item} is required` });
+      }
+    }
     let checkQuestion = true;
     await Promise.all(
       answers.map(async (item) => {
@@ -99,7 +109,6 @@ const approveBuyer = async (req, res) => {
     const buyer = await Buyer.findOne({ _id: req.params.id }).populate(
       "userId"
     );
-    //need to check questions ??
     if (!buyer) {
       return res.status(200).send({ error: "Buyer not found" });
     }
@@ -117,6 +126,14 @@ const approveBuyer = async (req, res) => {
         if (document.isVerified !== "success") {
           return res.status(200).send({
             error: `Approved failed. Document ${document.name} is not verified`,
+          });
+        }
+      }
+      for (let item of buyer.answers) {
+        if (item.isApproved === false) {
+          const question = await Question.findById(item.questionId);
+          return res.status(200).send({
+            error: `Answer of question "${question.questionText}" is not approved`,
           });
         }
       }
@@ -199,6 +216,39 @@ const verifyDocument = async (req, res) => {
   }
 };
 
+//@desc  Approve an answer
+//@route PUT /api/buyers/:buyerId/answers/:questionId/approved
+const approveAnswer = async (req, res) => {
+  try {
+    const { buyerId, questionId } = req.params;
+    const buyer = await Buyer.findById(buyerId).populate("answers");
+    if (!buyer) {
+      return res.status(200).send({ error: "Buyer not found" });
+    }
+
+    const question = buyer.answers.find(
+      (item) => item.questionId.toString() === questionId
+    );
+    if (!question) {
+      return res.status(200).send({ error: "Question not found" });
+    }
+
+    question.isApproved = true;
+    await question.save({ suppressWarning: true });
+    const savedBuyer = await buyer.save();
+    const result = {
+      _id: savedBuyer._id,
+      userId: savedBuyer.userId,
+      auctionId: savedBuyer.auctionId,
+      answers: savedBuyer.answers,
+      isApproved: savedBuyer.isApproved,
+    };
+    res.status(200).send(result);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+
 //@desc  Get all buyers & filter by status
 //@route GET /api/buyers
 const getBuyers = async (req, res) => {
@@ -220,4 +270,5 @@ module.exports = {
   approveBuyer,
   verifyDocument,
   getBuyers,
+  approveAnswer,
 };
