@@ -1,4 +1,5 @@
 const router = require("express").Router();
+const User = require("../model/User");
 const axios = require("axios");
 const jwt = require("jsonwebtoken");
 const docusign = require("docusign-esign");
@@ -6,62 +7,10 @@ const docusign = require("docusign-esign");
 // const consentURI =
 //   "https://account-d.docusign.com/oauth/auth?response_type=code&scope=signature%20impersonation&client_id=54bc1507-9cbe-4119-916f-ec1073bf7b48&redirect_uri=https://www.transenergy360.com/";
 
-const constructConsentURI = async () => {};
 const getAccessToken = async () => {
-  let privateKey =
-    "-----BEGIN RSA PRIVATE KEY-----" +
-    "\n" +
-    "MIIEowIBAAKCAQEAitik5zentkoV+dR04jbQjgD2jFHO++DNOfBe+oFoCRV1UkPI" +
-    "\n" +
-    "9t30lEHvnnFp79xMtF/Lbekm/HFgfAoU2p6zb7HPZ1Ziyalu1PJqoulvXaCOGW7/" +
-    "\n" +
-    "6KSL3gKrXd9LjkeZauxjnA91R+x6dFsXOVXYNUojQ71bf8/xC2mAllV/Ol2Oppl1" +
-    "\n" +
-    "gT68NxMkp6cGnuyzpT7q7g5m09IDUzMEeKh1x6umBRvM7WxODEaMqNyLJpVDYOBA" +
-    "\n" +
-    "miPrNbu6TvC2r4D38iNRd9ZWWdDs2dSv+HTWpoOyUu2aXcCKifbYy4JQdIo0T0Kj" +
-    "\n" +
-    "Rn3KXbVpA2/TryuIYZh8VjajicMGJP6SPw6fbwIDAQABAoIBABEkxte1y4N6ilQa" +
-    "\n" +
-    "o4P6+K1P+SFCSKhZDX4F6/RKXiog+Cd8LygsJ7LWoVuS7V2sedwbp+aeTy4EYcFv" +
-    "\n" +
-    "DTwhNE6qSc2coP39aa3pcLlE0XdiB6mkRvzWtF5pPfeNRqr+tDa7kWEHl5eV31jW" +
-    "\n" +
-    "lnuB2fxadxg6HT4e0shx8mqdi+QM0IZECGxtX/zpIh7xVN4Gul8dFYscQAWP4x8e" +
-    "\n" +
-    "d/Owt+yXtaSt/JqVp2Y1eRGjkAPWJClfY0j2AWjAf2JPMCG5Kv0zcpZcZrvPdwzl" +
-    "\n" +
-    "7j++mMEfsqeAMFDRmdDa/bUx96tTzWH8OESGGDxEYlyZcfb0oOlXdhe5uvI0/B2A" +
-    "\n" +
-    "LAGtLWECgYEA/z/PGgQRnqnCpJYFkJYmm+xitTHYOwSBf5pIT8REs/cXdBoqS/J5" +
-    "\n" +
-    "g8avulfduhEn9Mbzr35VKobJ6g85aQr1MjArwDsw4WpuSvAvPo2CL8lTrF1Dq5ni" +
-    "\n" +
-    "M5OyW4szlFm3uP38Mn9IC+P+wZZVmMC5kmL3dnQTTbOKIy6qvHnQ7RUCgYEAi0Ew" +
-    "\n" +
-    "ZNa2h6aWgpjsonjHWHRqrbGGbY5F/Vz+urXjEsMM2RIvFyu5JkYxvDL7+v0wUAI2" +
-    "\n" +
-    "EYpd7SPPxMVkdz9E4ojx4Sfsyxr5QbopM/2WIb9vbeDSDZwzCpPqsB3FaAnBYC4r" +
-    "\n" +
-    "6+H2cpm1r14MvD9aDFSq6U9aC240YlBrElOxY3MCgYEA6995cJ8l8SsLFbEU/2Hh" +
-    "\n" +
-    "1+D/7lVbbl5hlRtri1rh6jSCVeYABCLUK/QlW9vqqBFGjSp08k2aQixA1qyu7uUT" +
-    "\n" +
-    "ZQeixodsSkJiHZoK7pEyJxqy2ettp1wS7nqkLXhbd9HYt3jt33RDjclpGFfmTbx7" +
-    "\n" +
-    "QE14RNxLIlixZIWxfW5MpWkCgYBN7hlrFU3o9C1ewL4M3pKQyfW5ZpPYU7qPY6+a" +
-    "\n" +
-    "RZfiNA3InQiFaw6egMHslIu3lmGnJNWlU03lHBl2ARGMOngOXp0eZ/14XIwJYGkW" +
-    "\n" +
-    "k1+lW0C8uQhUXYmi7cx06vRCmNMDRFOIGliVIbgvf+6YmsuGAwvyrVmy8+WU73Q8" +
-    "\n" +
-    "OWIYSQKBgFK1pjbYG2G0HzMbLI1ZKyvtV84O2+hSxi2O059gQihv0gAy96JwfQuw" +
-    "\n" +
-    "6o728qsg5cfmenfNxSQCyDbHqG4hkUQDOBVFVzPKzqonyk2c9oAgpezWPu82Sl0X" +
-    "\n" +
-    "7ERQ0x4fEzfE2GqbrBcYWXtK4ImrI7bG2l4YXWb1RI3uG5u7IZLw" +
-    "\n" +
-    "-----END RSA PRIVATE KEY-----";
+  let privateKey = process.env.DOCUSIGN_PRIVATE_KEY.replace(/\\n/g, "\n");
+
+  console.log(privateKey);
 
   let now = new Date();
   let iat = Math.floor(now.getTime() / 1000);
@@ -115,13 +64,6 @@ let apiArgs = {
   accountId: "96fc7fb1-87e8-4e1a-914d-47e66a4f4ad0",
 };
 
-const recipientViewArgs = {
-  returnUrl: "http://localhost:3000/",
-  signerEmail: "nguyen.vi.1292@gmail.com",
-  signerName: " Tri Pham",
-  signerClientId: "100abc",
-};
-
 const returnUrlArgs = {
   dsReturnUrl: "http://localhost:3000/docusign",
 };
@@ -159,22 +101,34 @@ const createAndSendEnvelope = async (args) => {
 };
 
 // @desc: Request a signature through your app
-// @route: GET /docusign/signature/uiviews
+// @route: GET /docusign/signature/sellerAgreement/uiviews
 const makeRecipientViewRequest = (args) => {
   let viewRequest = new docusign.RecipientViewRequest();
-  viewRequest.returnUrl = returnUrlArgs.dsReturnUrl + "?state=signing_complete";
+  viewRequest.returnUrl = args.dsReturnUrl + "?state=signing_complete";
   viewRequest.authenticationMethod = "none";
-  viewRequest.email = recipientViewArgs.signerEmail;
-  viewRequest.userName = recipientViewArgs.signerName;
+  viewRequest.email = args.signerEmail;
+  viewRequest.userName = args.signerName;
   // viewRequest.clientUserId = args.signerClientId;
   // viewRequest.pingFrequency = 600;
 
   return viewRequest;
 };
 
-router.get("/uiviews/envelopes/buyerSellerContract", async (req, res) => {
+const getSellerAgreementUIViews = async (req, res) => {
   const accessToken = await getAccessToken();
-
+  const user = await User.findById(req.user.userId);
+  const recipientViewArgs = {
+    dsReturnUrl: "http://localhost:3000/docusign",
+    signerEmail: user.email,
+    signerName: `${user.firstName} +${user.lastName}`,
+    signerClientId: "100abc",
+  };
+  let envelopeArgs = {
+    templateId: "bd152cb4-2387-466a-a080-e74e37864be7",
+    signerEmail: "vienne@labs196.com",
+    signerName: "Auction 10X",
+    signerClientId: "100abc",
+  };
   let dsApiClient = new docusign.ApiClient();
   dsApiClient.setBasePath(apiArgs.basePath);
   dsApiClient.addDefaultHeader("Authorization", "Bearer " + accessToken);
@@ -186,7 +140,7 @@ router.get("/uiviews/envelopes/buyerSellerContract", async (req, res) => {
     envelopeDefinition: envelope,
   });
   let envelopeId = envelopeResult.envelopeId;
-  let viewRequest = makeRecipientViewRequest(),
+  let viewRequest = makeRecipientViewRequest(recipientViewArgs),
     viewResult = null;
   viewResult = await envelopesApi.createRecipientView(
     apiArgs.accountId,
@@ -201,7 +155,7 @@ router.get("/uiviews/envelopes/buyerSellerContract", async (req, res) => {
   );
   console.log(recipientsResult);
   res.status(200).send({ envelopeId, redirectUrl: viewResult.url });
-});
+};
 
 //send an envelope via your app
 // function prepareEnvelope & createEnvelope & makeSenderViewRequest & sendEnvelopeViaApp
@@ -312,15 +266,8 @@ const embededConsole = async (args) => {
   return { redirectUrl: url };
 };
 
-router.get("/accessToken", getAccessToken);
-router.get("/send", createAndSendEnvelope);
-router.get("/sendViaApp", sendEnvelopeViaApp);
-router.get("/embededConsole", embededConsole);
-// router.get("/requestSignatureThroughApp", requestSignatureThroughApp);
-
-// router.get("/test1", createAndSendEnvelope);
-//question: docusign: sign with us (Auction10X) or sign with seller
+//question: buyer docusign: sign with us (Auction10X) or sign with seller
 //assume with us: show on FE ->user sign -> save that documents where? -> show in the future.
 //https://stackoverflow.com/questions/57358821/display-particular-signed-contract-in-docusign
 //assume with seller: we send to buyer for sign -> we send that contract to seller to sign
-module.exports = router;
+module.exports = { getSellerAgreementUIViews };
