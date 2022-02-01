@@ -160,7 +160,9 @@ const callback = (req, res) => {
   let url = req.url;
   const { state, event } = req.query;
   console.log(url, state, event);
-  res.redirect("http://localhost:3000/MultiSellForm");
+  res.redirect(
+    `${process.env.CLIENT_HOST}/MultiSellForm?docusign=true&state=signing_complete`
+  );
 };
 
 //send an envelope via your app
