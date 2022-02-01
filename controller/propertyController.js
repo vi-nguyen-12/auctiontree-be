@@ -94,6 +94,7 @@ const createNewEstates = async (req, res) => {
     images,
     videos,
     documents,
+    docusign,
     reservedAmount,
     discussedAmount,
   } = req.body;
@@ -125,6 +126,7 @@ const createNewEstates = async (req, res) => {
     images,
     videos,
     documents,
+    docusign,
     reservedAmount,
     discussedAmount,
   });
