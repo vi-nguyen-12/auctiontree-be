@@ -2,6 +2,7 @@ const router = require("express").Router();
 const { auth } = require("../middleware/verifyToken");
 const {
   getSellerAgreementUIViews,
+  callback,
 } = require("../controller/docusignController");
 
 //how many docusigns are there in process:
@@ -10,5 +11,6 @@ router.get(
   auth,
   getSellerAgreementUIViews
 );
+router.get("/callback", callback);
 
 module.exports = router;

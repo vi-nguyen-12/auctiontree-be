@@ -66,7 +66,7 @@ app.use("/api/kyc", kycRoute);
 app.use("/api/buyers", buyerRoute);
 app.use("/api/questions", questionRoute);
 app.use("/admin/api/questions", questionRoute);
-app.use("/docusign", docusignRoute);
+app.use("/api/docusign", docusignRoute);
 app.use("/api/test", testRoute);
 
 if (process.env.NODE_ENV === "production") {
