@@ -3,6 +3,7 @@ const { auth } = require("../middleware/verifyToken");
 const {
   getSellerAgreementUIViews,
   callback,
+  getEnvelopeStatus,
 } = require("../controller/docusignController");
 
 //how many docusigns are there in process:
@@ -11,6 +12,7 @@ router.get(
   auth,
   getSellerAgreementUIViews
 );
-router.get("/callback", callback);
+router.get("/callback/:envelopeId", callback);
+router.get("/envelopes/:envelopeId/status", getEnvelopeStatus);
 
 module.exports = router;
