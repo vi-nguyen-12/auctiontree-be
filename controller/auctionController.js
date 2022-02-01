@@ -356,7 +356,8 @@ const placeBidding = async (req, res) => {
     if (!buyer) {
       return res.status(200).send({ error: "User did not register to buy" });
     }
-    if (!buyer.isApproved === "success") {
+    console.log(buyer.isApproved !== "success");
+    if (buyer.isApproved !== "success") {
       return res.status(200).send({ error: "User is not approved to bid yet" });
     }
 

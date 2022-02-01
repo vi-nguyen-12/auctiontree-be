@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const User = require("../model/User");
+const Docusign = require("../model/Docusign");
 const axios = require("axios");
 const jwt = require("jsonwebtoken");
 const docusign = require("docusign-esign");
@@ -121,23 +122,42 @@ const getSellerAgreementUIViews = async (req, res) => {
     signerName: `${user.firstName} +${user.lastName}`,
     signerClientId: "100abc",
   };
-  let envelopeArgs = {
-    templateId: "bd152cb4-2387-466a-a080-e74e37864be7",
-    signerEmail: "vienne@labs196.com",
-    signerName: "Auction 10X",
-    signerClientId: "100abc",
-  };
+
   let dsApiClient = new docusign.ApiClient();
   dsApiClient.setBasePath(apiArgs.basePath);
   dsApiClient.addDefaultHeader("Authorization", "Bearer " + accessToken);
   let envelopesApi = new docusign.EnvelopesApi(dsApiClient),
     envelopeResult = null;
 
-  let envelope = makeEnvelope(envelopeArgs);
-  envelopeResult = await envelopesApi.createEnvelope(apiArgs.accountId, {
-    envelopeDefinition: envelope,
+  let envelopeId;
+  const envelopeExists = await Docusign.findOne({
+    userId: req.user.userId,
+    type: "seller_agreement",
   });
-  let envelopeId = envelopeResult.envelopeId;
+  //if envelope does not exist, create a new one
+  if (!envelopeExists) {
+    let envelopeArgs = {
+      templateId: "bd152cb4-2387-466a-a080-e74e37864be7",
+      signerEmail: "vienne@labs196.com",
+      signerName: "Auction 10X",
+      signerClientId: "100abc",
+    };
+
+    let envelope = makeEnvelope(envelopeArgs);
+    envelopeResult = await envelopesApi.createEnvelope(apiArgs.accountId, {
+      envelopeDefinition: envelope,
+    });
+    envelopeId = envelopeResult.envelopeId;
+    const newEnvelope = new Docusign({
+      envelopeId,
+      type: "seller_agreement",
+      userId: user._id,
+    });
+    await newEnvelope.save();
+  } else {
+    envelopeId = envelopeExists.envelopeId;
+  }
+
   let viewRequest = makeRecipientViewRequest(recipientViewArgs),
     viewResult = null;
   viewResult = await envelopesApi.createRecipientView(
@@ -160,10 +180,11 @@ const callback = (req, res) => {
   let url = req.url;
   const { state, event } = req.query;
   console.log(url, state, event);
-  res.redirect("http://localhost:3000/MultiSellForm");
+  res.redirect(`${process.env.CLIENT_HOST}?docusign=true&state=${state}`);
 };
 
 //send an envelope via your app
+
 // function prepareEnvelope & createEnvelope & makeSenderViewRequest & sendEnvelopeViaApp
 const prepareEnvelope = (args) => {
   let env = new docusign.EnvelopeDefinition();
