@@ -10,8 +10,6 @@ const docusign = require("docusign-esign");
 const getAccessToken = async () => {
   let privateKey = process.env.DOCUSIGN_PRIVATE_KEY.replace(/\\n/g, "\n");
 
-  console.log(privateKey);
-
   let now = new Date();
   let iat = Math.floor(now.getTime() / 1000);
   let exp = Math.floor(now.setHours(now.getHours() + 3) / 1000);
@@ -65,7 +63,7 @@ let apiArgs = {
 };
 
 const returnUrlArgs = {
-  dsReturnUrl: "http://localhost:3000/docusign",
+  dsReturnUrl: "http://localhost:5000/api/docusign/callback",
 };
 
 //request a signature by email using a template,
@@ -101,7 +99,7 @@ const createAndSendEnvelope = async (args) => {
 };
 
 // @desc: Request a signature through your app
-// @route: GET /docusign/signature/sellerAgreement/uiviews
+// @route: GET api/docusign/signature/sellerAgreement/uiviews
 const makeRecipientViewRequest = (args) => {
   let viewRequest = new docusign.RecipientViewRequest();
   viewRequest.returnUrl = args.dsReturnUrl + "?state=signing_complete";
@@ -118,7 +116,7 @@ const getSellerAgreementUIViews = async (req, res) => {
   const accessToken = await getAccessToken();
   const user = await User.findById(req.user.userId);
   const recipientViewArgs = {
-    dsReturnUrl: "http://localhost:3000/docusign",
+    dsReturnUrl: "http://localhost:5000/api/docusign/callback",
     signerEmail: user.email,
     signerName: `${user.firstName} +${user.lastName}`,
     signerClientId: "100abc",
@@ -153,8 +151,16 @@ const getSellerAgreementUIViews = async (req, res) => {
     envelopeId,
     null
   );
-  console.log(recipientsResult);
   res.status(200).send({ envelopeId, redirectUrl: viewResult.url });
+};
+
+// @desc: callback after user has has signed
+// @route: GET /docusign/callback
+const callback = (req, res) => {
+  let url = req.url;
+  const { state, event } = req.query;
+  console.log(url, state, event);
+  res.redirect("http://localhost:3000/MultiSellForm");
 };
 
 //send an envelope via your app
@@ -270,4 +276,4 @@ const embededConsole = async (args) => {
 //assume with us: show on FE ->user sign -> save that documents where? -> show in the future.
 //https://stackoverflow.com/questions/57358821/display-particular-signed-contract-in-docusign
 //assume with seller: we send to buyer for sign -> we send that contract to seller to sign
-module.exports = { getSellerAgreementUIViews };
+module.exports = { getSellerAgreementUIViews, callback };
