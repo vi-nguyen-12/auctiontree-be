@@ -148,8 +148,8 @@ const callback = async (req, res) => {
     envelope.status = state;
     const savedEnvelope = await envelope.save();
     console.log(savedEnvelope);
-    // res.redirect(`${process.env.CLIENT_HOST}?docusign=true&state=${state}`);
-    res.status(200).send(window.close());
+    res.redirect(`${process.env.CLIENT_HOST}?docusign=true&state=${state}`);
+    // res.status(200).send(window.close());
   } catch (err) {
     res.status(500).send(err.message);
   }
