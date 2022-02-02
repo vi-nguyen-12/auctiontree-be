@@ -85,13 +85,16 @@ const getSellerAgreementUIViews = async (req, res) => {
   let envelopesApi = new docusign.EnvelopesApi(dsApiClient),
     envelopeResult = null;
 
-  let envelopeId;
-  const envelopeExists = await Docusign.findOne({
+  let envelopeId, dcs, dcsInProperty;
+  dcs = await Docusign.findOne({
     userId: req.user.userId,
     type: "seller_agreement",
   });
-  //if envelope does not exist, create a new one
-  if (!envelopeExists) {
+  if (dcs) {
+    dcsInProperty = await Property.findOne({ docusignId: dcs._id });
+  }
+  //if dcs does not exist || dcs exists but in other created property create a new one
+  if (!dcs || (dcs && dcsInProperty)) {
     let envelopeArgs = {
       templateId: "bd152cb4-2387-466a-a080-e74e37864be7",
       signerEmail: "vienne@labs196.com",
@@ -138,18 +141,16 @@ const getSellerAgreementUIViews = async (req, res) => {
 };
 
 // @desc: callback after user has has signed
-// @route: GET api/docusign/callback
+// @route: GET api/docusign/callback/:envelopeId
 const callback = async (req, res) => {
   try {
     const { envelopeId } = req.params;
     const { state, event } = req.query;
     console.log(envelopeId, state, event);
     const envelope = await Docusign.findOne({ envelopeId });
-    envelope.status = state;
-    const savedEnvelope = await envelope.save();
-    console.log(savedEnvelope);
-    res.redirect(`${process.env.CLIENT_HOST}?docusign=true&state=${state}`);
-    // res.status(200).send(window.close());
+    envelope.status = event;
+    await envelope.save();
+    res.redirect(`${process.env.CLIENT_HOST}?docusign=true&event=${event}`);
   } catch (err) {
     res.status(500).send(err.message);
   }

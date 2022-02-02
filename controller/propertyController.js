@@ -84,7 +84,7 @@ const search = async (req, res) => {
 };
 
 //@desc  Create a property
-//@route POST /api/properties/real-estates/ body:{type, street_address, city, state, images, videos, documents, reservedAmount, discussedAmount}
+//@route POST /api/properties/real-estates/ body:{type, street_address, city, state, images, videos, documents, docusignId, reservedAmount, discussedAmount}
 const createNewEstates = async (req, res) => {
   const {
     type,
@@ -94,7 +94,7 @@ const createNewEstates = async (req, res) => {
     images,
     videos,
     documents,
-    docusign,
+    docusignId,
     reservedAmount,
     discussedAmount,
   } = req.body;
@@ -126,7 +126,7 @@ const createNewEstates = async (req, res) => {
     images,
     videos,
     documents,
-    docusign,
+    docusignId,
     reservedAmount,
     discussedAmount,
   });
@@ -405,13 +405,18 @@ const getRealEstate = async (req, res) => {
 const approveProperty = async (req, res) => {
   try {
     const { status, rejectedReason } = req.body;
-    const property = await Property.findOne({ _id: req.params.id });
+    const property = await Property.findOne({ _id: req.params.id }).populate(
+      "docusignId"
+    );
     if (!property) {
       res.status(200).send({ error: "Property not found" });
     }
     const user = await User.findById(property.createdBy);
 
     if (status === "success") {
+      if (property.docusignId.status !== "signing_complete") {
+        return res.status(200).send({ error: "Docusign is not completed" });
+      }
       for (let image of property.images) {
         if (image.isVerified !== "success")
           return res

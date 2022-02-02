@@ -47,7 +47,11 @@ const propertySchema = new Schema(
         },
       },
     ],
-    docusign: { type: Schema.Types.ObjectId, ref: "Docusign", required: true },
+    docusignId: {
+      type: Schema.Types.ObjectId,
+      ref: "Docusign",
+      required: true,
+    },
     reservedAmount: { type: Number, required: true },
     discussedAmount: { type: Number, required: true },
     isApproved: {
