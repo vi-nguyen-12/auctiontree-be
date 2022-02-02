@@ -115,7 +115,7 @@ const getSellerAgreementUIViews = async (req, res) => {
     });
     await newEnvelope.save();
   } else {
-    envelopeId = envelopeExists.envelopeId;
+    envelopeId = dcs.envelopeId;
   }
 
   const recipientViewArgs = {
