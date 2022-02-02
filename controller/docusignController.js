@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const User = require("../model/User");
 const Docusign = require("../model/Docusign");
+const Property = require("../model/Property");
 const axios = require("axios");
 const jwt = require("jsonwebtoken");
 const docusign = require("docusign-esign");
