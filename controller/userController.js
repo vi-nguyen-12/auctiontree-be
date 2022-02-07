@@ -6,12 +6,18 @@ const Kyc = require("../model/Kyc");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const speakeasy = require("speakeasy");
-const sgMail = require("@sendgrid/mail");
 const { sendEmail } = require("../helper");
+const { userSchema } = require("../utils/userSchema");
 
 //@desc  Register a new user & create secret
 //@route POST /api/users/register
 const registerUser = async (req, res) => {
+  const { error } = userSchema.validate(req.body);
+  if (error) {
+    return res
+      .status(200)
+      .send({ error: error.details.map((i) => i.message).join(",") });
+  }
   try {
     const userExist = await User.findOne({
       $or: [{ email: req.body.email }, { userName: req.body.userName }],
@@ -212,7 +218,7 @@ const login = async (req, res) => {
 //@route GET /api/users/logout
 const logout = async (req, res) => {
   res.clearCookie("auth-token");
-  res.redirect("/");
+  res.status(200).send({ message: "User logged out" });
 };
 
 //@desc  Get user based on buyerId
