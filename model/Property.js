@@ -12,8 +12,8 @@ const propertySchema = new Schema(
     details: { type: Object },
     images: [
       {
-        name: String,
-        url: String,
+        name: { type: String, required: true },
+        url: { type: String, required: true },
         isVerified: {
           type: String,
           required: true,
@@ -36,9 +36,21 @@ const propertySchema = new Schema(
     ],
     documents: [
       {
-        officialName: String,
-        name: String,
-        url: String,
+        officialName: {
+          type: String,
+          required: true,
+          enum: [
+            "title_report",
+            "insurance_copy",
+            "financial_document",
+            "purchase_agreement",
+            "third-party_report",
+            "demographics",
+            "market_and_valuations",
+          ],
+        },
+        name: { type: String, required: true },
+        url: { type: String, required: true },
         isVerified: {
           type: String,
           required: true,

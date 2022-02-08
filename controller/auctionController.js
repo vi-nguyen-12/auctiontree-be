@@ -1,3 +1,4 @@
+const Joi = require("joi");
 const Auction = require("../model/Auction");
 const Property = require("../model/Property");
 const Buyer = require("../model/Buyer");
@@ -17,6 +18,7 @@ const createAuction = async (req, res) => {
     startingBid,
     incrementAmount,
   } = req.body;
+
   try {
     const isPropertyInAuction = await Auction.findOne({ propertyId });
     if (isPropertyInAuction) {
@@ -91,6 +93,7 @@ const editAuction = async (req, res) => {
     startingBid,
     incrementAmount,
   } = req.body;
+
   try {
     const auctionWithPropertyId = await Auction.findOne({ propertyId });
     if (
@@ -348,6 +351,13 @@ const getRealEstateAuctionsStatusBuyer = async (req, res) => {
 //@desc  Buyer do bidding
 //@route PUT /api/auctions/bidding/:id   body:{biddingTime, biddingPrice }
 const placeBidding = async (req, res) => {
+  const bodySchema = Joi.object({
+    biddingTime: Joi.date().iso().required(),
+    biddingPrice: Joi.number().required(),
+  });
+  const { error } = bodySchema.validate(req.body);
+  if (error) return res.status(200).send({ error: error.details[0].message });
+
   const auctionId = req.params.id;
   const { biddingTime: biddingTimeISOString, biddingPrice } = req.body;
   const biddingTime = new Date(biddingTimeISOString);

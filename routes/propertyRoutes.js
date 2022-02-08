@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const { auth } = require("../middleware/verifyToken");
+const { validateProperty } = require("../middleware/validateRequest");
 const {
   uploadS3,
   upload,
@@ -49,6 +50,6 @@ router.get("/", getRealEstates);
 
 //for logged in users
 router.get("/status", auth, getRealEstatesStatusBuyer);
-router.post("/", auth, createNewEstates);
-router.put("/:id", auth, editProperty);
+router.post("/", auth, validateProperty, createNewEstates);
+router.put("/:id", auth, validateProperty, editProperty);
 module.exports = router;

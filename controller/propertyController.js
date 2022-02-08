@@ -8,6 +8,7 @@ const multerS3 = require("multer-s3");
 const uuid = require("uuid/v4");
 const axios = require("axios");
 const { sendEmail, getBidsInformation } = require("../helper");
+const Joi = require("joi");
 
 //@desc  upload images, videos and documents to AWS S3
 const config = {
@@ -59,7 +60,6 @@ const uploadAll = async (req, res) => {
 //@route POST /api/properties/real-estates/search query params:{street_address, city, state}
 const search = async (req, res) => {
   const { street_address, city, state } = req.query;
-  console.log(street_address, city, state);
   try {
     const response = await axios.get(process.env.THIRD_PARTY_API, {
       params: { street_address, city, state },
@@ -77,6 +77,9 @@ const search = async (req, res) => {
     // } else {
     //   res.status(200).send({ data: response.data.data });
     // }
+    if (response.status !== 200) {
+      console.log(response);
+    }
     res.status(200).send(response.data.data);
   } catch (error) {
     res.send(error);
@@ -115,6 +118,12 @@ const createNewEstates = async (req, res) => {
     });
   }
 
+  for (let item of requiredDocuments) {
+    if (!documents.find((i) => i.officialName === item)) {
+      return res.status(200).send({ error: `Document ${item} is required` });
+    }
+  }
+
   const response = await axios.get(process.env.THIRD_PARTY_API, {
     params: { street_address, city, state },
   });
@@ -134,11 +143,6 @@ const createNewEstates = async (req, res) => {
   // newEstates.details.structure.beds_count = beds_count;
   // newEstates.details.structure.baths = baths;
 
-  for (let item of requiredDocuments) {
-    if (!documents.find((i) => i.officialName === item)) {
-      return res.status(200).send({ error: `Document ${item} is required` });
-    }
-  }
   const savedNewEstates = await newEstates.save();
 
   const { email } = await User.findOne({ _id: req.user.userId }, "email");
@@ -164,15 +168,32 @@ const editProperty = async (req, res) => {
     images,
     videos,
     documents,
+    docusignId,
     reservedAmount,
     discussedAmount,
   } = req.body;
   // const { rooms_count, beds_count, baths } = fields;
 
+  const requiredDocuments = [
+    "title_report",
+    "insurance_copy",
+    "financial_document",
+    "purchase_agreement",
+    "third-party_report",
+    "demographics",
+    "market_and_valuations",
+  ];
+
   if (discussedAmount > reservedAmount) {
     return res.status(200).send({
       error: "Discussed amount must be less than or equal to reserved amount",
     });
+  }
+
+  for (let item of requiredDocuments) {
+    if (!documents.find((i) => i.officialName === item)) {
+      return res.status(200).send({ error: `Document ${item} is required` });
+    }
   }
 
   const response = await axios.get(process.env.THIRD_PARTY_API, {
@@ -187,6 +208,7 @@ const editProperty = async (req, res) => {
   property.images = images;
   property.videos = videos;
   property.documents = documents;
+  property.docusignId = docusignId;
   property.reservedAmount = reservedAmount;
   property.discussedAmount = discussedAmount;
 
@@ -206,6 +228,18 @@ const editProperty = async (req, res) => {
 //@route GET /api/properties/real-estates
 const getRealEstates = async (req, res) => {
   try {
+    const paramsSchema = Joi.object({
+      status: Joi.alternatives(
+        Joi.string().valid("pending", "success", "fail"),
+        Joi.array().items(Joi.string())
+      ).optional(),
+      inAuction: Joi.string().valid("true", "false").optional(),
+      page: Joi.string().regex(/^\d+$/).optional(),
+      limit: Joi.string().regex(/^\d+$/).optional(),
+    });
+    const { error } = paramsSchema.validate(req.query);
+    if (error) return res.status(200).send({ error: error.details[0].message });
+
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const { inAuction, status: isApproved } = req.query;
@@ -215,6 +249,7 @@ const getRealEstates = async (req, res) => {
     if (isApproved) {
       filters.isApproved = isApproved;
     }
+
     let properties = [];
     if (inAuction === "true") {
       const auctions = await Auction.find().select("propertyId");
@@ -404,6 +439,15 @@ const getRealEstate = async (req, res) => {
 
 const approveProperty = async (req, res) => {
   try {
+    const bodySchema = Joi.object({
+      status: Joi.string().valid("pending", "success", "fail"),
+      rejectedReason: Joi.string().optional(),
+    });
+    const { error } = bodySchema.validate(req.body);
+    if (error) {
+      return res.status(200).send({ error: error.details[0].message });
+    }
+
     const { status, rejectedReason } = req.body;
     const property = await Property.findOne({ _id: req.params.id }).populate(
       "docusignId"
@@ -472,12 +516,15 @@ const approveProperty = async (req, res) => {
 //@desc  Verify a document
 //@route PUT /:propertyId/documents/:documentId/status"  body: {status:"pending"/"success"/"fail"}
 const verifyDocument = async (req, res) => {
-  const { status } = req.body;
-  if (status !== "pending" && status !== "success" && status !== "fail") {
-    return res.status(404).send({
-      message: "Status value must be 'pending' or 'success' or 'fail'",
-    });
+  const bodySchema = Joi.object({
+    status: Joi.string().valid("pending", "success", "fail"),
+  });
+  const { error } = bodySchema.validate(req.body);
+  if (error) {
+    return res.status(200).send({ error: error.details[0].message });
   }
+
+  const { status } = req.body;
   const { propertyId, documentId } = req.params;
 
   try {
@@ -508,12 +555,15 @@ const verifyDocument = async (req, res) => {
 //@desc  Verify a video
 //@route PUT /:propertyId/videos/:videoId/status"
 const verifyVideo = async (req, res) => {
-  const { status } = req.body;
-  if (status !== "pending" && status !== "success" && status !== "fail") {
-    return res.status(404).send({
-      message: "Status value must be 'pending' or 'success' or 'fail'",
-    });
+  const bodySchema = Joi.object({
+    status: Joi.string().valid("pending", "success", "fail"),
+  });
+  const { error } = bodySchema.validate(req.body);
+  if (error) {
+    return res.status(200).send({ error: error.details[0].message });
   }
+
+  const { status } = req.body;
   const { propertyId, videoId } = req.params;
 
   try {
@@ -543,12 +593,15 @@ const verifyVideo = async (req, res) => {
 //@desc  Verify an image
 //@route PUT /:propertyId/images/:imageId/status"
 const verifyImage = async (req, res) => {
-  const { status } = req.body;
-  if (status !== "pending" && status !== "success" && status !== "fail") {
-    return res.status(404).send({
-      message: "Status value must be 'pending' or 'success' or 'fail'",
-    });
+  const bodySchema = Joi.object({
+    status: Joi.string().valid("pending", "success", "fail"),
+  });
+  const { error } = bodySchema.validate(req.body);
+  if (error) {
+    return res.status(200).send({ error: error.details[0].message });
   }
+
+  const { status } = req.body;
   const { propertyId, imageId } = req.params;
 
   try {

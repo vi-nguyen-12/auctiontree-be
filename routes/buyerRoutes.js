@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const { auth } = require("../middleware/verifyToken");
+const { validateBuyer } = require("../middleware/validateRequest");
 const { checkKyc } = require("../middleware/checkKyc");
 const {
   createBuyer,
@@ -9,7 +10,7 @@ const {
   approveAnswer,
 } = require("../controller/buyerController");
 
-router.post("/", auth, checkKyc, createBuyer);
+router.post("/", auth, checkKyc, validateBuyer, createBuyer);
 
 //this should be only for admin
 router.put("/:buyerId/documents/:documentId/status", verifyDocument);

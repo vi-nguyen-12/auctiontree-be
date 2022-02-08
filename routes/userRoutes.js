@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const { auth } = require("../middleware/verifyToken");
+const { validateUser } = require("../middleware/validateRequest");
 const {
   registerUser,
   login,
@@ -14,7 +15,7 @@ const {
   deleteUserAccount,
 } = require("../controller/userController");
 
-router.route("/register").post(registerUser);
+router.post("/register", validateUser, registerUser);
 router.route("/login").post(login);
 router.route("/logout").get(logout);
 router.post("/confirmation/email", sendConfirmEmail);

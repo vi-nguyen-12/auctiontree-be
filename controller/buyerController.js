@@ -105,6 +105,14 @@ const createBuyer = async (req, res) => {
 //@route PUT /api/buyers/:id/status body: {status:"pending"/"success"/"fail", walletAmount:...,rejectedReason:...}
 const approveBuyer = async (req, res) => {
   try {
+    const bodySchema = Joi.object({
+      status: Joi.string().valid("pending", "success", "fail"),
+      walletAmount: Joi.string().regex(/^\d+$/).optional(),
+      rejectedReason: Joi.string().optional(),
+    });
+    const { error } = bodySchema.validate(req.body);
+    if (error) return res.status(200).send({ error: error.details[0].message });
+
     const { status, walletAmount, rejectedReason } = req.body;
     const buyer = await Buyer.findOne({ _id: req.params.id }).populate(
       "userId"
@@ -183,12 +191,15 @@ const approveBuyer = async (req, res) => {
 //@route PUT /api/buyers/:buyerId/documents/:documentId/status body={status:"pending"/"success"/"fail"}
 
 const verifyDocument = async (req, res) => {
-  const { status } = req.body;
-  if (status !== "pending" && status !== "success" && status !== "fail") {
-    return res.status(200).send({
-      error: "Status value must be 'pending' or 'success' or 'fail'",
-    });
+  const bodySchema = Joi.object({
+    status: Joi.string().valid("pending", "success", "fail"),
+  });
+  const { error } = bodySchema.validate(req.body);
+  if (error) {
+    return res.status(200).send({ error: error.details[0].message });
   }
+
+  const { status } = req.body;
   const { buyerId, documentId } = req.params;
   try {
     const buyer = await Buyer.findById(buyerId);
