@@ -61,8 +61,8 @@ const validateProperty = (req, res, next) => {
       })
     ),
     docusignId: Joi.objectId().required(),
-    reservedAmount: Joi.number().required(),
-    discussedAmount: Joi.number().required(),
+    reservedAmount: Joi.number().required().strict(),
+    discussedAmount: Joi.number().required().strict(),
   });
   const { error } = propertySchema.validate(req.body);
   if (error) {
