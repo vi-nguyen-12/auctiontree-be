@@ -34,7 +34,7 @@ const createAuction = async (req, res) => {
     console.log(propertyId);
     const property = await Property.findOne({
       _id: propertyId,
-    }).populate("createdBy docusign");
+    }).populate("createdBy docusignId");
 
     if (!property) {
       return res.status(200).send({ error: "Property not found" });
