@@ -27,7 +27,10 @@ const validateUser = (req, res, next) => {
 const validateProperty = (req, res, next) => {
   const propertySchema = Joi.object({
     type: Joi.string().valid("real-estate", "jet", "car", "yacht").required(),
-    details: Joi.object().keys({}),
+    street_address: Joi.string().required(),
+    city: Joi.string().required(),
+    state: Joi.string().required(),
+    // details: Joi.object().keys({}),
     images: Joi.array().items(
       Joi.object({
         name: Joi.string().required(),
