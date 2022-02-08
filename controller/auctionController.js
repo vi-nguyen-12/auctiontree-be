@@ -353,7 +353,7 @@ const getRealEstateAuctionsStatusBuyer = async (req, res) => {
 const placeBidding = async (req, res) => {
   const bodySchema = Joi.object({
     biddingTime: Joi.date().iso().required(),
-    biddingPrice: Joi.number().required(),
+    biddingPrice: Joi.number().required().strict(),
   });
   const { error } = bodySchema.validate(req.body);
   if (error) return res.status(200).send({ error: error.details[0].message });

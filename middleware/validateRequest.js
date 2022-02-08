@@ -110,8 +110,8 @@ const validateBuyer = (req, res, next) => {
 const validateAuction = (req, res, next) => {
   const auctionSchema = Joi.object({
     propertyId: Joi.objectId().required(),
-    startingBid: Joi.number().required(),
-    incrementAmount: Joi.number().required(),
+    startingBid: Joi.number().required().strict(),
+    incrementAmount: Joi.number().required().strict(),
     registerStartDate: Joi.date().iso().required(),
     registerEndDate: Joi.date().iso().required(),
     auctionStartDate: Joi.date().iso().required(),
