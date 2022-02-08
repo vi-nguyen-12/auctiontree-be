@@ -94,12 +94,12 @@ const getSellerAgreementUIViews = async (req, res) => {
   if (dcs) {
     dcsInProperty = await Property.findOne({ docusignId: dcs._id });
   }
-  //if dcs does not exist || dcs exists but in other created property create a new one
+  //if dcs does not exist || dcs exists but in other created property: create a new one
   if (!dcs || (dcs && dcsInProperty)) {
     let envelopeArgs = {
       templateId: "bd152cb4-2387-466a-a080-e74e37864be7",
-      signerEmail: "vienne@labs196.com",
-      signerName: "Auction 10X",
+      signerEmail: user.email,
+      signerName: `${user.firstName} ${user.lastName}`,
       signerClientId: "100abc",
     };
 
@@ -117,13 +117,16 @@ const getSellerAgreementUIViews = async (req, res) => {
   } else {
     envelopeId = dcs.envelopeId;
   }
+  console.log(user.email);
 
   const recipientViewArgs = {
     dsReturnUrl: `http://localhost:5000/api/docusign/callback/${envelopeId}`,
     signerEmail: user.email,
-    signerName: `${user.firstName} +${user.lastName}`,
+    signerName: `${user.firstName} ${user.lastName}`,
     signerClientId: "100abc",
   };
+
+  console.log(envelopeArgs, recipientViewArgs);
 
   let viewRequest = makeRecipientViewRequest(recipientViewArgs),
     viewResult = null;
