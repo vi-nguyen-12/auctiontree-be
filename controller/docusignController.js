@@ -79,10 +79,8 @@ const makeEnvelope = (args) => {
 
   // Create recipients
   let signer1 = docusign.Signer.constructFromObject({
-    // email: args.signer1.email,
-    // name: args.signer1.name,
-    email: "vienne@labs196.com",
-    name: "Vi Nguyen",
+    email: args.signer1.email,
+    name: args.signer1.name,
     recipientId: "1",
     clientUserId: "1001",
     routingOrder: "1",
@@ -120,7 +118,7 @@ const makeEnvelope = (args) => {
   env.recipients = recipients;
 
   // Envelope will be sent
-  env.status = "sent";
+  env.status = "created";
   return env;
 };
 
@@ -132,7 +130,7 @@ const sendEnvelope = async (req, res) => {
 
   let envelopeArgs = {
     templateId: "bd152cb4-2387-466a-a080-e74e37864be7",
-    signer1: { email: "vienne@labs196.com", name: "Hello there" },
+    signer1: { email: "nguyen.vi.1292@gmail.com", name: "Hello there" },
     cc1: { email: "nguyen.vi.1292@gmail.com", name: "tiho" },
   };
   let envelopesApi = new docusign.EnvelopesApi(dsApiClient);
@@ -241,6 +239,7 @@ const getSellerAgreementUIViews = async (req, res) => {
 // @desc: callback after user has has signed
 // @route: GET api/docusign/callback/:envelopeId
 const callback = async (req, res) => {
+  console.log("callback !!");
   try {
     const { envelopeId } = req.params;
     const { state, event } = req.query;
