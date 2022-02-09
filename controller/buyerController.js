@@ -126,11 +126,11 @@ const approveBuyer = async (req, res) => {
         return res
           .status(200)
           .send({ error: "Please specify the amount for wallet" });
-      if (!buyer.docusign.isSigned) {
-        return res
-          .status(200)
-          .send({ error: "Approved failed. Docusign is not signed" });
-      }
+      // if (!buyer.docusign.isSigned) {
+      //   return res
+      //     .status(200)
+      //     .send({ error: "Approved failed. Docusign is not signed" });
+      // }
       for (let document of buyer.documents) {
         if (document.isVerified !== "success") {
           return res.status(200).send({

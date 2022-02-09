@@ -79,10 +79,12 @@ const makeEnvelope = (args) => {
 
   // Create recipients
   let signer1 = docusign.Signer.constructFromObject({
-    email: args.signer1.email,
-    name: args.signer1.name,
-    recipientId: args.signer1.recipientId,
-    clientUserId: args.signer1.clientUserId,
+    // email: args.signer1.email,
+    // name: args.signer1.name,
+    email: "vienne@labs196.com",
+    name: "Vi Nguyen",
+    recipientId: "1",
+    clientUserId: "1001",
     routingOrder: "1",
   });
 
@@ -152,8 +154,6 @@ const makeRecipientViewRequest = (args) => {
   viewRequest.authenticationMethod = "none";
   viewRequest.email = args.signerEmail;
   viewRequest.userName = args.signerName;
-  // viewRequest.recipientId = args.recipientId;
-  // viewRequest.clientUserId = args.clientUserId;
   viewRequest.recipientId = "1";
   viewRequest.clientUserId = "1001";
   // viewRequest.pingFrequency = 600;
