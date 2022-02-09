@@ -1,3 +1,4 @@
+const Joi = require("joi");
 const Buyer = require("../model/Buyer");
 const User = require("../model/User");
 const Question = require("../model/Question");
@@ -107,7 +108,7 @@ const approveBuyer = async (req, res) => {
   try {
     const bodySchema = Joi.object({
       status: Joi.string().valid("pending", "success", "fail"),
-      walletAmount: Joi.string().regex(/^\d+$/).optional(),
+      walletAmount: Joi.number().strict(),
       rejectedReason: Joi.string().optional(),
     });
     const { error } = bodySchema.validate(req.body);
