@@ -4,7 +4,7 @@ const {
   getSellerAgreementUIViews,
   callback,
   getEnvelopeStatus,
-  createAndSendEnvelope,
+  sendEnvelope,
 } = require("../controller/docusignController");
 
 //how many docusigns are there in process??
@@ -15,5 +15,5 @@ router.get(
 );
 router.get("/callback/:envelopeId", callback);
 router.get("/envelopes/:envelopeId/status", getEnvelopeStatus);
-router.get("/createAndSendEvelope", createAndSendEnvelope);
+router.get("/createAndSendEvelope", sendEnvelope);
 module.exports = router;

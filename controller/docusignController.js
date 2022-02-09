@@ -56,109 +56,56 @@ const returnUrlArgs = {
   dsReturnUrl: "http://localhost:5000/api/docusign/callback",
 };
 
-//request a signature by email using a template,
-//function: makeEnvelope & createAndSendEnvelope
+//request a signature by email,
+//function: makeEnvelope & sendEnvelope
+
 const makeEnvelope = (args) => {
-  let env = new docusign.EnvelopeDefinition();
-  env.templateId = args.templateId;
-
-  // let signer1 = docusign.TemplateRole.constructFromObject({
-  //   email: "nguyen.vi.1292@gmail.com",
-  //   name: args.signerName,
-  //   // clientUserId: "100abc",
-  //   roleName: "signer",
-  // });
-  // let signer2 = docusign.TemplateRole.constructFromObject({
-  //   email: "nguyen.vi.1292@gmail.com",
-  //   name: args.signerName,
-  //   // clientUserId: "100abc",
-  //   roleName: "signer",
-  // });
-
-  // let signer1 = new docusign.TemplateRole();
-  // signer1.email = "nguyen.vi.1292@gmail.com";
-  // signer1.name = args.signerName;
-  // signer1.roleName = "signer";
-
-  // let cc1 = new docusign.TemplateRole();
-  // cc1.email = "nguyen.vi.1292@gmail.com";
-  // cc1.name = "hello";
-  // cc1.roleName = "cc";
-
-  // env.templateRoles = [signer1, signer2];
-  env.status = "sent"; // We want the envelope to be sent;
-  console.log(env);
-  return env;
-};
-
-const makeEnvelope2 = () => {
-  let doc2DocxBytes;
-  doc2DocxBytes = fs.readFileSync(
-    path.resolve(__dirname, "../public/cookie.pdf")
+  let doc1DocxBytes = fs.readFileSync(
+    path.resolve(__dirname, "../public/test_word.docx")
   );
 
-  // Create the envelope definition
   let env = new docusign.EnvelopeDefinition();
-  env.emailSubject = "Please sign this document set";
+  env.emailSubject = "Please sign seller agreement";
 
-  // add the documents
-  let doc2b64 = Buffer.from(doc2DocxBytes).toString("base64");
-
-  // Alternate pattern: using constructors for docs 2 and 3...
-  let doc2 = new docusign.Document.constructFromObject({
-    documentBase64: doc2b64,
-    name: "Battle Plan", // can be different from actual file name
-    fileExtension: "pdf",
-    documentId: "2",
+  let doc1b64 = Buffer.from(doc1DocxBytes).toString("base64");
+  let doc1 = new docusign.Document.constructFromObject({
+    documentBase64: doc1b64,
+    name: "seller_agreement",
+    fileExtension: "docx",
+    documentId: "1",
   });
 
-  // The order in the docs array determines the order in the envelope
-  env.documents = [doc2];
+  env.documents = [doc1];
 
-  // create a signer recipient to sign the document, identified by name and email
-  // We're setting the parameters via the object constructor
+  // Create recipients
   let signer1 = docusign.Signer.constructFromObject({
-    // email: args.signerEmail,
-    // name: args.signerName,
-    email: "vienne@labs196.com",
-    name: "Test with not template",
-    recipientId: "1",
+    email: args.signer1.email,
+    name: args.signer1.name,
+    recipientId: args.signer1.recipientId,
+    clientUserId: args.signer1.clientUserId,
     routingOrder: "1",
   });
-  // routingOrder (lower means earlier) determines the order of deliveries
-  // to the recipients. Parallel routing order is supported by using the
-  // same integer as the order for two or more recipients.
 
-  // create a cc recipient to receive a copy of the documents, identified by name and email
-  // We're setting the parameters via setters
   let cc1 = new docusign.CarbonCopy();
-  // cc1.email = args.ccEmail;
-  // cc1.name = args.ccName;
-  cc1.email = "nguyen.vi.1292@gmail.com";
-  cc1.name = "labs196 test";
+  cc1.email = args.cc1.email;
+  cc1.name = args.cc1.name;
   cc1.routingOrder = "2";
   cc1.recipientId = "2";
 
-  // Create signHere fields (also known as tabs) on the documents,
-  // We're using anchor (autoPlace) positioning
-  //
-  // The DocuSign platform searches throughout your envelope's
-  // documents for matching anchor strings. So the
-  // signHere2 tab will be used in both document 2 and 3 since they
-  // use the same anchor string for their "signer 1" tabs.
+  // Create tabs
   let signHere1 = docusign.SignHere.constructFromObject({
-      anchorString: "**signature_1**",
+      anchorString: "Sign Here",
       anchorYOffset: "10",
       anchorUnits: "pixels",
-      anchorXOffset: "20",
+      anchorXOffset: "60",
     }),
     signHere2 = docusign.SignHere.constructFromObject({
-      anchorString: "/sn1/",
-      anchorYOffset: "40",
+      anchorString: "Initial",
+      anchorYOffset: "10",
       anchorUnits: "pixels",
       anchorXOffset: "60",
     });
-  // Tabs are set per recipient / signer
+
   signer1.tabs = docusign.Tabs.constructFromObject({
     signHereTabs: [signHere1, signHere2],
   });
@@ -170,15 +117,12 @@ const makeEnvelope2 = () => {
   });
   env.recipients = recipients;
 
-  // Request that the envelope be sent by setting |status| to "sent".
-  // To request that the envelope be created as a draft, set to "created"
-  // env.status = args.status;
+  // Envelope will be sent
   env.status = "sent";
-
   return env;
 };
 
-const createAndSendEnvelope = async (req, res) => {
+const sendEnvelope = async (req, res) => {
   const accessToken = await getAccessToken();
   let dsApiClient = new docusign.ApiClient();
   dsApiClient.setBasePath(apiArgs.basePath);
@@ -186,11 +130,12 @@ const createAndSendEnvelope = async (req, res) => {
 
   let envelopeArgs = {
     templateId: "bd152cb4-2387-466a-a080-e74e37864be7",
-    signerName: "Hello",
+    signer1: { email: "vienne@labs196.com", name: "Hello there" },
+    cc1: { email: "nguyen.vi.1292@gmail.com", name: "tiho" },
   };
   let envelopesApi = new docusign.EnvelopesApi(dsApiClient);
   // let envelope = makeEnvelope(envelopeArgs);
-  let envelope = makeEnvelope2(envelopeArgs);
+  let envelope = makeEnvelope(envelopeArgs);
 
   let results = await envelopesApi.createEnvelope(apiArgs.accountId, {
     envelopeDefinition: envelope,
@@ -207,7 +152,10 @@ const makeRecipientViewRequest = (args) => {
   viewRequest.authenticationMethod = "none";
   viewRequest.email = args.signerEmail;
   viewRequest.userName = args.signerName;
-  // viewRequest.clientUserId = args.signerClientId;
+  // viewRequest.recipientId = args.recipientId;
+  // viewRequest.clientUserId = args.clientUserId;
+  viewRequest.recipientId = "1";
+  viewRequest.clientUserId = "1001";
   // viewRequest.pingFrequency = 600;
 
   return viewRequest;
@@ -236,9 +184,18 @@ const getSellerAgreementUIViews = async (req, res) => {
   if (!dcs || (dcs && dcsInProperty)) {
     let envelopeArgs = {
       templateId: "bd152cb4-2387-466a-a080-e74e37864be7",
-      signerEmail: user.email,
-      signerName: `${user.firstName} ${user.lastName}`,
-      signerClientId: "100abc",
+      signer1: {
+        email: user.email,
+        name: `${user.firstName} ${user.lastName}`,
+        recipientId: "1",
+        clientUserId: "1001",
+      },
+      cc1: {
+        email: "vienne@labs196.com",
+        name: "Vi Nguyen",
+        recipientId: "2",
+        clientUserId: "1002",
+      },
     };
 
     let envelope = makeEnvelope(envelopeArgs);
@@ -260,7 +217,9 @@ const getSellerAgreementUIViews = async (req, res) => {
     dsReturnUrl: `http://localhost:5000/api/docusign/callback/${envelopeId}`,
     signerEmail: user.email,
     signerName: `${user.firstName} ${user.lastName}`,
-    signerClientId: "100abc",
+    recipientId: "1",
+    clientUserId: "1001",
+    // signerClientId: "100abc",
   };
 
   let viewRequest = makeRecipientViewRequest(recipientViewArgs),
@@ -320,7 +279,7 @@ module.exports = {
   getSellerAgreementUIViews,
   callback,
   getEnvelopeStatus,
-  createAndSendEnvelope,
+  sendEnvelope,
 };
 
 const getUserInfo = async (access_token) => {
