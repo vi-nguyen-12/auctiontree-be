@@ -118,7 +118,7 @@ const makeEnvelope = (args) => {
   env.recipients = recipients;
 
   // Envelope will be sent
-  env.status = "created";
+  env.status = "sent";
   return env;
 };
 
