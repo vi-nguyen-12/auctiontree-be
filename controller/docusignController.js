@@ -79,10 +79,9 @@ const makeEnvelope = (args) => {
 
   // Create recipients
   let signer1 = docusign.Signer.constructFromObject({
-    // email: args.signer1.email,
-    // name: args.signer1.name,
-    email: "vienne@labs196.com",
-    name: "Vi Nguyen",
+    email: args.signer1.email,
+    name: args.signer1.name,
+
     recipientId: "1",
     clientUserId: "1001",
     routingOrder: "1",
@@ -96,11 +95,11 @@ const makeEnvelope = (args) => {
 
   // Create tabs
   let signHere1 = docusign.SignHere.constructFromObject({
-      anchorString: "Sign Here",
-      anchorYOffset: "10",
-      anchorUnits: "pixels",
-      anchorXOffset: "60",
-    }),
+    anchorString: "Sign Here",
+    anchorYOffset: "10",
+    anchorUnits: "pixels",
+    anchorXOffset: "60",
+  }),
     signHere2 = docusign.SignHere.constructFromObject({
       anchorString: "Initial",
       anchorYOffset: "10",
