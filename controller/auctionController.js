@@ -380,7 +380,7 @@ const placeBidding = async (req, res) => {
 
     //check wallet is sufficient
     if (buyer.walletAmount < biddingPrice) {
-      return res.status.error({ error: "Wallet is insufficient for bid" });
+      return res.status(200).send({ error: "Wallet is insufficient for bid" });
     }
 
     //check bidding time
