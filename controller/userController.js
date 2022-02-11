@@ -23,12 +23,14 @@ const registerUser = async (req, res) => {
 
     const salt = await bcrypt.genSaltSync(10);
     const hashedPassword = await bcrypt.hash(req.body.password, salt);
+
     const secret = speakeasy.generateSecret();
     const token = speakeasy.totp({
-      secret: secret.secret.base32,
+      secret: secret.base32,
       encoding: "base32",
       time: 300,
     });
+
     const user = new User({
       firstName: req.body.firstName,
       lastName: req.body.lastName,
