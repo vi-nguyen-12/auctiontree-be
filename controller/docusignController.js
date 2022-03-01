@@ -94,11 +94,11 @@ const makeEnvelope = (args) => {
 
   // Create tabs
   let signHere1 = docusign.SignHere.constructFromObject({
-      anchorString: "Sign Here",
-      anchorYOffset: "10",
-      anchorUnits: "pixels",
-      anchorXOffset: "60",
-    }),
+    anchorString: "Sign Here",
+    anchorYOffset: "10",
+    anchorUnits: "pixels",
+    anchorXOffset: "60",
+  }),
     signHere2 = docusign.SignHere.constructFromObject({
       anchorString: "Initial",
       anchorYOffset: "10",
