@@ -20,7 +20,7 @@ const createAuction = async (req, res) => {
   } = req.body;
 
   try {
-    const isPropertyInAuction = await Auction.findOne({ propertyId });
+    const isPropertyInAuction = await Auction.findOne({ property: propertyId });
     if (isPropertyInAuction) {
       return res
         .status(200)
@@ -31,7 +31,6 @@ const createAuction = async (req, res) => {
     const registerEndDate = new Date(registerEndDateISOString);
     const auctionStartDate = new Date(auctionStartDateISOString);
     const auctionEndDate = new Date(auctionEndDateISOString);
-    console.log(propertyId);
     const property = await Property.findOne({
       _id: propertyId,
     }).populate("createdBy docusignId");
@@ -49,6 +48,7 @@ const createAuction = async (req, res) => {
           "Register end time is earlier than or equal to register start time",
       });
     }
+
     if (auctionStartDate.getTime() >= auctionEndDate.getTime()) {
       return res.status(200).send({
         error:
@@ -56,7 +56,7 @@ const createAuction = async (req, res) => {
       });
     }
     const newAuction = new Auction({
-      propertyId: property._id,
+      property: property._id,
       registerStartDate,
       registerEndDate,
       auctionStartDate,
@@ -95,7 +95,9 @@ const editAuction = async (req, res) => {
   } = req.body;
 
   try {
-    const auctionWithPropertyId = await Auction.findOne({ propertyId });
+    const auctionWithPropertyId = await Auction.findOne({
+      property: propertyId,
+    });
     if (
       auctionWithPropertyId !== null &&
       auctionWithPropertyId._id !== auction._id
@@ -135,7 +137,7 @@ const editAuction = async (req, res) => {
         error: "Auction start time is earlier than register end time",
       });
     }
-    auction.propertyId = property._id;
+    auction.property = property._id;
     auction.registerStartDate = registerStartDate;
     auction.registerEndDate = registerEndDate;
     auction.auctionStartDate = auctionStartDate;
@@ -171,7 +173,7 @@ const getAuction = async (req, res) => {
   try {
     let auction;
     if (url.includes("propertyId")) {
-      auction = await Auction.findOne({ propertyId: req.params.propertyId });
+      auction = await Auction.findOne({ property: req.params.propertyId });
     } else {
       auction = await Auction.findOne({ _id: req.params.id });
     }
@@ -180,7 +182,7 @@ const getAuction = async (req, res) => {
         .status(200)
         .send({ error: "Auction for this property is not found" });
     }
-    const property = await Property.findOne({ _id: auction.propertyId });
+    const property = await Property.findOne({ _id: auction.property });
     const { numberOfBids, highestBid, highestBidders } =
       await getBidsInformation(auction.bids, auction.startingBid);
     const result = {
@@ -218,12 +220,12 @@ const getUpcomingAuctionsOfRealEstates = async (req, res) => {
     const allAuctions = await Auction.find({
       auctionStartDate: { $gte: now },
     })
-      .populate("propertyId")
+      .populate("property")
       .sort({ auctionStartDate: 1 });
 
     const data = allAuctions
       .filter((auction) => {
-        return auction.propertyId.type === "real-estate";
+        return auction.property.type === "real-estate";
       })
       .map((auction) => {
         return {
@@ -235,12 +237,12 @@ const getUpcomingAuctionsOfRealEstates = async (req, res) => {
           startingBid: auction.startingBid,
           incrementAmount: auction.incrementAmount,
           property: {
-            _id: auction.propertyId._id,
-            type: auction.propertyId.type,
-            details: auction.propertyId.details,
-            images: auction.propertyId.images,
-            videos: auction.propertyId.videos,
-            documents: auction.propertyId.documents,
+            _id: auction.property._id,
+            type: auction.property.type,
+            details: auction.property.details,
+            images: auction.property.images,
+            videos: auction.property.videos,
+            documents: auction.property.documents,
           },
         };
       });
@@ -261,7 +263,7 @@ const getOngoingAuctionsOfRealEstates = async (req, res) => {
     }).sort({ auctionStartDate: 1 });
 
     for (let auction of allAuctions) {
-      const property = await Property.findOne({ _id: auction.propertyId });
+      const property = await Property.findOne({ _id: auction.property });
       const { numberOfBids, highestBid, highestBidders } =
         await getBidsInformation(auction.bids, auction.startingBid);
       auction.property = property;
@@ -320,7 +322,7 @@ const getRealEstateAuctionsStatusBuyer = async (req, res) => {
     }
     for (let item of registeredList) {
       const auction = await Auction.findOne({ _id: item.auctionId });
-      const property = await Property.findOne({ _id: auction.propertyId });
+      const property = await Property.findOne({ _id: auction.property });
       item.auction = auction;
       item.property = property;
     }
@@ -376,7 +378,7 @@ const placeBidding = async (req, res) => {
       return res.status(200).send({ error: "Auction not found" });
     }
 
-    const property = await Property.findOne({ _id: auction.propertyId });
+    const property = await Property.findOne({ _id: auction.property });
 
     //check wallet is sufficient
     if (buyer.walletAmount < biddingPrice) {
@@ -469,7 +471,7 @@ const getAuctionResult = async (req, res) => {
       });
     }
 
-    if (auction.auctionEndDate.getTime() < new Date().getTime()) {
+    if (auction.auctionEndDate.getTime() > new Date().getTime()) {
       return res.status(200).send({
         _id: auction._id,
         winner: null,
@@ -484,7 +486,7 @@ const getAuctionResult = async (req, res) => {
         message: "No one bids at this auction",
       });
     }
-    const property = await Property.findOne({ _id: auction.propertyId });
+    const property = await Property.findOne({ _id: auction.property });
     let highestBidder = auction.bids.slice(-1)[0];
 
     if (highestBidder.amount >= property.reservedAmount) {

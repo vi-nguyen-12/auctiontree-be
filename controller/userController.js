@@ -369,7 +369,7 @@ const deleteUserAccount = async (req, res) => {
     const properties = await Property.find({ createdBy: userId });
 
     for (let property of properties) {
-      await Auction.deleteOne({ propertyId: property.id });
+      await Auction.deleteOne({ property: property.id });
       await Property.deleteOne({ _id: property.id });
     }
 
@@ -378,6 +378,131 @@ const deleteUserAccount = async (req, res) => {
     res.status(200).send({ message: "User account successfully deleted" });
   } catch (err) {
     res.status(500).send(err.message);
+  }
+};
+
+//@desc  Get likedAuctions
+//@route GET /api/users/:id/likes
+const getLikedAuctions = async (req, res) => {
+  try {
+    const user = await User.findOne({ _id: req.params.id })
+      .select("likedAuctions")
+      .populate({
+        path: "likedAuctions",
+        populate: {
+          path: "property",
+          select: "type details images",
+        },
+      });
+
+    res.status(200).send(user.likedAuctions);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+
+//@desc  Set a liked auction
+//@route PUT /api/users/:id/likes/:auctionId
+const setLikedAuction = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(200).send("User not found");
+
+    const auctionId = await Auction.findById(req.params.auctionId);
+    if (!auctionId) return res.status(200).send("Auction not found");
+
+    let auctionExistsInLiked = user.likedAuctions.includes(auctionId);
+    if (!auctionExistsInLiked) {
+      user.likedAuctions.push(auctionId);
+      await user.save();
+    }
+    return res.status(200).send("Successfully added auction to liked list");
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+
+//@desc  Set an unliked auction
+//@route DELETE /api/users/:id/likes/:auctionId
+const setUnlikedAuction = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(200).send("User not found");
+
+    const auctionId = await Auction.findById(req.params.auctionId);
+    if (!auctionId) return res.status(200).send("Auction not found");
+
+    user.likedAuctions.filter((item) => item !== auctionId);
+    return res.status(200).send("Successfully remove auction from liked list");
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+
+//@desc  Get bid auctions of a user
+//@route GET /api/users/:id/bidAuctions
+const getBidAuctions = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(200).send("User not found");
+
+    const bidAuctions = await Auction.find({
+      "bids.userId": user._id,
+    }).populate({ path: "property", select: "type details images" });
+
+    res.status(200).send(bidAuctions);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
+//@desc  Get approved auctions of a buyer
+//@route GET /api/users/:id/buyer/approvedAuctions
+const getApprovedAuctionsAsBuyer = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(200).send("User not found");
+
+    const buyerApprovedList = await Buyer.find({
+      userId: user._id,
+      isApproved: "success",
+    }).populate({
+      path: "auctionId",
+      select: "auctionId ",
+      populate: {
+        path: "property",
+        select: "type details images",
+      },
+    });
+    const result = buyerApprovedList.map((item) => {
+      return item.auctionId;
+    });
+    res.status(200).send(result);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
+//@desc  Get approved auctions of a seller
+//@route GET /api/users/:id/seller/approvedAuctions
+const getApprovedAuctionsAsSeller = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(200).send("User not found");
+
+    const approvedPropertyList = await Property.find({
+      createdBy: user._id,
+      isApproved: "success",
+    }).select("_id");
+    let auctions = [];
+    if (approvedPropertyList.length !== 0) {
+      auctions = await Auction.find({
+        property: { $in: approvedPropertyList },
+      }).populate({ path: "property", select: "type details images" });
+    }
+    res.status(200).send(auctions);
+  } catch (error) {
+    res.status(500).send(error.message);
   }
 };
 
@@ -393,4 +518,10 @@ module.exports = {
   sendConfirmEmail,
   suspendUserAccount,
   deleteUserAccount,
+  getLikedAuctions,
+  setLikedAuction,
+  setUnlikedAuction,
+  getBidAuctions,
+  getApprovedAuctionsAsBuyer,
+  getApprovedAuctionsAsSeller,
 };

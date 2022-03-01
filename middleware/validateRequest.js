@@ -109,7 +109,7 @@ const validateBuyer = (req, res, next) => {
 
 const validateAuction = (req, res, next) => {
   const auctionSchema = Joi.object({
-    propertyId: Joi.objectId().required(),
+    property: Joi.objectId().required(),
     startingBid: Joi.number().required().strict(),
     incrementAmount: Joi.number().required().strict(),
     registerStartDate: Joi.date().iso().required(),

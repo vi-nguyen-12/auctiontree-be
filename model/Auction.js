@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 const auctionSchema = new Schema(
   {
-    propertyId: {
+    property: {
       type: Schema.Types.ObjectId,
       ref: "Property",
       required: true,

@@ -118,7 +118,7 @@ const makeEnvelope = (args) => {
   env.recipients = recipients;
 
   // Envelope will be sent
-  env.status = "created";
+  env.status = "sent";
   return env;
 };
 
@@ -180,26 +180,34 @@ const getSellerAgreementUIViews = async (req, res) => {
   }
   //if dcs does not exist || dcs exists but in other created property: create a new one
   if (!dcs || (dcs && dcsInProperty)) {
+    console.log("create new envelope");
     let envelopeArgs = {
-      templateId: "bd152cb4-2387-466a-a080-e74e37864be7",
       signer1: {
         email: user.email,
         name: `${user.firstName} ${user.lastName}`,
+        // email: "tri.pham@labs196.com",
+        // name: "Tri",
         recipientId: "1",
-        clientUserId: "1001",
+        // clientUserId: "1001",
       },
       cc1: {
         email: "vienne@labs196.com",
         name: "Vi Nguyen",
         recipientId: "2",
-        clientUserId: "1002",
+        // clientUserId: "1002",
       },
     };
-
     let envelope = makeEnvelope(envelopeArgs);
     envelopeResult = await envelopesApi.createEnvelope(apiArgs.accountId, {
       envelopeDefinition: envelope,
     });
+    console.log(envelopeResult);
+    const recipientsResult = await envelopesApi.listRecipients(
+      apiArgs.accountId,
+      (envelopeId = envelopeResult.envelopeId),
+      null
+    );
+    console.log(recipientsResult);
     envelopeId = envelopeResult.envelopeId;
     const newEnvelope = new Docusign({
       envelopeId,
@@ -213,8 +221,10 @@ const getSellerAgreementUIViews = async (req, res) => {
 
   const recipientViewArgs = {
     dsReturnUrl: `http://localhost:5000/api/docusign/callback/${envelopeId}`,
-    signerEmail: user.email,
-    signerName: `${user.firstName} ${user.lastName}`,
+    // signerEmail: user.email,
+    // signerName: `${user.firstName} ${user.lastName}`,
+    signerEmail: "tri.pham@labs196.com",
+    signerName: `Tri`,
     recipientId: "1",
     clientUserId: "1001",
     // signerClientId: "100abc",

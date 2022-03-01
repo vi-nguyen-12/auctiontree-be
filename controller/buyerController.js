@@ -71,7 +71,7 @@ const createBuyer = async (req, res) => {
 
     const savedBuyer = await newBuyer.save();
 
-    const property = await Property.findOne({ _id: auction.propertyId });
+    const property = await Property.findOne({ _id: auction.property });
 
     const result = {
       _id: savedBuyer._id,

@@ -1,4 +1,3 @@
-const User = require("./model/User");
 const sgMail = require("@sendgrid/mail");
 
 const sendEmail = ({ email, subject, text }) => {

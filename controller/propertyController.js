@@ -252,8 +252,8 @@ const getRealEstates = async (req, res) => {
 
     let properties = [];
     if (inAuction === "true") {
-      const auctions = await Auction.find().select("propertyId");
-      const propertyIds = auctions.map((auction) => auction.propertyId);
+      const auctions = await Auction.find().select("property");
+      const propertyIds = auctions.map((auction) => auction.property);
       properties = await Property.find({ _id: propertyIds })
         .find(filters)
         .sort({
@@ -262,8 +262,8 @@ const getRealEstates = async (req, res) => {
         .skip((page - 1) * limit)
         .limit(limit);
     } else if (inAuction === "false") {
-      const auctions = await Auction.find().select("propertyId");
-      const propertyIds = auctions.map((auction) => auction.propertyId);
+      const auctions = await Auction.find().select("property");
+      const propertyIds = auctions.map((auction) => auction.property);
       properties = await Property.find({ _id: { $nin: propertyIds } })
         .find(filters)
         .sort({
@@ -295,7 +295,7 @@ const getRealEstatesUpcomingAuctions = async (req, res) => {
   });
 
   for (let auction of allAuctions) {
-    const property = await Property.findOne({ _id: auction.propertyId });
+    const property = await Property.findOne({ _id: auction.property });
     auction.property = property;
   }
 
@@ -334,7 +334,7 @@ const getRealEstatesOngoingAuctions = async (req, res) => {
     auctionEndDate: { $gte: now },
   });
   for (let auction of allAuctions) {
-    const property = await Property.findOne({ _id: auction.propertyId });
+    const property = await Property.findOne({ _id: auction.property });
     const { numberOfBids, highestBid, highestBidders } =
       await getBidsInformation(auction.bids, auction.startingBid);
     auction.property = property;
@@ -389,7 +389,7 @@ const getRealEstatesStatusBuyer = async (req, res) => {
     }
     for (let item of registeredList) {
       const auction = await Auction.findOne({ _id: item.auctionId });
-      const property = await Property.findOne({ _id: auction.propertyId });
+      const property = await Property.findOne({ _id: auction.property });
       item.auction = auction;
       item.property = property;
     }
