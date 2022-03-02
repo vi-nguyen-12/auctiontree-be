@@ -145,7 +145,7 @@ const sendEnvelope = async (req, res) => {
 };
 
 // @desc: Request a signature through your app
-// @route: GET api/docusign/signature/sellerAgreement/uiviews
+// @route: GET api/docusign/signature/sellerAgreement/uiviews?envelopeId=123
 const makeRecipientViewRequest = (args) => {
   let viewRequest = new docusign.RecipientViewRequest();
   viewRequest.returnUrl = args.dsReturnUrl + "?state=signing_complete";
@@ -162,6 +162,8 @@ const makeRecipientViewRequest = (args) => {
 const getSellerAgreementUIViews = async (req, res) => {
   const accessToken = await getAccessToken();
   const user = await User.findById(req.user.userId);
+  let envelopeId = req.query.envelopeId;
+  let dcs;
 
   let dsApiClient = new docusign.ApiClient();
   dsApiClient.setBasePath(apiArgs.basePath);
@@ -169,18 +171,12 @@ const getSellerAgreementUIViews = async (req, res) => {
   let envelopesApi = new docusign.EnvelopesApi(dsApiClient),
     envelopeResult = null;
 
-  let envelopeId, dcs, dcsInProperty;
-  dcs = await Docusign.findOne({
-    userId: req.user.userId,
-    type: "seller_agreement",
-  });
-
-  if (dcs) {
-    dcsInProperty = await Property.findOne({ docusignId: dcs._id });
+  if (envelopeId) {
+    dcs = await Docusign.findOne({ envelopeId });
   }
-  //if dcs does not exist || dcs exists but in other created property: create a new one
-  if (!dcs || (dcs && dcsInProperty)) {
-    console.log("create new envelope");
+
+  //if dcs does not exist create a new one
+  if (!dcs) {
     let envelopeArgs = {
       signer1: {
         email: user.email,
@@ -199,13 +195,13 @@ const getSellerAgreementUIViews = async (req, res) => {
     envelopeResult = await envelopesApi.createEnvelope(apiArgs.accountId, {
       envelopeDefinition: envelope,
     });
-    console.log(envelopeResult);
+
     const recipientsResult = await envelopesApi.listRecipients(
       apiArgs.accountId,
       (envelopeId = envelopeResult.envelopeId),
       null
     );
-    console.log(recipientsResult);
+
     envelopeId = envelopeResult.envelopeId;
     const newEnvelope = new Docusign({
       envelopeId,
@@ -253,7 +249,8 @@ const callback = async (req, res) => {
     const envelope = await Docusign.findOne({ envelopeId });
     envelope.status = event;
     await envelope.save();
-    res.redirect(`${process.env.CLIENT_HOST}?docusign=true&event=${event}`);
+    res.status(200).send(envelope.status);
+    // res.redirect(`${process.env.CLIENT_HOST}?docusign=true&event=${event}`);
   } catch (err) {
     res.status(500).send(err.message);
   }
