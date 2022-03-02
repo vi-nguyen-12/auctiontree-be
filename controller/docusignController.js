@@ -28,7 +28,7 @@ const getAccessToken = async () => {
     privateKey,
     { algorithm: "RS256" }
   );
-  const getAccessToken = async () => {
+  const getToken = async () => {
     try {
       const response = await axios.post(
         "https://account-d.docusign.com/oauth/token",
@@ -43,7 +43,7 @@ const getAccessToken = async () => {
     }
   };
 
-  const access_token = await getAccessToken();
+  const access_token = await getToken();
   return access_token;
 };
 
@@ -94,11 +94,11 @@ const makeEnvelope = (args) => {
 
   // Create tabs
   let signHere1 = docusign.SignHere.constructFromObject({
-    anchorString: "Sign Here",
-    anchorYOffset: "10",
-    anchorUnits: "pixels",
-    anchorXOffset: "60",
-  }),
+      anchorString: "Sign Here",
+      anchorYOffset: "10",
+      anchorUnits: "pixels",
+      anchorXOffset: "60",
+    }),
     signHere2 = docusign.SignHere.constructFromObject({
       anchorString: "Initial",
       anchorYOffset: "10",
@@ -185,8 +185,6 @@ const getSellerAgreementUIViews = async (req, res) => {
       signer1: {
         email: user.email,
         name: `${user.firstName} ${user.lastName}`,
-        // email: "tri.pham@labs196.com",
-        // name: "Tri",
         recipientId: "1",
         // clientUserId: "1001",
       },
@@ -221,10 +219,8 @@ const getSellerAgreementUIViews = async (req, res) => {
 
   const recipientViewArgs = {
     dsReturnUrl: `http://localhost:5000/api/docusign/callback/${envelopeId}`,
-    // signerEmail: user.email,
-    // signerName: `${user.firstName} ${user.lastName}`,
-    signerEmail: "tri.pham@labs196.com",
-    signerName: `Tri`,
+    signerEmail: user.email,
+    signerName: `${user.firstName} ${user.lastName}`,
     recipientId: "1",
     clientUserId: "1001",
     // signerClientId: "100abc",
