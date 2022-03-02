@@ -17,8 +17,11 @@ const {
   setLikedAuction,
   setUnlikedAuction,
   getBidAuctions,
-  getApprovedAuctionsAsBuyer,
-  getApprovedAuctionsAsSeller,
+  getApprovedAuctionsOfBuyer,
+  getWinAuctionsOfBuyer,
+  getApprovedAuctionsOfSeller,
+  getPendingListingsOfSeller,
+  getApprovedListingsOfSeller,
 } = require("../controller/userController");
 
 router.post("/register", validateUser, registerUser);
@@ -32,8 +35,11 @@ router.put("/:id/likes/:auctionId", setLikedAuction);
 router.delete("/:id/likes/:auctionId", setUnlikedAuction);
 router.get("/:id/likes", getLikedAuctions);
 router.get("/:id/bidAuctions", getBidAuctions);
-router.get("/:id/buyer/approvedAuctions", getApprovedAuctionsAsBuyer);
-router.get("/:id/seller/approvedAuctions", getApprovedAuctionsAsSeller);
+router.get("/:id/buyer/approvedAuctions", getApprovedAuctionsOfBuyer);
+router.get("/:id/buyer/winAuctions", getWinAuctionsOfBuyer);
+router.get("/:id/seller/approvedAuctions", getApprovedAuctionsOfSeller);
+router.get("/:id/seller/pendingListings", getPendingListingsOfSeller);
+router.get("/:id/seller/approvedListings", getApprovedListingsOfSeller);
 //only for login user
 router.put("/:id?suspended=true", auth, suspendUserAccount);
 router.put("/:id?suspended=false", auth, suspendUserAccount);

@@ -458,7 +458,7 @@ const getBidAuctions = async (req, res) => {
 
 //@desc  Get approved auctions of a buyer
 //@route GET /api/users/:id/buyer/approvedAuctions
-const getApprovedAuctionsAsBuyer = async (req, res) => {
+const getApprovedAuctionsOfBuyer = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(200).send("User not found");
@@ -483,9 +483,26 @@ const getApprovedAuctionsAsBuyer = async (req, res) => {
   }
 };
 
+//@desc  Get win auctions of a buyer
+//@route GET /api/users/:id/buyer/winAuctions
+const getWinAuctionsOfBuyer = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(200).send("User not found");
+
+    const result = await Auction.find({
+      "winner.userId": user._id,
+    }).populate({ path: "property", select: "type details images" });
+
+    res.status(200).send(result);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
 //@desc  Get approved auctions of a seller
 //@route GET /api/users/:id/seller/approvedAuctions
-const getApprovedAuctionsAsSeller = async (req, res) => {
+const getApprovedAuctionsOfSeller = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(200).send("User not found");
@@ -501,6 +518,42 @@ const getApprovedAuctionsAsSeller = async (req, res) => {
       }).populate({ path: "property", select: "type details images" });
     }
     res.status(200).send(auctions);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
+//@desc  Get pending listings of a seller
+//@route GET /api/users/:id/seller/pendingListings
+const getPendingListingsOfSeller = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(200).send("User not found");
+
+    const notApprovedPropertyList = await Property.find({
+      createdBy: user._id,
+      isApproved: { $in: ["pending", "fail"] },
+    });
+
+    res.status(200).send(notApprovedPropertyList);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
+//@desc  Get pending listings of a seller
+//@route GET /api/users/:id/seller/approvedListings
+const getApprovedListingsOfSeller = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(200).send("User not found");
+
+    const approvedPropertyList = await Property.find({
+      createdBy: user._id,
+      isApproved: "success",
+    });
+
+    res.status(200).send(approvedPropertyList);
   } catch (error) {
     res.status(500).send(error.message);
   }
@@ -522,6 +575,9 @@ module.exports = {
   setLikedAuction,
   setUnlikedAuction,
   getBidAuctions,
-  getApprovedAuctionsAsBuyer,
-  getApprovedAuctionsAsSeller,
+  getApprovedAuctionsOfBuyer,
+  getWinAuctionsOfBuyer,
+  getApprovedAuctionsOfSeller,
+  getPendingListingsOfSeller,
+  getApprovedListingsOfSeller,
 };

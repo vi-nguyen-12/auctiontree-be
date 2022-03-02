@@ -25,6 +25,7 @@ const allowedDomains = [
   "http://localhost:3001",
   "https://master.duhqplujt8olk.amplifyapp.com",
 ];
+
 const corsOptions = {
   credentials: true,
   origin: (origin, callback) => {
