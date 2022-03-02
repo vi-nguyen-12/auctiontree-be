@@ -16,7 +16,7 @@ const {
   getLikedAuctions,
   setLikedAuction,
   setUnlikedAuction,
-  getBidAuctions,
+  getBidAuctionsOfBuyer,
   getApprovedAuctionsOfBuyer,
   getWinAuctionsOfBuyer,
   getApprovedAuctionsOfSeller,
@@ -34,7 +34,7 @@ router.post("/password", resetForgotPassword);
 router.put("/:id/likes/:auctionId", setLikedAuction);
 router.delete("/:id/likes/:auctionId", setUnlikedAuction);
 router.get("/:id/likes", getLikedAuctions);
-router.get("/:id/bidAuctions", getBidAuctions);
+router.get("/:id/buyer/bidAuctions", getBidAuctionsOfBuyer);
 router.get("/:id/buyer/approvedAuctions", getApprovedAuctionsOfBuyer);
 router.get("/:id/buyer/winAuctions", getWinAuctionsOfBuyer);
 router.get("/:id/seller/approvedAuctions", getApprovedAuctionsOfSeller);

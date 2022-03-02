@@ -439,9 +439,9 @@ const setUnlikedAuction = async (req, res) => {
   }
 };
 
-//@desc  Get bid auctions of a user
-//@route GET /api/users/:id/bidAuctions
-const getBidAuctions = async (req, res) => {
+//@desc  Get bid auctions of a buyer
+//@route GET /api/users/:id/buyer/bidAuctions
+const getBidAuctionsOfBuyer = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(200).send("User not found");
@@ -574,7 +574,7 @@ module.exports = {
   getLikedAuctions,
   setLikedAuction,
   setUnlikedAuction,
-  getBidAuctions,
+  getBidAuctionsOfBuyer,
   getApprovedAuctionsOfBuyer,
   getWinAuctionsOfBuyer,
   getApprovedAuctionsOfSeller,
