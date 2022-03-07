@@ -24,7 +24,7 @@ const allowedDomains = [
   "http://localhost:3000",
   "http://localhost:3001",
   "https://master.duhqplujt8olk.amplifyapp.com",
-  "https://auction10x.herokuapp.com/",
+  "https://auction10x.herokuapp.com",
 ];
 
 const corsOptions = {
