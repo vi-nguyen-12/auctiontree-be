@@ -74,9 +74,9 @@ app.use("/admin/api/questions", questionRoute);
 app.use("/api/docusign", docusignRoute);
 app.use("/api/test", testRoute);
 
-if (process.env.NODE_ENV === "production") {
-  app.use();
-}
+// if (process.env.NODE_ENV === "production") {
+//   app.use();
+// }
 const server = app.listen(port, () => console.log("Server is running..."));
 
 const io = socket(server, {
