@@ -18,6 +18,8 @@ const testRoute = require("./routes/test");
 const cookieparser = require("cookie-parser");
 const cors = require("cors");
 
+app.set("trust proxy", 1);
+
 // app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
 
 const allowedDomains = [
