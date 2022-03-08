@@ -19,7 +19,6 @@ const cookieparser = require("cookie-parser");
 const cors = require("cors");
 
 app.set("trust proxy", 1);
-
 // app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
 
 const allowedDomains = [
@@ -37,6 +36,7 @@ const corsOptions = {
     callback(new Error("Not allowed by CORS"));
   },
 };
+
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
