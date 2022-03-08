@@ -18,7 +18,7 @@ const testRoute = require("./routes/test");
 const cookieparser = require("cookie-parser");
 const cors = require("cors");
 
-app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
+// app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
 
 const allowedDomains = [
   "http://localhost:3000",
@@ -28,14 +28,14 @@ const allowedDomains = [
   "https://auction10x.netlify.app",
 ];
 
-// const corsOptions = {
-//   credentials: true,
-//   origin: (origin, callback) => {
-//     if (allowedDomains.includes(origin)) return callback(null, true);
-//     callback(new Error("Not allowed by CORS"));
-//   },
-// };
-// app.use(cors(corsOptions));
+const corsOptions = {
+  credentials: true,
+  origin: (origin, callback) => {
+    if (allowedDomains.includes(origin)) return callback(null, true);
+    callback(new Error("Not allowed by CORS"));
+  },
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
