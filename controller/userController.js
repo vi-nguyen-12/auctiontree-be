@@ -185,7 +185,7 @@ const login = async (req, res) => {
     res.cookie("auth-token", token, {
       expires: new Date(Date.now() + 18000000),
       httpOnly: false,
-      sameSite: "strict",
+      sameSite: "none",
       secure: true,
       domain: "https://auction10x.netlify.app",
     });
