@@ -187,7 +187,6 @@ const login = async (req, res) => {
       httpOnly: false,
       sameSite: "none",
       secure: true,
-      domain: "https://auction10x.netlify.app",
     });
 
     res.status(200).send({

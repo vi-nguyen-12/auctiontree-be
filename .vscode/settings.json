@@ -1,0 +1,4 @@
+{
+  "appService.defaultWebAppToDeploy": "/subscriptions/1f55f133-b005-40af-a4b6-2afb0d993dbb/resourceGroups/appsvc_linux_centralus/providers/Microsoft.Web/sites/auction10x-be",
+  "appService.deploySubpath": "."
+}

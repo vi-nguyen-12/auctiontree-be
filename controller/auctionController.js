@@ -314,36 +314,33 @@ const getRealEstateAuctionsStatusBuyer = async (req, res) => {
   }
   try {
     const registeredList = await Buyer.find({ userId: req.user.userId });
-
-    if (registeredList.length === 0) {
-      return res
-        .status(200)
-        .send({ error: "This user has not register to buy any property" });
+    let data = [];
+    if (registeredList.length !== 0) {
+      for (let item of registeredList) {
+        const auction = await Auction.findOne({ _id: item.auctionId });
+        const property = await Property.findOne({ _id: auction.property });
+        item.auction = auction;
+        item.property = property;
+      }
+      data = registeredList.map((item) => {
+        return {
+          _id: item.auction._id,
+          registerStartDate: item.auction.registerStartDate,
+          registerEndDate: item.auction.registerEndDate,
+          auctionStartDate: item.auction.auctionStartDate,
+          auctionEndDate: item.auction.auctionEndDate,
+          property: {
+            _id: item.property._id,
+            type: item.auction.type,
+            details: item.property.details,
+            images: item.property.images,
+            videos: item.property.videos,
+            documents: item.property.documents,
+          },
+          isApproved: item.isApproved,
+        };
+      });
     }
-    for (let item of registeredList) {
-      const auction = await Auction.findOne({ _id: item.auctionId });
-      const property = await Property.findOne({ _id: auction.property });
-      item.auction = auction;
-      item.property = property;
-    }
-    const data = registeredList.map((item) => {
-      return {
-        _id: item.auction._id,
-        registerStartDate: item.auction.registerStartDate,
-        registerEndDate: item.auction.registerEndDate,
-        auctionStartDate: item.auction.auctionStartDate,
-        auctionEndDate: item.auction.auctionEndDate,
-        property: {
-          _id: item.property._id,
-          type: item.auction.type,
-          details: item.property.details,
-          images: item.property.images,
-          videos: item.property.videos,
-          documents: item.property.documents,
-        },
-        isApproved: item.isApproved,
-      };
-    });
     res.status(200).send(data);
   } catch (err) {
     res.status(500).send(err.message);

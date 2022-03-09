@@ -19,6 +19,15 @@ const cookieparser = require("cookie-parser");
 const cors = require("cors");
 
 app.set("trust proxy", 1);
+app.use(function (req, res, next) {
+  // if (req.headers["x-arr-ssl"] && !req.headers["x-forwarded-proto"]) {
+  //   req.headers["x-forwarded-proto"] = "https";
+  // }
+  if (!req.headers["x-forwarded-proto"]) {
+    req.headers["x-forwarded-proto"] = "https";
+  }
+  return next();
+});
 // app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
 
 const allowedDomains = [
@@ -65,6 +74,7 @@ app.use(function (req, res, next) {
   }
   res.header(
     "Access-Control-Allow-Headers",
+    "Access-Control-Allow-Credentials",
     "Origin, X-Requested-With, Content-Type, Accept"
   );
   next();
