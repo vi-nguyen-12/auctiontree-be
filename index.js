@@ -18,7 +18,6 @@ const testRoute = require("./routes/test");
 const cookieparser = require("cookie-parser");
 const cors = require("cors");
 
-app.set("trust proxy", 1);
 app.use(function (req, res, next) {
   // if (req.headers["x-arr-ssl"] && !req.headers["x-forwarded-proto"]) {
   //   req.headers["x-forwarded-proto"] = "https";
@@ -31,11 +30,13 @@ app.use(function (req, res, next) {
 // app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
 
 const allowedDomains = [
-  "http://localhost:3000",
+  process.env.DEV_CLIENT_URL,
+  process.env.PROD_CLIENT_URL,
+  process.env.DEV_API_URL,
+  process.env.PROD_API_URL,
   "http://localhost:3001",
-  "https://master.duhqplujt8olk.amplifyapp.com",
-  "https://auction10x.herokuapp.com",
-  "https://auction10x.netlify.app",
+  // "https://master.duhqplujt8olk.amplifyapp.com",
+  // "https://auction10x.herokuapp.com",
 ];
 
 const corsOptions = {
@@ -47,6 +48,8 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.set("trust proxy", 1);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -67,7 +70,6 @@ mongoose.connect(
 
 app.use(express.json());
 app.use(function (req, res, next) {
-  // res.header("Access-Control-Allow-Origin", "http://localhost:3000");
   const origin = req.headers.origin;
   if (allowedDomains.indexOf(origin) > -1) {
     res.header("Access-Control-Allow-Origin", origin);
@@ -96,7 +98,11 @@ const server = app.listen(port, () => console.log("Server is running..."));
 const io = socket(server, {
   cors: {
     credentials: true,
-    origin: ["http://localhost:3000", "http://localhost:3001"],
+    origin: [
+      process.env.DEV_CLIENT_URL,
+      process.env.PROD_CLIENT_URL,
+      "http://localhost:3001",
+    ],
   },
 });
 

@@ -8,6 +8,11 @@ const jwt = require("jsonwebtoken");
 const speakeasy = require("speakeasy");
 const { sendEmail } = require("../helper");
 
+const client_url =
+  process.env.NODE_ENV === "production"
+    ? process.env.PROD_CLIENT_URL
+    : process.env.DEV_CLIENT_URL;
+
 //@desc  Register a new user & create secret
 //@route POST /api/users/register
 const registerUser = async (req, res) => {
@@ -47,7 +52,7 @@ const registerUser = async (req, res) => {
     sendEmail({
       email: user.email,
       subject: "Auction 10X- Confirm email",
-      text: `Please click here to confirm your email: ${process.env.CLIENT_HOST}/confirm_email&?token=${token}`,
+      text: `Please click here to confirm your email: ${client_url}/confirm_email&?token=${token}`,
     });
     res.status(200).send({
       userId: savedUser._id,
@@ -130,7 +135,7 @@ const sendConfirmEmail = async (req, res) => {
     sendEmail({
       email: user.email,
       subject: "Auction 10X- Confirm email",
-      text: `Please click here to confirm your email: ${process.env.CLIENT_HOST}/confirm_email?token=${token}`,
+      text: `Please click here to confirm your email: ${client_url}/confirm_email?token=${token}`,
     });
     res.status(200).send({
       userId: savedUser._id,
@@ -202,6 +207,7 @@ const login = async (req, res) => {
         city: user.city,
         isActive: user.isActive,
         KYC: user.isKYC,
+        token,
       },
     });
   } catch (error) {
@@ -294,7 +300,7 @@ const resetForgotPassword = async (req, res) => {
       sendEmail({
         email,
         subject: "Auction10X- Reset password",
-        text: `Please click here to reset password: ${process.env.CLIENT_HOST}/reset_password?token=${token}`,
+        text: `Please click here to reset password: ${client_url}/reset_password?token=${token}`,
       });
       return res.status(200).send({ message: "Reset link sent successfully" });
     }
