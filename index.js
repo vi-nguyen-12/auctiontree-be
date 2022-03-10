@@ -19,9 +19,6 @@ const cookieparser = require("cookie-parser");
 const cors = require("cors");
 
 app.use(function (req, res, next) {
-  // if (req.headers["x-arr-ssl"] && !req.headers["x-forwarded-proto"]) {
-  //   req.headers["x-forwarded-proto"] = "https";
-  // }
   if (!req.headers["x-forwarded-proto"]) {
     req.headers["x-forwarded-proto"] = "https";
   }

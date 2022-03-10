@@ -7,10 +7,15 @@ const axios = require("axios");
 const jwt = require("jsonwebtoken");
 const docusign = require("docusign-esign");
 
-const server_host =
+const server_url =
   process.env.NODE_ENV === "production"
     ? process.env.PROD_API_URL
     : process.env.DEV_API_URL;
+
+const client_url =
+  process.env.NODE_ENV === "production"
+    ? process.env.PROD_CLIENT_URL
+    : process.env.DEV_CLIENT_URL;
 
 // const consentURI =
 //   "https://account-d.docusign.com/oauth/auth?response_type=code&scope=signature%20impersonation&client_id=54bc1507-9cbe-4119-916f-ec1073bf7b48&redirect_uri=https://www.transenergy360.com/";
@@ -58,7 +63,7 @@ let apiArgs = {
 };
 
 const returnUrlArgs = {
-  dsReturnUrl: `${server_host}/api/docusign/callback`,
+  dsReturnUrl: `${client_url}/docusign/callback`,
 };
 
 //request a signature by email,
@@ -219,7 +224,7 @@ const getSellerAgreementUIViews = async (req, res) => {
   }
 
   const recipientViewArgs = {
-    dsReturnUrl: `${server_host}/api/docusign/callback/${envelopeId}`,
+    dsReturnUrl: `${client_url}/api/docusign/callback/${envelopeId}`,
     signerEmail: user.email,
     signerName: `${user.firstName} ${user.lastName}`,
     recipientId: "1",
