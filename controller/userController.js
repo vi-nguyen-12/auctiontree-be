@@ -432,13 +432,14 @@ const setLikedAuction = async (req, res) => {
 //@route DELETE /api/users/:id/likes/:auctionId
 const setUnlikedAuction = async (req, res) => {
   try {
+    const { id, auctionId } = req.params;
     const user = await User.findById(req.params.id);
     if (!user) return res.status(200).send("User not found");
 
-    const auctionId = await Auction.findById(req.params.auctionId);
-    if (!auctionId) return res.status(200).send("Auction not found");
-
-    user.likedAuctions.filter((item) => item !== auctionId);
+    user.likedAuctions = user.likedAuctions.filter(
+      (item) => item !== auctionId
+    );
+    await user.save();
     return res.status(200).send("Successfully remove auction from liked list");
   } catch (err) {
     res.status(500).send(err.message);
