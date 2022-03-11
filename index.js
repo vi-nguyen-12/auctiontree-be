@@ -29,9 +29,9 @@ app.use(function (req, res, next) {
 const allowedDomains = [
   process.env.DEV_CLIENT_URL,
   process.env.PROD_CLIENT_URL,
-  process.env.DEV_API_URL,
-  process.env.PROD_API_URL,
-  "http://localhost:3001",
+  process.env.DEV_CLIENT_ADMIN_URL,
+  process.env.PROD_CLIENT_ADMIN_URL,
+  "https://demo.docusign.net/restapi",
   // "https://master.duhqplujt8olk.amplifyapp.com",
   // "https://auction10x.herokuapp.com",
 ];

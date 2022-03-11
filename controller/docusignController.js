@@ -224,7 +224,7 @@ const getSellerAgreementUIViews = async (req, res) => {
   }
 
   const recipientViewArgs = {
-    dsReturnUrl: `${client_url}/api/docusign/callback/${envelopeId}`,
+    dsReturnUrl: `${client_url}/docusign/callback/${envelopeId}`,
     signerEmail: user.email,
     signerName: `${user.firstName} ${user.lastName}`,
     recipientId: "1",

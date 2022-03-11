@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now },
   secret: { type: Object },
   isActive: { type: Boolean, required: true, default: false },
-  KYC: { type: Boolean, required: true, default: false },
+  KYC: { type: Boolean, required: true, default: true },
   temp_token: String,
   isSuspended: { type: Boolean, required: true, default: false },
   likedAuctions: [{ type: Schema.Types.ObjectId, ref: "Auction" }],

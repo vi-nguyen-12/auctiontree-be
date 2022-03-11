@@ -8,7 +8,13 @@ const docusignSchema = new Schema(
     type: { type: String, enum: ["seller_agreement"], required: true },
     status: {
       type: String,
-      enum: ["pending", "signing_complete", "decline", "cancel"],
+      enum: [
+        "pending",
+        "signing_complete",
+        "viewing_complete",
+        "decline",
+        "cancel",
+      ],
       default: "pending",
     },
   },
