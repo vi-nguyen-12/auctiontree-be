@@ -86,141 +86,164 @@ const search = async (req, res) => {
   }
 };
 
-//@desc  Create a property
+//@desc  Create a real-estate
 //@route POST /api/properties/real-estates/ body:{type, street_address, city, state, images, videos, documents, docusignId, reservedAmount, discussedAmount}
-const createNewEstates = async (req, res) => {
-  const {
-    type,
-    street_address,
-    city,
-    state,
-    images,
-    videos,
-    documents,
-    docusignId,
-    reservedAmount,
-    discussedAmount,
-  } = req.body;
-  const requiredDocuments = [
-    "title_report",
-    "insurance_copy",
-    "financial_document",
-    "purchase_agreement",
-    "third-party_report",
-    "demographics",
-    "market_and_valuations",
-  ];
-  // const { rooms_count, beds_count, baths } = fields;
+const createRealestate = async (req, res) => {
+  {
+    try {
+      const {
+        type,
+        street_address,
+        city,
+        state,
+        images,
+        videos,
+        documents,
+        docusignId,
+        reservedAmount,
+        discussedAmount,
+      } = req.body;
 
-  if (discussedAmount > reservedAmount) {
-    return res.status(200).send({
-      error: "Discussed amount must be less than or equal to reserved amount",
-    });
-  }
+      // const { rooms_count, beds_count, baths } = fields;
 
-  for (let item of requiredDocuments) {
-    if (!documents.find((i) => i.officialName === item)) {
-      return res.status(200).send({ error: `Document ${item} is required` });
+      if (discussedAmount > reservedAmount) {
+        return res.status(200).send({
+          error:
+            "Discussed amount must be less than or equal to reserved amount",
+        });
+      }
+      const response = await axios.get(process.env.THIRD_PARTY_API, {
+        params: { street_address, city, state },
+      });
+
+      const newEstates = new Property({
+        createdBy: req.user.userId,
+        type,
+        details: response.data.data,
+        images,
+        videos,
+        documents,
+        docusignId,
+        reservedAmount,
+        discussedAmount,
+      });
+      // newEstates.details.structure.rooms_count = rooms_count;
+      // newEstates.details.structure.beds_count = beds_count;
+      // newEstates.details.structure.baths = baths;
+
+      const savedNewEstates = await newEstates.save();
+      const { email } = await User.findOne({ _id: req.user.userId }, "email");
+      sendEmail({
+        email,
+        subject: "Auction 10X-Listing real-estate status",
+        text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
+      });
+      res.status(200).send(savedNewEstates);
+    } catch (error) {
+      res.status(500).send(error.message);
     }
   }
-
-  const response = await axios.get(process.env.THIRD_PARTY_API, {
-    params: { street_address, city, state },
-  });
-
-  const newEstates = new Property({
-    createdBy: req.user.userId,
-    type,
-    details: response.data.data,
-    images,
-    videos,
-    documents,
-    docusignId,
-    reservedAmount,
-    discussedAmount,
-  });
-  // newEstates.details.structure.rooms_count = rooms_count;
-  // newEstates.details.structure.beds_count = beds_count;
-  // newEstates.details.structure.baths = baths;
-
-  const savedNewEstates = await newEstates.save();
-
-  const { email } = await User.findOne({ _id: req.user.userId }, "email");
-  sendEmail({
-    email,
-    subject: "Auction 10X-Listing real-estate status",
-    text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
-  });
-
-  res.status(200).send(savedNewEstates);
 };
 
-//@desc  Edit a property
+//@desc  Edit a real-estate
 //@route PUT /api/properties/real-estates/:id body:{type, street_address, city, state, images, videos, documents, reservedAmount, discussedAmount}
-const editProperty = async (req, res) => {
-  const property = await Property.findById(req.params.id);
-  if (!property) return res.status(404).send("No property is found!");
-  const {
-    type,
-    street_address,
-    city,
-    state,
-    images,
-    videos,
-    documents,
-    docusignId,
-    reservedAmount,
-    discussedAmount,
-  } = req.body;
-  // const { rooms_count, beds_count, baths } = fields;
+const editRealestate = async (req, res) => {
+  try {
+    const property = await Property.findById(req.params.id);
+    if (!property) return res.status(404).send("No property is found!");
+    const {
+      type,
+      street_address,
+      city,
+      state,
+      images,
+      videos,
+      documents,
+      docusignId,
+      reservedAmount,
+      discussedAmount,
+    } = req.body;
+    // const { rooms_count, beds_count, baths } = fields;
 
-  const requiredDocuments = [
-    "title_report",
-    "insurance_copy",
-    "financial_document",
-    "purchase_agreement",
-    "third-party_report",
-    "demographics",
-    "market_and_valuations",
-  ];
-
-  if (discussedAmount > reservedAmount) {
-    return res.status(200).send({
-      error: "Discussed amount must be less than or equal to reserved amount",
+    if (discussedAmount > reservedAmount) {
+      return res.status(200).send({
+        error: "Discussed amount must be less than or equal to reserved amount",
+      });
+    }
+    const response = await axios.get(process.env.THIRD_PARTY_API, {
+      params: { street_address, city, state },
     });
-  }
+    console.log(response.data);
 
-  for (let item of requiredDocuments) {
-    if (!documents.find((i) => i.officialName === item)) {
-      return res.status(200).send({ error: `Document ${item} is required` });
+    property.type = type;
+    property.street_address = street_address;
+    property.city = city;
+    property.state = state;
+    property.images = images;
+    property.videos = videos;
+    property.documents = documents;
+    property.docusignId = docusignId;
+    property.reservedAmount = reservedAmount;
+    property.discussedAmount = discussedAmount;
+
+    const updatedProperty = property.save();
+    const { email } = await User.findOne({ _id: req.user.userId }, "email");
+    sendEmail({
+      email,
+      subject: "Auction 10X- Updating property",
+      text: "Thank you for updating your property. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
+    });
+
+    res.status(200).send(updatedProperty);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+//@desc  Create a car/jet/yatch
+//@route POST /api/properties body:{type, details, images, videos, documents, docusignId, reservedAmount, discussedAmount}
+const createOthers = async (req, res) => {
+  {
+    try {
+      const {
+        type,
+        details,
+        images,
+        videos,
+        documents,
+        docusignId,
+        reservedAmount,
+        discussedAmount,
+      } = req.body;
+
+      if (discussedAmount > reservedAmount) {
+        return res.status(200).send({
+          error:
+            "Discussed amount must be less than or equal to reserved amount",
+        });
+      }
+      const newProperty = new Property({
+        createdBy: req.user.userId,
+        type,
+        details,
+        images,
+        videos,
+        documents,
+        docusignId,
+        reservedAmount,
+        discussedAmount,
+      });
+      const savedProperty = await newProperty.save();
+      const { email } = await User.findOne({ _id: req.user.userId }, "email");
+      sendEmail({
+        email,
+        subject: `Auction 10X-Listing  ${type} status`,
+        text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
+      });
+      res.status(200).send(savedProperty);
+    } catch (error) {
+      res.status(500).send(error.message);
     }
   }
-
-  const response = await axios.get(process.env.THIRD_PARTY_API, {
-    params: { street_address, city, state },
-  });
-  console.log(response.data);
-
-  property.type = type;
-  property.street_address = street_address;
-  property.city = city;
-  property.state = state;
-  property.images = images;
-  property.videos = videos;
-  property.documents = documents;
-  property.docusignId = docusignId;
-  property.reservedAmount = reservedAmount;
-  property.discussedAmount = discussedAmount;
-
-  const updatedProperty = property.save();
-  const { email } = await User.findOne({ _id: req.user.userId }, "email");
-  sendEmail({
-    email,
-    subject: "Auction 10X- Updating property",
-    text: "Thank you for updating your property. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
-  });
-
-  res.status(200).send(updatedProperty);
 };
 
 //@desc  List real estates (sorting by created date) by page and limit
@@ -634,13 +657,14 @@ module.exports = {
   upload,
   uploadAll,
   search,
-  createNewEstates,
-  editProperty,
+  createRealestate,
+  editRealestate,
   getRealEstates,
   getRealEstate,
   getRealEstatesUpcomingAuctions,
   getRealEstatesOngoingAuctions,
   getRealEstatesStatusBuyer,
+  createOthers,
   approveProperty,
   verifyDocument,
   verifyImage,

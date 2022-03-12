@@ -39,15 +39,6 @@ const propertySchema = new Schema(
         officialName: {
           type: String,
           required: true,
-          enum: [
-            "title_report",
-            "insurance_copy",
-            "financial_document",
-            "purchase_agreement",
-            "third-party_report",
-            "demographics",
-            "market_and_valuations",
-          ],
         },
         name: { type: String, required: true },
         url: { type: String, required: true },
@@ -76,5 +67,36 @@ const propertySchema = new Schema(
   },
   { timestamps: true }
 );
+propertySchema.pre("save", function (next) {
+  let requiredDocuments;
+  switch (this.type) {
+    case "real-estate":
+      requiredDocuments = [
+        "title_report",
+        "insurance_copy",
+        "financial_document",
+        "purchase_agreement",
+        "third-party_report",
+        "demographics",
+        "market_and_valuations",
+      ];
+      break;
+    case "car":
+    case "jet":
+    case "yacht":
+      requiredDocuments = [
+        "certificate_of_title",
+        "insurance_copy",
+        "financial_document",
+        "market_and_valuations",
+      ];
+  }
+  for (item of requiredDocuments) {
+    if (!this.documents.find((i) => i.officialName === item)) {
+      next(new Error(`Document ${item} is required`));
+    }
+    next();
+  }
+});
 
 module.exports = mongoose.model("Property", propertySchema);

@@ -79,7 +79,7 @@ app.use(function (req, res, next) {
   next();
 });
 app.use("/api/users", userRoutes);
-app.use("/api/properties/real-estates/", propertyRoutes);
+app.use("/api/properties", propertyRoutes);
 app.use("/api/kyc", kycRoute);
 app.use("/api/buyers", buyerRoute);
 app.use("/api/questions", questionRoute);

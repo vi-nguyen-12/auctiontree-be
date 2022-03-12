@@ -5,12 +5,13 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev":"nodemon index.js",
+    "dev": "nodemon index.js",
     "test": "mocha"
   },
   "author": "10X",
   "license": "ISC",
   "dependencies": {
+    "@joi/date": "^2.1.0",
     "@sendgrid/mail": "^7.6.0",
     "aws-sdk": "^2.1033.0",
     "axios": "^0.24.0",

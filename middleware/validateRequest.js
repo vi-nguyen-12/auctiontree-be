@@ -1,4 +1,4 @@
-const Joi = require("joi");
+const Joi = require("joi").extend(require("@joi/date"));
 Joi.objectId = require("joi-objectid")(Joi);
 
 const validateUser = (req, res, next) => {
@@ -53,6 +53,125 @@ const validateProperty = (req, res, next) => {
             "purchase_agreement",
             "third-party_report",
             "demographics",
+            "market_and_valuations"
+          )
+          .required(),
+        url: Joi.string().required(),
+        name: Joi.string().required(),
+      })
+    ),
+    docusignId: Joi.objectId().required(),
+    reservedAmount: Joi.number().required().strict(),
+    discussedAmount: Joi.number().required().strict(),
+  });
+  const { error } = propertySchema.validate(req.body);
+  if (error) {
+    return res.status(200).send({ error: error.details[0].message });
+  }
+  next();
+};
+const validateOthers = (req, res, next) => {
+  const propertySchema = Joi.object({
+    type: Joi.string().valid("jet", "car", "yacht").required(),
+    details: Joi.when("type", {
+      is: "car",
+      then: Joi.object({
+        make: Joi.string().required(),
+        model: Joi.string().required(),
+        year: Joi.date().format("YYYY").required(),
+        mileage: Joi.number().required(),
+        transmission: Joi.string().required(),
+        car_type: Joi.string().required(),
+        power: Joi.string().required(),
+        color: Joi.string().required(),
+        VIN: Joi.string().required(),
+        engine: Joi.string().required(),
+        fuel_type: Joi.string().required(),
+        condition: Joi.string().required(),
+        price: Joi.number().required(),
+        address: Joi.string().required(),
+      }).required(),
+    })
+      .when("type", {
+        is: "jet",
+        then: Joi.object({
+          VAT_type: Joi.string().required(),
+          crusing_speed: Joi.number().required(),
+          max_range: Joi.number().required(),
+          cabin_length: Joi.number().required(),
+          cabin_height: Joi.number().required(),
+          cabin_width: Joi.number().required(),
+          exterior_height: Joi.number().required(),
+          exterior_length: Joi.number().required(),
+          capacity: Joi.number().required(),
+          other_services: Joi.string(),
+          plane_type: Joi.string().required(),
+          wing_span: Joi.number().required(),
+        }).required(),
+      })
+      .when("type", {
+        is: "yacht",
+        then: Joi.object({
+          year: Joi.date().format("YYYY").required(),
+          address: Joi.string().required(),
+          length: Joi.number().required(),
+          beam: Joi.number().required(),
+          draft: Joi.number().required(),
+          displacement: Joi.number().required(),
+          engines: Joi.number().required(),
+          engine_hours: Joi.number().required(),
+          engine_brand: Joi.string().required(),
+          fuel_tankage: Joi.number().required(),
+          boat_type: Joi.string().required(),
+        }),
+      }),
+
+    images: Joi.array().items(
+      Joi.object({
+        name: Joi.string().required(),
+        url: Joi.string().required(),
+      }).required()
+    ),
+    videos: Joi.array().items(
+      Joi.object({
+        name: Joi.string().required(),
+        url: Joi.string().required(),
+      })
+    ),
+    // documents: Joi.array().items(
+    //   Joi.object({
+    //     officialName: Joi.when("type", {
+    //       is: Joi.string().valid("real-estate"),
+    //       then: Joi.string()
+    //         .valid(
+    //           "title_report",
+    //           "insurance_copy",
+    //           "financial_document",
+    //           "purchase_agreement",
+    //           "third-party_report",
+    //           "demographics",
+    //           "market_and_valuations"
+    //         )
+    //         .required(),
+    //       is: Joi.string().valid("car"),
+    //       then: Joi.string().valid(
+    //         "certificate_of_title",
+    //         "car_insurance",
+    //         "financial_document",
+    //         "market_and_valuations"
+    //       ),
+    //     }),
+    //     url: Joi.string().required(),
+    //     name: Joi.string().required(),
+    //   })
+    // ),
+    documents: Joi.array().items(
+      Joi.object({
+        officialName: Joi.string()
+          .valid(
+            "certificate_of_title",
+            "insurance_copy",
+            "financial_document",
             "market_and_valuations"
           )
           .required(),
@@ -128,4 +247,5 @@ module.exports = {
   validateProperty,
   validateBuyer,
   validateAuction,
+  validateOthers,
 };
