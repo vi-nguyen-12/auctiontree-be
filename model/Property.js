@@ -68,6 +68,7 @@ const propertySchema = new Schema(
   { timestamps: true }
 );
 propertySchema.pre("save", function (next) {
+  console.log("test");
   let requiredDocuments;
   switch (this.type) {
     case "real-estate":
@@ -102,24 +103,29 @@ propertySchema.pre("save", function (next) {
       ];
       break;
     case "jet":
-      requiredDocuments: [
+      requiredDocuments = [
         "ownership_document",
         "registration_document",
         "title_certificate",
         "detail_specification",
-        "jet_insurance",
+        "insurance_document",
+        "loan_document",
+        "jet_detail_history",
         "fitness_report",
         "electric_work_details",
         "engine_details",
         "inspection_report",
+        "valuation_report",
       ];
+      break;
   }
   for (item of requiredDocuments) {
     if (!this.documents.find((i) => i.officialName === item)) {
+      console.log(item);
       next(new Error(`Document ${item} is required`));
     }
-    next();
   }
+  next();
 });
 
 module.exports = mongoose.model("Property", propertySchema);

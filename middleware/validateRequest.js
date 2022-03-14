@@ -93,33 +93,6 @@ const validateOthers = (req, res, next) => {
       }).required(),
     })
       .when("type", {
-        is: "jet",
-        then: Joi.object({
-          owner_name: Joi.when("broker_name", {
-            is: Joi.exist(),
-            then: Joi.string().allow(""),
-            otherwise: Joi.string().required(),
-          }),
-          address: Joi.string().required(),
-          phone: Joi.string().required(),
-          email: Joi.string().required(),
-          broker_name: Joi.when("owner_name", {
-            is: Joi.exist(),
-            then: Joi.string().allow(""),
-            otherwise: Joi.string().required(),
-          }),
-          registration_mark: Joi.string().required(),
-          aircraft_builder_name: Joi.string().required(),
-          aircraft_model_designation: Joi.string().required(),
-          aircraft_serial_no: Joi.string().required(),
-          engine_builder_name: Joi.string().required(),
-          engine_model_designation: Joi.string().required(),
-          number_of_engines: Joi.number().required(),
-          propeller_builder_name: Joi.string().required(),
-          propeller_model_designation: Joi.string().required(),
-        }).required(),
-      })
-      .when("type", {
         is: "yacht",
         then: Joi.object({
           owner_name: Joi.when("broker_name", {
@@ -127,14 +100,10 @@ const validateOthers = (req, res, next) => {
             then: Joi.string().allow(""),
             otherwise: Joi.string().required(),
           }),
+          broker_name: Joi.string(),
           address: Joi.string().required(),
           phone: Joi.string().required(),
           email: Joi.string().required(),
-          broker_name: Joi.when("owner_name", {
-            is: Joi.exist(),
-            then: Joi.string().allow(""),
-            otherwise: Joi.string().required(),
-          }),
           vessel_registration_number: Joi.string().required(),
           vessel_manufacturing_date: Joi.date().required(),
           manufacture_mark: Joi.string().required(),
@@ -145,6 +114,29 @@ const validateOthers = (req, res, next) => {
           running_cost: Joi.number().required(),
           no_of_crew_required: Joi.number().required(),
         }),
+      })
+      .when("type", {
+        is: "jet",
+        then: Joi.object({
+          owner_name: Joi.when("broker_name", {
+            is: Joi.exist(),
+            then: Joi.string().allow(""),
+            otherwise: Joi.string().required(),
+          }),
+          broker_name: Joi.string(),
+          address: Joi.string().required(),
+          phone: Joi.string().required(),
+          email: Joi.string().required(),
+          registration_mark: Joi.string().required(),
+          aircraft_builder_name: Joi.string().required(),
+          aircraft_model_designation: Joi.string().required(),
+          aircraft_serial_no: Joi.string().required(),
+          engine_builder_name: Joi.string().required(),
+          engine_model_designation: Joi.string().required(),
+          number_of_engines: Joi.number().required(),
+          propeller_builder_name: Joi.string().required(),
+          propeller_model_designation: Joi.string().required(),
+        }).required(),
       })
       .required(),
     images: Joi.array().items(
@@ -195,11 +187,14 @@ const validateOthers = (req, res, next) => {
                 "registration_document",
                 "title_certificate",
                 "detail_specification",
-                "jet_insurance",
+                "insurance_document",
+                "loan_document",
+                "jet_detail_history",
                 "fitness_report",
                 "electric_work_details",
                 "engine_details",
-                "inspection_report"
+                "inspection_report",
+                "valuation_report"
               )
               .required(),
           }),
