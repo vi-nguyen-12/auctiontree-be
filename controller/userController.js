@@ -336,7 +336,7 @@ const resetForgotPassword = async (req, res) => {
 };
 
 //@desc  Edit profile
-//@route POST /api/users/:id body {firstName, lastName, email, phone, userName, country, city}
+//@route POST /api/users/:id body {firstName, lastName, email, phone, userName, country, city, old_password, new_password}
 const editProfile = async (req, res) => {
   try {
     const { id } = req.params;
@@ -349,6 +349,8 @@ const editProfile = async (req, res) => {
       country,
       city,
       profileImage,
+      old_password,
+      new_password,
     } = req.body;
     if (req.user.userId !== id) {
       return res.status(200).send({ error: "User not found" });
@@ -362,6 +364,17 @@ const editProfile = async (req, res) => {
     user.country = country;
     user.city = city;
     user.profileImage = profileImage;
+    if (old_password) {
+      const match = await bcrypt.compare(old_password, user.password);
+      if (!match) {
+        return res
+          .status(200)
+          .send({ error: "Wrong password! Cannot update profile" });
+      }
+      const salt = await bcrypt.genSaltSync(10);
+      const hashedPassword = await bcrypt.hash(new_password, salt);
+      user.password = hashedPassword;
+    }
     const savedUser = await user.save();
     const result = {
       _id: savedUser._id,

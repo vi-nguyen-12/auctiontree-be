@@ -40,6 +40,12 @@ const validateUpdateUser = (req, res, next) => {
     country: Joi.string(),
     city: Joi.string(),
     profileImage: Joi.string(),
+    old_password: Joi.string(),
+    new_password: Joi.when("old_password", {
+      is: Joi.exist(),
+      then: Joi.string().required(),
+      otherwise: Joi.string().allow(null),
+    }),
   });
   const { error } = userSchema.validate(req.body);
   if (error) {
