@@ -100,6 +100,13 @@ const validateOthers = (req, res, next) => {
     details: Joi.when("type", {
       is: "car",
       then: Joi.object({
+        owner_name: Joi.string().required(),
+        broker_name: Joi.string(),
+        broker_id: Joi.when("broker_name", {
+          is: Joi.exist(),
+          then: Joi.string().required(),
+          otherwise: Joi.string().min(1),
+        }),
         make: Joi.string().required(),
         model: Joi.string().required(),
         year: Joi.date().format("YYYY").required(),
@@ -119,12 +126,13 @@ const validateOthers = (req, res, next) => {
       .when("type", {
         is: "yacht",
         then: Joi.object({
-          owner_name: Joi.when("broker_name", {
-            is: Joi.exist(),
-            then: Joi.string().allow(""),
-            otherwise: Joi.string().required(),
-          }),
+          owner_name: Joi.string().required(),
           broker_name: Joi.string(),
+          broker_id: Joi.when("broker_name", {
+            is: Joi.exist(),
+            then: Joi.string().required(),
+            otherwise: Joi.string().min(1),
+          }),
           address: Joi.string().required(),
           phone: Joi.string().required(),
           email: Joi.string().required(),
@@ -143,12 +151,13 @@ const validateOthers = (req, res, next) => {
       .when("type", {
         is: "jet",
         then: Joi.object({
-          owner_name: Joi.when("broker_name", {
-            is: Joi.exist(),
-            then: Joi.string().allow(""),
-            otherwise: Joi.string().required(),
-          }),
+          owner_name: Joi.string().required(),
           broker_name: Joi.string(),
+          broker_id: Joi.when("broker_name", {
+            is: Joi.exist(),
+            then: Joi.string().required(),
+            otherwise: Joi.string().min(1),
+          }),
           address: Joi.string().required(),
           phone: Joi.string().required(),
           email: Joi.string().required(),
