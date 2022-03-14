@@ -7,8 +7,8 @@ const {
   getAuction,
   editAuction,
   placeBidding,
-  getUpcomingAuctionsOfRealEstates,
-  getOngoingAuctionsOfRealEstates,
+  getUpcomingAuctionsOfSpecificType,
+  getOngoingAuctionsOfSpecificType,
   getRealEstateAuctionsStatusBuyer,
   getAuctionResult,
   deleteAuction,
@@ -17,8 +17,14 @@ const {
 // need to check if the user is admin
 router.post("/", validateAuction, createAuction);
 router.put("/bidding/:id", auth, placeBidding);
-router.get("/real-estates/upcoming", getUpcomingAuctionsOfRealEstates);
-router.get("/real-estates/ongoing", getOngoingAuctionsOfRealEstates);
+router.get("/real-estate/upcoming", getUpcomingAuctionsOfSpecificType);
+router.get("/real-estate/ongoing", getOngoingAuctionsOfSpecificType);
+router.get("/car/upcoming", getUpcomingAuctionsOfSpecificType);
+router.get("/car/ongoing", getOngoingAuctionsOfSpecificType);
+router.get("/yacht/upcoming", getUpcomingAuctionsOfSpecificType);
+router.get("/yacht/ongoing", getOngoingAuctionsOfSpecificType);
+router.get("/jet/upcoming", getUpcomingAuctionsOfSpecificType);
+router.get("/jet/ongoing", getOngoingAuctionsOfSpecificType);
 router.get("/real-estates/status", auth, getRealEstateAuctionsStatusBuyer);
 router.get("/result/:id", getAuctionResult);
 router.get("/propertyId/:propertyId", getAuction);

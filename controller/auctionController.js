@@ -212,10 +212,14 @@ const getAuction = async (req, res) => {
   }
 };
 
-//@desc  Get upcoming auctions for real-estate
-//@route GET /api/auctions/real-estates/upcoming
-const getUpcomingAuctionsOfRealEstates = async (req, res) => {
+//@desc  Get upcoming auctions for a specific type
+//@route GET /api/auctions/real-estate/upcoming
+//@route GET /api/auctions/car/upcoming
+//@route GET /api/auctions/yacht/upcoming
+//@route GET /api/auctions/jet/upcoming
+const getUpcomingAuctionsOfSpecificType = async (req, res) => {
   try {
+    const type = req.originalUrl.split("/")[3];
     const now = new Date();
     const allAuctions = await Auction.find({
       auctionStartDate: { $gte: now },
@@ -225,7 +229,7 @@ const getUpcomingAuctionsOfRealEstates = async (req, res) => {
 
     const data = allAuctions
       .filter((auction) => {
-        return auction.property.type === "real-estate";
+        return auction.property.type === type;
       })
       .map((auction) => {
         return {
@@ -252,10 +256,14 @@ const getUpcomingAuctionsOfRealEstates = async (req, res) => {
   }
 };
 
-//@desc  Get ongoing auctions for real-estate
-//@route GET /api/auctions/real-estates/ongoing
-const getOngoingAuctionsOfRealEstates = async (req, res) => {
+//@desc  Get ongoing auctions for a specific type
+//@route GET /api/auctions/real-estate/ongoing
+//@route GET /api/auctions/car/ongoing
+//@route GET /api/auctions/yacht/ongoing
+//@route GET /api/auctions/jet/ongoing
+const getOngoingAuctionsOfSpecificType = async (req, res) => {
   try {
+    const type = req.originalUrl.split("/")[3];
     const now = new Date();
     const allAuctions = await Auction.find({
       auctionStartDate: { $lte: now },
@@ -273,7 +281,7 @@ const getOngoingAuctionsOfRealEstates = async (req, res) => {
     }
     const data = allAuctions
       .filter((auction) => {
-        return auction.property.type === "real-estate";
+        return auction.property.type === type;
       })
       .map((auction) => {
         return {
@@ -538,8 +546,8 @@ module.exports = {
   createAuction,
   getAuction,
   placeBidding,
-  getUpcomingAuctionsOfRealEstates,
-  getOngoingAuctionsOfRealEstates,
+  getUpcomingAuctionsOfSpecificType,
+  getOngoingAuctionsOfSpecificType,
   getRealEstateAuctionsStatusBuyer,
   getAuctionResult,
   editAuction,
