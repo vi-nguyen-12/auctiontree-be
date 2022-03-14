@@ -7,6 +7,8 @@ const {
   getAuction,
   editAuction,
   placeBidding,
+  getUpcomingAuctions,
+  getOngoingAuctions,
   getUpcomingAuctionsOfSpecificType,
   getOngoingAuctionsOfSpecificType,
   getRealEstateAuctionsStatusBuyer,
@@ -17,6 +19,8 @@ const {
 // need to check if the user is admin
 router.post("/", validateAuction, createAuction);
 router.put("/bidding/:id", auth, placeBidding);
+router.get("/upcoming", getUpcomingAuctions);
+router.get("/ongoing", getOngoingAuctions);
 router.get("/real-estate/upcoming", getUpcomingAuctionsOfSpecificType);
 router.get("/real-estate/ongoing", getOngoingAuctionsOfSpecificType);
 router.get("/car/upcoming", getUpcomingAuctionsOfSpecificType);
