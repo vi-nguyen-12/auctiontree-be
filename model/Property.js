@@ -82,13 +82,36 @@ propertySchema.pre("save", function (next) {
       ];
       break;
     case "car":
-    case "jet":
-    case "yacht":
       requiredDocuments = [
         "certificate_of_title",
         "insurance_copy",
         "financial_document",
         "market_and_valuations",
+      ];
+      break;
+    case "yacht":
+      requiredDocuments = [
+        "vessel_registration",
+        "vessel_maintenance_report",
+        "vessel_engine_type",
+        "vessel_performance_report",
+        "vessel_deck_details",
+        "vessel_insurance",
+        "vessel_marine_surveyor_report",
+        "vessel_valuation_report",
+      ];
+      break;
+    case "jet":
+      requiredDocuments: [
+        "ownership_document",
+        "registration_document",
+        "title_certificate",
+        "detail_specification",
+        "jet_insurance",
+        "fitness_report",
+        "electric_work_details",
+        "engine_details",
+        "inspection_report",
       ];
   }
   for (item of requiredDocuments) {

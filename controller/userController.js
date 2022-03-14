@@ -406,23 +406,24 @@ const getLikedAuctions = async (req, res) => {
     res.status(500).send(err.message);
   }
 };
-
 //@desc  Set a liked auction
 //@route PUT /api/users/:id/likes/:auctionId
 const setLikedAuction = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
-    if (!user) return res.status(200).send("User not found");
+    if (!user) return res.status(200).send({ error: "User not found" });
 
     const auctionId = await Auction.findById(req.params.auctionId);
-    if (!auctionId) return res.status(200).send("Auction not found");
+    if (!auctionId) return res.status(200).send({ error: "Auction not found" });
 
     let auctionExistsInLiked = user.likedAuctions.includes(auctionId);
     if (!auctionExistsInLiked) {
       user.likedAuctions.push(auctionId);
       await user.save();
     }
-    return res.status(200).send("Successfully added auction to liked list");
+    return res
+      .status(200)
+      .send({ message: "Successfully added auction to liked list" });
   } catch (err) {
     res.status(500).send(err.message);
   }
@@ -432,15 +433,11 @@ const setLikedAuction = async (req, res) => {
 //@route DELETE /api/users/:id/likes/:auctionId
 const setUnlikedAuction = async (req, res) => {
   try {
-    const { id, auctionId } = req.params;
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(200).send("User not found");
-
-    user.likedAuctions = user.likedAuctions.filter(
-      (item) => item !== auctionId
-    );
-    await user.save();
-    return res.status(200).send("Successfully remove auction from liked list");
+    const { id: _id, auctionId } = req.params;
+    await User.updateOne({ _id }, { $pull: { likedAuctions: auctionId } });
+    return res
+      .status(200)
+      .send({ message: "Successfully remove auction from liked list" });
   } catch (err) {
     res.status(500).send(err.message);
   }

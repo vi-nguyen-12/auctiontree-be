@@ -95,37 +95,58 @@ const validateOthers = (req, res, next) => {
       .when("type", {
         is: "jet",
         then: Joi.object({
-          VAT_type: Joi.string().required(),
-          crusing_speed: Joi.number().required(),
-          max_range: Joi.number().required(),
-          cabin_length: Joi.number().required(),
-          cabin_height: Joi.number().required(),
-          cabin_width: Joi.number().required(),
-          exterior_height: Joi.number().required(),
-          exterior_length: Joi.number().required(),
-          capacity: Joi.number().required(),
-          other_services: Joi.string(),
-          plane_type: Joi.string().required(),
-          wing_span: Joi.number().required(),
+          owner_name: Joi.when("broker_name", {
+            is: Joi.exist(),
+            then: Joi.string().allow(""),
+            otherwise: Joi.string().required(),
+          }),
+          address: Joi.string().required(),
+          phone: Joi.string().required(),
+          email: Joi.string().required(),
+          broker_name: Joi.when("owner_name", {
+            is: Joi.exist(),
+            then: Joi.string().allow(""),
+            otherwise: Joi.string().required(),
+          }),
+          registration_mark: Joi.string().required(),
+          aircraft_builder_name: Joi.string().required(),
+          aircraft_model_designation: Joi.string().required(),
+          aircraft_serial_no: Joi.string().required(),
+          engine_builder_name: Joi.string().required(),
+          engine_model_designation: Joi.string().required(),
+          number_of_engines: Joi.number().required(),
+          propeller_builder_name: Joi.string().required(),
+          propeller_model_designation: Joi.string().required(),
         }).required(),
       })
       .when("type", {
         is: "yacht",
         then: Joi.object({
-          year: Joi.date().format("YYYY").required(),
+          owner_name: Joi.when("broker_name", {
+            is: Joi.exist(),
+            then: Joi.string().allow(""),
+            otherwise: Joi.string().required(),
+          }),
           address: Joi.string().required(),
-          length: Joi.number().required(),
-          beam: Joi.number().required(),
-          draft: Joi.number().required(),
-          displacement: Joi.number().required(),
-          engines: Joi.number().required(),
-          engine_hours: Joi.number().required(),
-          engine_brand: Joi.string().required(),
-          fuel_tankage: Joi.number().required(),
-          boat_type: Joi.string().required(),
+          phone: Joi.string().required(),
+          email: Joi.string().required(),
+          broker_name: Joi.when("owner_name", {
+            is: Joi.exist(),
+            then: Joi.string().allow(""),
+            otherwise: Joi.string().required(),
+          }),
+          vessel_registration_number: Joi.string().required(),
+          vessel_manufacturing_date: Joi.date().required(),
+          manufacture_mark: Joi.string().required(),
+          manufacturer_name_engine_type: Joi.string().required(),
+          engine_manufacture_name: Joi.string().required(),
+          engine_deck_type: Joi.string().required(),
+          detain: Joi.string(),
+          running_cost: Joi.number().required(),
+          no_of_crew_required: Joi.number().required(),
         }),
-      }),
-
+      })
+      .required(),
     images: Joi.array().items(
       Joi.object({
         name: Joi.string().required(),
@@ -138,43 +159,50 @@ const validateOthers = (req, res, next) => {
         url: Joi.string().required(),
       })
     ),
-    // documents: Joi.array().items(
-    //   Joi.object({
-    //     officialName: Joi.when("type", {
-    //       is: Joi.string().valid("real-estate"),
-    //       then: Joi.string()
-    //         .valid(
-    //           "title_report",
-    //           "insurance_copy",
-    //           "financial_document",
-    //           "purchase_agreement",
-    //           "third-party_report",
-    //           "demographics",
-    //           "market_and_valuations"
-    //         )
-    //         .required(),
-    //       is: Joi.string().valid("car"),
-    //       then: Joi.string().valid(
-    //         "certificate_of_title",
-    //         "car_insurance",
-    //         "financial_document",
-    //         "market_and_valuations"
-    //       ),
-    //     }),
-    //     url: Joi.string().required(),
-    //     name: Joi.string().required(),
-    //   })
-    // ),
     documents: Joi.array().items(
       Joi.object({
-        officialName: Joi.string()
-          .valid(
-            "certificate_of_title",
-            "insurance_copy",
-            "financial_document",
-            "market_and_valuations"
-          )
-          .required(),
+        officialName: Joi.when("type", {
+          is: "car",
+          then: Joi.string()
+            .valid(
+              "certificate_of_title",
+              "insurance_copy",
+              "financial_document",
+              "market_and_valuations"
+            )
+            .required(),
+        })
+          .when("type", {
+            is: "yacht",
+            then: Joi.string()
+              .valid(
+                "vessel_registration",
+                "vessel_maintenance_report",
+                "vessel_engine_type",
+                "vessel_performance_report",
+                "vessel_deck_details",
+                "vessel_insurance",
+                "vessel_marine_surveyor_report",
+                "vessel_valuation_report"
+              )
+              .required(),
+          })
+          .when("type", {
+            is: "jet",
+            then: Joi.string()
+              .valid(
+                "ownership_document",
+                "registration_document",
+                "title_certificate",
+                "detail_specification",
+                "jet_insurance",
+                "fitness_report",
+                "electric_work_details",
+                "engine_details",
+                "inspection_report"
+              )
+              .required(),
+          }),
         url: Joi.string().required(),
         name: Joi.string().required(),
       })
