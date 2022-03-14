@@ -157,10 +157,15 @@ const validateOthers = (req, res, next) => {
           is: "car",
           then: Joi.string()
             .valid(
-              "certificate_of_title",
-              "insurance_copy",
-              "financial_document",
-              "market_and_valuations"
+              "ownership_document",
+              "registration_document",
+              "title_certificate",
+              "inspection_report",
+              "engine_details",
+              "insurance_document",
+              "loan_document",
+              "valuation_report",
+              "others"
             )
             .required(),
         })
@@ -175,7 +180,8 @@ const validateOthers = (req, res, next) => {
                 "vessel_deck_details",
                 "vessel_insurance",
                 "vessel_marine_surveyor_report",
-                "vessel_valuation_report"
+                "vessel_valuation_report",
+                "others"
               )
               .required(),
           })
@@ -194,7 +200,8 @@ const validateOthers = (req, res, next) => {
                 "electric_work_details",
                 "engine_details",
                 "inspection_report",
-                "valuation_report"
+                "valuation_report",
+                "others"
               )
               .required(),
           }),

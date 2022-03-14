@@ -84,10 +84,13 @@ propertySchema.pre("save", function (next) {
       break;
     case "car":
       requiredDocuments = [
-        "certificate_of_title",
-        "insurance_copy",
-        "financial_document",
-        "market_and_valuations",
+        "ownership_document",
+        "registration_document",
+        "title_certificate",
+        "inspection_report",
+        "engine_details",
+        "insurance_document",
+        "valuation_report",
       ];
       break;
     case "yacht":
@@ -109,7 +112,6 @@ propertySchema.pre("save", function (next) {
         "title_certificate",
         "detail_specification",
         "insurance_document",
-        "loan_document",
         "jet_detail_history",
         "fitness_report",
         "electric_work_details",
