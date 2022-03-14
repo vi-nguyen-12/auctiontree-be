@@ -14,6 +14,7 @@ const buyerRoute = require("./routes/buyerRoutes");
 const auctionRoute = require("./routes/auctionRoutes");
 const questionRoute = require("./routes/questionRoutes");
 const docusignRoute = require("./routes/docusignRoutes");
+const awsRoute = require("./routes/awsRoutes");
 const testRoute = require("./routes/test");
 const cookieparser = require("cookie-parser");
 const cors = require("cors");
@@ -86,6 +87,7 @@ app.use("/api/questions", questionRoute);
 app.use("/admin/api/questions", questionRoute);
 app.use("/api/docusign", docusignRoute);
 app.use("/api/test", testRoute);
+app.use("/api/aws", awsRoute);
 
 // if (process.env.NODE_ENV === "production") {
 //   app.use();
