@@ -1,6 +1,9 @@
 const router = require("express").Router();
 const { auth } = require("../middleware/verifyToken");
-const { validateUser } = require("../middleware/validateRequest");
+const {
+  validateUser,
+  validateUpdateUser,
+} = require("../middleware/validateRequest");
 const {
   registerUser,
   login,
@@ -22,6 +25,7 @@ const {
   getApprovedAuctionsOfSeller,
   getPendingListingsOfSeller,
   getApprovedListingsOfSeller,
+  editProfile,
 } = require("../controller/userController");
 
 router.post("/register", validateUser, registerUser);
@@ -44,6 +48,7 @@ router.get("/:id/seller/approvedListings", getApprovedListingsOfSeller);
 router.put("/:id?suspended=true", auth, suspendUserAccount);
 router.put("/:id?suspended=false", auth, suspendUserAccount);
 router.delete("/:id", auth, deleteUserAccount);
+router.post("/:id", auth, validateUpdateUser, editProfile);
 //only for admin
 router.get("/buyerId/:buyerId", getUserByBuyerId);
 router.get("/propertyId/:propertyId", getUserByPropertyId);

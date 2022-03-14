@@ -68,7 +68,6 @@ const propertySchema = new Schema(
   { timestamps: true }
 );
 propertySchema.pre("save", function (next) {
-  console.log("test");
   let requiredDocuments;
   switch (this.type) {
     case "real-estate":
@@ -123,7 +122,6 @@ propertySchema.pre("save", function (next) {
   }
   for (item of requiredDocuments) {
     if (!this.documents.find((i) => i.officialName === item)) {
-      console.log(item);
       next(new Error(`Document ${item} is required`));
     }
   }

@@ -335,6 +335,51 @@ const resetForgotPassword = async (req, res) => {
   }
 };
 
+//@desc  Edit profile
+//@route POST /api/users/:id body {firstName, lastName, email, phone, userName, country, city}
+const editProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      firstName,
+      lastName,
+      email,
+      phone,
+      userName,
+      country,
+      city,
+      profileImage,
+    } = req.body;
+    if (req.user.userId !== id) {
+      return res.status(200).send({ error: "User not found" });
+    }
+    const user = await User.findOne({ _id: req.user.userId });
+    user.firstName = firstName;
+    user.lastName = lastName;
+    user.email = email;
+    user.phone = phone;
+    user.userName = userName;
+    user.country = country;
+    user.city = city;
+    user.profileImage = profileImage;
+    const savedUser = await user.save();
+    const result = {
+      _id: savedUser._id,
+      firstName: savedUser.firstName,
+      lastName: savedUser.lastName,
+      email: savedUser.email,
+      phone: savedUser.phone,
+      userName: savedUser.userName,
+      country: savedUser.country,
+      city: savedUser.city,
+      profileImage: savedUser.profileImage,
+    };
+    res.status(200).send(result);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+
 //deactivate user account and other related data,
 //@route PUT /api/users/:id?suspended=true
 //@route PUT /api/users/:id?suspended=false
@@ -584,4 +629,5 @@ module.exports = {
   getApprovedAuctionsOfSeller,
   getPendingListingsOfSeller,
   getApprovedListingsOfSeller,
+  editProfile,
 };

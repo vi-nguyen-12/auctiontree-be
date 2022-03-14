@@ -12,6 +12,7 @@ const userSchema = new mongoose.Schema({
   city: { type: String },
   date: { type: Date, default: Date.now },
   secret: { type: Object },
+  profileImage: String,
   isActive: { type: Boolean, required: true, default: false },
   KYC: { type: Boolean, required: true, default: true },
   temp_token: String,

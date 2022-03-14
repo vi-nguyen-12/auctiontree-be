@@ -16,6 +16,30 @@ const validateUser = (req, res, next) => {
     userName: Joi.string().required(),
     country: Joi.string(),
     city: Joi.string(),
+    profileImage: Joi.string(),
+  });
+  const { error } = userSchema.validate(req.body);
+  if (error) {
+    return res.status(200).send({ error: error.details[0].message });
+  }
+  next();
+};
+
+const validateUpdateUser = (req, res, next) => {
+  const userSchema = Joi.object({
+    firstName: Joi.string().required(),
+    lastName: Joi.string().required(),
+    email: Joi.string()
+      .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
+      .required(),
+    phone: Joi.string()
+      .length(10)
+      .pattern(/^[0-9]+$/)
+      .required(),
+    userName: Joi.string().required(),
+    country: Joi.string(),
+    city: Joi.string(),
+    profileImage: Joi.string(),
   });
   const { error } = userSchema.validate(req.body);
   if (error) {
@@ -274,6 +298,7 @@ const validateAuction = (req, res, next) => {
 };
 module.exports = {
   validateUser,
+  validateUpdateUser,
   validateProperty,
   validateBuyer,
   validateAuction,
