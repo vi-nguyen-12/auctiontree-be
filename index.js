@@ -25,7 +25,7 @@ app.use(function (req, res, next) {
   }
   return next();
 });
-app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
+// app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
 
 const allowedDomains = [
   process.env.DEV_CLIENT_URL,
@@ -37,15 +37,15 @@ const allowedDomains = [
   // "https://auction10x.herokuapp.com",
 ];
 
-// const corsOptions = {
-//   credentials: true,
-//   origin: (origin, callback) => {
-//     if (allowedDomains.includes(origin)) return callback(null, true);
-//     callback(new Error("Not allowed by CORS"));
-//   },
-// };
+const corsOptions = {
+  credentials: true,
+  origin: (origin, callback) => {
+    if (allowedDomains.includes(origin)) return callback(null, true);
+    callback(new Error("Not allowed by CORS"));
+  },
+};
 
-// app.use(cors(corsOptions));
+app.use(cors(corsOptions));
 app.set("trust proxy", 1);
 
 app.use(express.json());

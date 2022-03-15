@@ -27,16 +27,16 @@ const validateUser = (req, res, next) => {
 
 const validateUpdateUser = (req, res, next) => {
   const userSchema = Joi.object({
-    firstName: Joi.string().required(),
-    lastName: Joi.string().required(),
-    email: Joi.string()
-      .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
-      .required(),
+    firstName: Joi.string(),
+    lastName: Joi.string(),
+    email: Joi.string().email({
+      minDomainSegments: 2,
+      tlds: { allow: ["com", "net"] },
+    }),
     phone: Joi.string()
       .length(10)
-      .pattern(/^[0-9]+$/)
-      .required(),
-    userName: Joi.string().required(),
+      .pattern(/^[0-9]+$/),
+    userName: Joi.string(),
     country: Joi.string(),
     city: Joi.string(),
     profileImage: Joi.string(),
@@ -113,6 +113,14 @@ const validateOthers = (req, res, next) => {
           then: Joi.string().required(),
           otherwise: Joi.string().min(1),
         }),
+        address: Joi.string().required(),
+        email: Joi.string()
+          .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
+          .required(),
+        phone: Joi.string()
+          .length(10)
+          .pattern(/^[0-9]+$/)
+          .required(),
         make: Joi.string().required(),
         model: Joi.string().required(),
         year: Joi.date().format("YYYY").required(),
@@ -140,8 +148,13 @@ const validateOthers = (req, res, next) => {
             otherwise: Joi.string().min(1),
           }),
           address: Joi.string().required(),
-          phone: Joi.string().required(),
-          email: Joi.string().required(),
+          email: Joi.string()
+            .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
+            .required(),
+          phone: Joi.string()
+            .length(10)
+            .pattern(/^[0-9]+$/)
+            .required(),
           vessel_registration_number: Joi.string().required(),
           vessel_manufacturing_date: Joi.date().required(),
           manufacture_mark: Joi.string().required(),
@@ -165,8 +178,13 @@ const validateOthers = (req, res, next) => {
             otherwise: Joi.string().min(1),
           }),
           address: Joi.string().required(),
-          phone: Joi.string().required(),
-          email: Joi.string().required(),
+          email: Joi.string()
+            .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
+            .required(),
+          phone: Joi.string()
+            .length(10)
+            .pattern(/^[0-9]+$/)
+            .required(),
           registration_mark: Joi.string().required(),
           aircraft_builder_name: Joi.string().required(),
           aircraft_model_designation: Joi.string().required(),
@@ -205,6 +223,7 @@ const validateOthers = (req, res, next) => {
               "insurance_document",
               "loan_document",
               "valuation_report",
+              "listing_agreement",
               "others"
             )
             .required(),
@@ -221,6 +240,7 @@ const validateOthers = (req, res, next) => {
                 "vessel_insurance",
                 "vessel_marine_surveyor_report",
                 "vessel_valuation_report",
+                "listing_agreement",
                 "others"
               )
               .required(),
@@ -241,6 +261,7 @@ const validateOthers = (req, res, next) => {
                 "engine_details",
                 "inspection_report",
                 "valuation_report",
+                "listing_agreement",
                 "others"
               )
               .required(),

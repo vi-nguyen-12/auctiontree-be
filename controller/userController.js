@@ -356,13 +356,13 @@ const editProfile = async (req, res) => {
       return res.status(200).send({ error: "User not found" });
     }
     const user = await User.findOne({ _id: req.user.userId });
-    user.firstName = firstName;
-    user.lastName = lastName;
-    user.email = email;
-    user.phone = phone;
-    user.userName = userName;
-    user.country = country;
-    user.city = city;
+    user.firstName = firstName || user.firstName;
+    user.lastName = lastName || user.lastName;
+    user.email = email || user.email;
+    user.phone = phone || user.phone;
+    user.userName = userName || user.userName;
+    user.country = country || user.country;
+    user.city = city || user.city;
     user.profileImage = profileImage;
     if (old_password) {
       const match = await bcrypt.compare(old_password, user.password);

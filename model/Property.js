@@ -84,6 +84,7 @@ propertySchema.pre("save", function (next) {
     case "car":
       requiredDocuments = [
         "ownership_document",
+        // "listing_agreement",
         "registration_document",
         "title_certificate",
         "inspection_report",
@@ -94,6 +95,7 @@ propertySchema.pre("save", function (next) {
       break;
     case "yacht":
       requiredDocuments = [
+        // "listing_agreement",
         "vessel_registration",
         "vessel_maintenance_report",
         "vessel_engine_type",
@@ -107,6 +109,7 @@ propertySchema.pre("save", function (next) {
     case "jet":
       requiredDocuments = [
         "ownership_document",
+        // "listing_agreement",
         "registration_document",
         "title_certificate",
         "detail_specification",
@@ -119,6 +122,9 @@ propertySchema.pre("save", function (next) {
         "valuation_report",
       ];
       break;
+  }
+  if (this.details.broker_name) {
+    requiredDocuments.push("listing_agreement");
   }
   for (item of requiredDocuments) {
     if (!this.documents.find((i) => i.officialName === item)) {
