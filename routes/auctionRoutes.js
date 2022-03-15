@@ -29,7 +29,7 @@ router.get("/yacht/upcoming", getUpcomingAuctionsOfSpecificType);
 router.get("/yacht/ongoing", getOngoingAuctionsOfSpecificType);
 router.get("/jet/upcoming", getUpcomingAuctionsOfSpecificType);
 router.get("/jet/ongoing", getOngoingAuctionsOfSpecificType);
-router.get("/real-estates/status", auth, getRealEstateAuctionsStatusBuyer);
+router.get("/status", auth, getRealEstateAuctionsStatusBuyer);
 router.get("/result/:id", getAuctionResult);
 router.get("/propertyId/:propertyId", getAuction);
 router.get("/:id", getAuction);
