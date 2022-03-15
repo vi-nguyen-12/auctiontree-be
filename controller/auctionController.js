@@ -394,7 +394,7 @@ const getOngoingAuctionsOfSpecificType = async (req, res) => {
 };
 
 //@desc  Get status of auctions  which buyer register to buy
-//@route GET /api/auctions/real-estates/status?buyer=true
+//@route GET /api/auctions/real-estate/status?buyer=true
 const getRealEstateAuctionsStatusBuyer = async (req, res) => {
   const { buyer } = req.query;
   if (!buyer) {
