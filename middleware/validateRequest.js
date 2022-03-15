@@ -195,6 +195,8 @@ const validateOthers = (req, res, next) => {
           number_of_engines: Joi.number().required(),
           propeller_builder_name: Joi.string().required(),
           propeller_model_designation: Joi.string().required(),
+          number_of_aircraft: Joi.string().required(),
+          imported_aircraft: Joi.boolean().required(),
           property_address: Joi.string().required(),
         }).required(),
       })
