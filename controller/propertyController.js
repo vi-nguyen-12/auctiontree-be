@@ -523,9 +523,6 @@ const verifyImage = async (req, res) => {
 };
 
 module.exports = {
-  uploadS3,
-  upload,
-  uploadAll,
   search,
   createRealestate,
   editRealestate,
