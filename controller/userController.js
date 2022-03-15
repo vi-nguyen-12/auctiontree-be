@@ -81,11 +81,6 @@ const verify = async (req, res) => {
       time: 300,
     });
     if (!verified) {
-      const token = speakeasy.totp({
-        secret: user.secret.base32,
-        encoding: "base32",
-        time: 300,
-      });
       return res.status(200).send({ error: "Invalid or expired token" });
     }
     user.isActive = true;
