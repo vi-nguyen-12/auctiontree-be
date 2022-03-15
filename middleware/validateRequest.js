@@ -134,7 +134,7 @@ const validateOthers = (req, res, next) => {
         fuel_type: Joi.string().required(),
         condition: Joi.string().required(),
         price: Joi.number().required(),
-        address: Joi.string().required(),
+        property_address: Joi.string().required(),
       }).required(),
     })
       .when("type", {
@@ -165,6 +165,7 @@ const validateOthers = (req, res, next) => {
           detain: Joi.string(),
           running_cost: Joi.number().required(),
           no_of_crew_required: Joi.number().required(),
+          property_address: Joi.string().required(),
         }),
       })
       .when("type", {
@@ -194,6 +195,7 @@ const validateOthers = (req, res, next) => {
           number_of_engines: Joi.number().required(),
           propeller_builder_name: Joi.string().required(),
           propeller_model_designation: Joi.string().required(),
+          property_address: Joi.string().required(),
         }).required(),
       })
       .required(),
