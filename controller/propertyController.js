@@ -102,6 +102,7 @@ const createRealestate = async (req, res) => {
         docusignId,
         reservedAmount,
         discussedAmount,
+        details,
       } = req.body;
 
       // const { rooms_count, beds_count, baths } = fields;
@@ -115,11 +116,14 @@ const createRealestate = async (req, res) => {
       const response = await axios.get(process.env.THIRD_PARTY_API, {
         params: { street_address, city, state },
       });
+      delete Object.assign(response.data.data, {
+        property_address: response.data.data.address,
+      })["address"];
 
       const newEstates = new Property({
         createdBy: req.user.userId,
         type,
-        details: response.data.data,
+        details: { ...details, ...response.data.data },
         images,
         videos,
         documents,
@@ -173,7 +177,6 @@ const editRealestate = async (req, res) => {
     const response = await axios.get(process.env.THIRD_PARTY_API, {
       params: { street_address, city, state },
     });
-    console.log(response.data);
 
     property.type = type;
     property.street_address = street_address;

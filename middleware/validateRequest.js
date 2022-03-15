@@ -56,11 +56,27 @@ const validateUpdateUser = (req, res, next) => {
 
 const validateProperty = (req, res, next) => {
   const propertySchema = Joi.object({
-    type: Joi.string().valid("real-estate", "jet", "car", "yacht").required(),
+    type: Joi.string().valid("real-estate").required(),
     street_address: Joi.string().required(),
     city: Joi.string().required(),
     state: Joi.string().required(),
-    // details: Joi.object().keys({}),
+    details: Joi.object({
+      owner_name: Joi.string().required(),
+      broker_name: Joi.string(),
+      broker_id: Joi.when("broker_name", {
+        is: Joi.exist(),
+        then: Joi.string().required(),
+        otherwise: Joi.string().min(1),
+      }),
+      address: Joi.string().required(),
+      email: Joi.string()
+        .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
+        .required(),
+      phone: Joi.string()
+        .length(10)
+        .pattern(/^[0-9]+$/)
+        .required(),
+    }).required(),
     images: Joi.array().items(
       Joi.object({
         name: Joi.string().required(),
