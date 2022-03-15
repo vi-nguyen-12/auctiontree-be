@@ -1,60 +1,10 @@
-const AWS = require("aws-sdk");
 const Property = require("../model/Property");
 const User = require("../model/User");
 const Buyer = require("../model/Buyer");
 const Auction = require("../model/Auction");
-const multer = require("multer");
-const multerS3 = require("multer-s3");
-const uuid = require("uuid/v4");
 const axios = require("axios");
 const { sendEmail, getBidsInformation } = require("../helper");
 const Joi = require("joi");
-
-//@desc  upload images, videos and documents to AWS S3
-const config = {
-  region: "us-east-2",
-  apiVersion: "2006-03-01",
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-};
-const bucket = process.env.AWS_BUCKET_NAME;
-
-const s3 = new AWS.S3(config);
-
-const uploadS3 = multer({
-  storage: multerS3({
-    s3,
-    bucket,
-    acl: "public-read",
-    contentType: multerS3.AUTO_CONTENT_TYPE,
-    contentDisposition: "inline",
-    metadata: function (req, file, cb) {
-      cb(null, {
-        fieldName: file.fieldname,
-      });
-    },
-    key: function (req, file, cb) {
-      cb(null, uuid() + file.originalname);
-    },
-  }),
-});
-
-const upload = async (req, res) => {
-  const data = req.files.map((item) => {
-    return { name: item.originalname, url: item.location };
-  });
-  res.status(200).send(data);
-};
-
-const uploadAll = async (req, res) => {
-  let result = {};
-  for (let key in req.files) {
-    result[key] = req.files[key].map((item) => {
-      return { name: item.originalname, url: item.location };
-    });
-  }
-  res.status(200).send(result);
-};
 
 //@desc  Search a real-estate with an address
 //@route POST /api/properties/real-estates/search query params:{street_address, city, state}
@@ -202,6 +152,7 @@ const editRealestate = async (req, res) => {
     res.status(500).send(error.message);
   }
 };
+
 //@desc  Create a car/jet/yatch
 //@route POST /api/properties body:{type, details, images, videos, documents, docusignId, reservedAmount, discussedAmount}
 const createOthers = async (req, res) => {
@@ -248,6 +199,8 @@ const createOthers = async (req, res) => {
     }
   }
 };
+
+//@desc  Edit a car/jet/yatch
 
 //@desc  List real estates (sorting by created date) by page and limit
 //@desc filter by: ?status=... & inAuction=true
@@ -310,92 +263,6 @@ const getRealEstates = async (req, res) => {
   } catch (err) {
     res.status(500).send(err.message);
   }
-};
-
-//@desc  List real-estates in upcoming auctions
-//@route GET /api/properties/real-estates/upcomingAuctions
-const getRealEstatesUpcomingAuctions = async (req, res) => {
-  const now = new Date();
-  const allAuctions = await Auction.find({
-    auctionStartDate: { $gte: now },
-  });
-
-  for (let auction of allAuctions) {
-    const property = await Property.findOne({ _id: auction.property });
-    auction.property = property;
-  }
-
-  const data = allAuctions
-    .filter((auction) => {
-      return auction.property.type === "real-estate";
-    })
-    .map((auction) => {
-      return {
-        _id: auction.property._id,
-        type: auction.property.type,
-        details: auction.property.details,
-        images: auction.property.images,
-        videos: auction.property.videos,
-        documents: auction.property.documents,
-        auctionDetails: {
-          _id: auction._id,
-          registerStartDate: auction.registerStartDate,
-          registerEndDate: auction.registerEndDate,
-          auctionStartDate: auction.auctionStartDate,
-          auctionEndDate: auction.auctionEndDate,
-          startingBid: auction.startingBid,
-        },
-      };
-    });
-
-  res.status(200).send(data);
-};
-
-//@desc  List real-estates in ongoing auctions
-//@route GET /api/properties/real-estates/ongoingAuctions
-const getRealEstatesOngoingAuctions = async (req, res) => {
-  const now = new Date();
-  const allAuctions = await Auction.find({
-    auctionStartDate: { $lte: now },
-    auctionEndDate: { $gte: now },
-  });
-  for (let auction of allAuctions) {
-    const property = await Property.findOne({ _id: auction.property });
-    const { numberOfBids, highestBid, highestBidders } =
-      await getBidsInformation(auction.bids, auction.startingBid);
-    auction.property = property;
-    auction.numberOfBids = numberOfBids;
-    auction.highestBid = highestBid;
-    auction.highestBidders = highestBidders;
-  }
-
-  const data = allAuctions
-    .filter((auction) => {
-      return auction.property.type === "real-estate";
-    })
-    .map((auction) => {
-      return {
-        _id: auction.property._id,
-        type: auction.property.type,
-        details: auction.property.details,
-        images: auction.property.images,
-        videos: auction.property.videos,
-        documents: auction.property.documents,
-        auctionDetails: {
-          _id: auction._id,
-          registerStartDate: auction.registerStartDate,
-          registerEndDate: auction.registerEndDate,
-          auctionStartDate: auction.auctionStartDate,
-          auctionEndDate: auction.auctionEndDate,
-          startingBid: auction.startingBid,
-          numberOfBids: auction.numberOfBids,
-          highestBid: auction.highestBid,
-          highestBidders: auction.highestBidders,
-        },
-      };
-    });
-
-  res.status(200).send(data);
 };
 
 //@desc  List real-estates registered status for a logged in buyer
@@ -664,8 +531,6 @@ module.exports = {
   editRealestate,
   getRealEstates,
   getRealEstate,
-  getRealEstatesUpcomingAuctions,
-  getRealEstatesOngoingAuctions,
   getRealEstatesStatusBuyer,
   createOthers,
   approveProperty,
