@@ -514,7 +514,7 @@ const getBidAuctionsOfBuyer = async (req, res) => {
 };
 
 //@desc  Get approved auctions of a buyer
-//@route GET /api/users/:id/buyer/approvedAuctions
+//@route GET /api/users/:id/buyer/approvedAuctions    //should changed to GET /api/users/:id/buyer/auctions/approved
 const getApprovedAuctionsOfBuyer = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -541,7 +541,7 @@ const getApprovedAuctionsOfBuyer = async (req, res) => {
 };
 
 //@desc  Get win auctions of a buyer
-//@route GET /api/users/:id/buyer/winAuctions
+//@route GET /api/users/:id/buyer/winAuctions    //should changed to GET /api/users/:id/buyer/auctions/winner
 const getWinAuctionsOfBuyer = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -558,7 +558,7 @@ const getWinAuctionsOfBuyer = async (req, res) => {
 };
 
 //@desc  Get approved auctions of a seller
-//@route GET /api/users/:id/seller/approvedAuctions
+//@route GET /api/users/:id/seller/approvedAuctions   //should changed to GET /api/users/:id/seller/auctions/approved
 const getApprovedAuctionsOfSeller = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -581,7 +581,7 @@ const getApprovedAuctionsOfSeller = async (req, res) => {
 };
 
 //@desc  Get pending listings of a seller
-//@route GET /api/users/:id/seller/pendingListings
+//@route GET /api/users/:id/seller/pendingListings   // should changed to GET /api/users/:id/seller/properties/pending
 const getPendingListingsOfSeller = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -599,17 +599,45 @@ const getPendingListingsOfSeller = async (req, res) => {
 };
 
 //@desc  Get pending listings of a seller
-//@route GET /api/users/:id/seller/approvedListings
+//@route GET /api/users/:id/seller/approvedListings   // should changed to GET /api/users/:id/seller/properties/approved?inAuction=true/false
 const getApprovedListingsOfSeller = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
+    const { inAuction } = req.query;
     if (!user) return res.status(200).send("User not found");
 
-    const approvedPropertyList = await Property.find({
+    let approvedPropertyList = await Property.find({
       createdBy: user._id,
       isApproved: "success",
     });
 
+    if (inAuction === "true") {
+      approvedPropertyList = await approvedPropertyList.filter(async (item) => {
+        const result = await Auction.findOne({ property: item._id });
+        console.log(result);
+        return result;
+      });
+      // for (let i = 0; i < approvedPropertyList.length; i++) {
+      //   let result = await Auction.findOne({
+      //     property: approvedPropertyList[i],
+      //   });
+      //   console.log(!result);
+      //   if (!result) {
+      //     approvedPropertyList = approvedPropertyList.splice(i, 1);
+      //     console.log(approvedPropertyList.length);
+      //   }
+      // }
+    }
+
+    // await Promise.all(
+    //   approvedPropertyList.filter(async (item) => {
+    //     let isInAuction = await Auction.findOne({ property: item._id });
+    //     if ()
+    //     return isInAuction;
+    //   })
+    // );
+
+    console.log(approvedPropertyList.length);
     res.status(200).send(approvedPropertyList);
   } catch (error) {
     res.status(500).send(error.message);
