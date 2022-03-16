@@ -16,7 +16,7 @@ const search = async (req, res) => {
     });
     // const addressExist = await Property.findOne({
     //   type: "real-estate",
-    //   "details.address.formatted_street_address": response.data.data.address.formatted_street_address,
+    //   "details.property_address.formatted_street_address": response.data.data.address.formatted_street_address,
     // });
     // console.log(addressExist.createdAt);
     // if (
