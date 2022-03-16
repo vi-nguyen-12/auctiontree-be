@@ -7,7 +7,7 @@ const {
 const {
   registerUser,
   login,
-  logout,
+
   verify,
   getUserByBuyerId,
   getUserByPropertyId,
@@ -30,7 +30,6 @@ const {
 
 router.post("/register", validateUser, registerUser);
 router.route("/login").post(login);
-router.route("/logout").get(logout);
 router.post("/confirmation/email", sendConfirmEmail);
 router.post("/confirmation/verify", verify);
 router.post("/checkJWT", checkJWT);
@@ -48,7 +47,7 @@ router.get("/:id/seller/approvedListings", getApprovedListingsOfSeller);
 router.put("/:id?suspended=true", auth, suspendUserAccount);
 router.put("/:id?suspended=false", auth, suspendUserAccount);
 router.delete("/:id", auth, deleteUserAccount);
-router.post("/:id", auth, validateUpdateUser, editProfile);
+router.put("/:id", auth, validateUpdateUser, editProfile);
 //only for admin
 router.get("/buyerId/:buyerId", getUserByBuyerId);
 router.get("/propertyId/:propertyId", getUserByPropertyId);
