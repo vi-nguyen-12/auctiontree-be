@@ -99,7 +99,8 @@ const validateProperty = (req, res, next) => {
             "purchase_agreement",
             "third-party_report",
             "demographics",
-            "market_and_valuations"
+            "market_and_valuations",
+            "listing_agreement"
           )
           .required(),
         url: Joi.string().required(),
