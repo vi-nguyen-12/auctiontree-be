@@ -203,8 +203,8 @@ const createOthers = async (req, res) => {
 //@desc  Edit a car/jet/yatch
 
 //@desc  List real estates (sorting by created date) by page and limit
-//@desc filter by: ?status=... & inAuction=true
-//@route GET /api/properties/real-estates
+//@desc filter by: ?type=... & status=... & inAuction=true
+//@route GET /api/properties
 const getRealEstates = async (req, res) => {
   try {
     const paramsSchema = Joi.object({
@@ -215,18 +215,20 @@ const getRealEstates = async (req, res) => {
       inAuction: Joi.string().valid("true", "false").optional(),
       page: Joi.string().regex(/^\d+$/).optional(),
       limit: Joi.string().regex(/^\d+$/).optional(),
+      type: Joi.string().valid("real-estate", "car", "jet", "yatch"),
     });
     const { error } = paramsSchema.validate(req.query);
     if (error) return res.status(200).send({ error: error.details[0].message });
 
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const { inAuction, status: isApproved } = req.query;
-    const filters = {
-      type: "real-estate",
-    };
+    const limit = parseInt(req.query.limit) || 100;
+    const { inAuction, status: isApproved, type } = req.query;
+    let filters = {};
     if (isApproved) {
       filters.isApproved = isApproved;
+    }
+    if (type) {
+      filters.type = type;
     }
 
     let properties = [];
@@ -258,7 +260,7 @@ const getRealEstates = async (req, res) => {
         .skip((page - 1) * limit)
         .limit(limit);
     }
-
+    console.log(properties.length);
     res.status(200).send(properties);
   } catch (err) {
     res.status(500).send(err.message);

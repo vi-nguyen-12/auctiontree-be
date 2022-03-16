@@ -28,7 +28,7 @@ router.put("/:id/status", approveProperty);
 
 //for all users
 router.get("/:id", getRealEstate);
-router.get("/real-estates/", getRealEstates);
+router.get("/", getRealEstates);
 
 //for logged in users
 router.get("/real-estates/status", auth, getRealEstatesStatusBuyer);
