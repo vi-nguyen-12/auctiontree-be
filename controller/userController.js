@@ -560,8 +560,8 @@ const getWinAuctionsOfBuyer = async (req, res) => {
   }
 };
 
-//@desc  Get approved auctions of a seller
-//@route GET /api/users/:id/seller/approvedAuctions   //should changed to GET /api/users/:id/seller/auctions/approved
+//@desc  Get auctions of a seller
+//@route GET /api/users/:id/seller/auctions
 const getApprovedAuctionsOfSeller = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
