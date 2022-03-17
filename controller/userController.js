@@ -621,6 +621,7 @@ const getListingsOfSeller = async (req, res) => {
             await getBidsInformation(result.bids, result.startingBid);
           item = item.toJSON();
           item["auctionDetails"] = {
+            _id: result._id,
             startingBid: result.startingBid,
             incrementAmount: result.incrementAmount,
             registerStartDate: result.registerStartDate,
