@@ -8,8 +8,8 @@ const {
   search,
   createRealestate,
   editRealestate,
-  getRealEstates,
-  getRealEstate,
+  getProperties,
+  getProperty,
   getRealEstatesStatusBuyer,
   approveProperty,
   verifyDocument,
@@ -27,8 +27,8 @@ router.put("/:propertyId/videos/:videoId/status", verifyVideo);
 router.put("/:id/status", approveProperty);
 
 //for all users
-router.get("/:id", getRealEstate);
-router.get("/", getRealEstates);
+router.get("/:id", getProperty);
+router.get("/", getProperties);
 
 //for logged in users
 router.get("/real-estates/status", auth, getRealEstatesStatusBuyer);

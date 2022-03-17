@@ -202,10 +202,10 @@ const createOthers = async (req, res) => {
 
 //@desc  Edit a car/jet/yacht
 
-//@desc  List real estates (sorting by created date) by page and limit
+//@desc  Get properties (sorting by created date) by page and limit
 //@desc filter by: ?type=... & status=... & inAuction=true
 //@route GET /api/properties
-const getRealEstates = async (req, res) => {
+const getProperties = async (req, res) => {
   try {
     const paramsSchema = Joi.object({
       status: Joi.alternatives(
@@ -312,18 +312,17 @@ const getRealEstatesStatusBuyer = async (req, res) => {
   }
 };
 
-//@desc  Get information of a real estate
-//@route GET /api/properties/real-estates/:id
-const getRealEstate = async (req, res) => {
+//@desc  Get a property
+//@route GET /api/properties/:id
+const getProperty = async (req, res) => {
   try {
-    const realEstate = await Property.findOne({
+    const property = await Property.findOne({
       _id: req.params.id,
-      type: "real-estate",
     });
-    if (!realEstate) {
-      return res.status(200).send("No real-estate found");
+    if (!property) {
+      return res.status(200).send("No property found");
     }
-    res.status(200).send(realEstate);
+    res.status(200).send(property);
   } catch (error) {
     res.send(error);
   }
@@ -528,8 +527,8 @@ module.exports = {
   search,
   createRealestate,
   editRealestate,
-  getRealEstates,
-  getRealEstate,
+  getProperties,
+  getProperty,
   getRealEstatesStatusBuyer,
   createOthers,
   approveProperty,
