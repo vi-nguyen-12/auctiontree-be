@@ -23,8 +23,7 @@ const {
   getApprovedAuctionsOfBuyer,
   getWinAuctionsOfBuyer,
   getApprovedAuctionsOfSeller,
-  getPendingListingsOfSeller,
-  getApprovedListingsOfSeller,
+  getListingsOfSeller,
   editProfile,
 } = require("../controller/userController");
 
@@ -41,8 +40,7 @@ router.get("/:id/buyer/bidAuctions", getBidAuctionsOfBuyer);
 router.get("/:id/buyer/approvedAuctions", getApprovedAuctionsOfBuyer);
 router.get("/:id/buyer/winAuctions", getWinAuctionsOfBuyer);
 router.get("/:id/seller/approvedAuctions", getApprovedAuctionsOfSeller);
-router.get("/:id/seller/pendingListings", getPendingListingsOfSeller);
-router.get("/:id/seller/properties", getApprovedListingsOfSeller);
+router.get("/:id/seller/properties", getListingsOfSeller);
 //only for login user
 router.put("/:id?suspended=true", auth, suspendUserAccount);
 router.put("/:id?suspended=false", auth, suspendUserAccount);

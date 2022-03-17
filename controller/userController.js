@@ -583,27 +583,9 @@ const getApprovedAuctionsOfSeller = async (req, res) => {
   }
 };
 
-//@desc  Get pending listings of a seller
-//@route GET /api/users/:id/seller/pendingListings   // should changed to GET /api/users/:id/seller/properties?status=pending
-const getPendingListingsOfSeller = async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(200).send("User not found");
-
-    const notApprovedPropertyList = await Property.find({
-      createdBy: user._id,
-      isApproved: { $in: ["pending", "fail"] },
-    });
-
-    res.status(200).send(notApprovedPropertyList);
-  } catch (error) {
-    res.status(500).send(error.message);
-  }
-};
-
-//@desc  Get pending listings of a seller
+//@desc  Get listings of a seller
 //@route GET /api/users/:id/seller/properties?status= pending/fail/success & inAuction=true/false
-const getApprovedListingsOfSeller = async (req, res) => {
+const getListingsOfSeller = async (req, res) => {
   try {
     const querySchema = Joi.object({
       status: Joi.string().valid("pending", "success", "fail").optional(),
@@ -658,8 +640,7 @@ module.exports = {
   getApprovedAuctionsOfBuyer,
   getWinAuctionsOfBuyer,
   getApprovedAuctionsOfSeller,
-  getPendingListingsOfSeller,
-  getApprovedListingsOfSeller,
+  getListingsOfSeller,
   editProfile,
 };
 
