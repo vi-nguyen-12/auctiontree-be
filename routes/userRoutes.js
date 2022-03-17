@@ -42,7 +42,7 @@ router.get("/:id/buyer/approvedAuctions", getApprovedAuctionsOfBuyer);
 router.get("/:id/buyer/winAuctions", getWinAuctionsOfBuyer);
 router.get("/:id/seller/approvedAuctions", getApprovedAuctionsOfSeller);
 router.get("/:id/seller/pendingListings", getPendingListingsOfSeller);
-router.get("/:id/seller/approvedListings", getApprovedListingsOfSeller);
+router.get("/:id/seller/properties", getApprovedListingsOfSeller);
 //only for login user
 router.put("/:id?suspended=true", auth, suspendUserAccount);
 router.put("/:id?suspended=false", auth, suspendUserAccount);

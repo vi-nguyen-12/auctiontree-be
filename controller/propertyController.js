@@ -200,7 +200,7 @@ const createOthers = async (req, res) => {
   }
 };
 
-//@desc  Edit a car/jet/yatch
+//@desc  Edit a car/jet/yacht
 
 //@desc  List real estates (sorting by created date) by page and limit
 //@desc filter by: ?type=... & status=... & inAuction=true
@@ -215,7 +215,7 @@ const getRealEstates = async (req, res) => {
       inAuction: Joi.string().valid("true", "false").optional(),
       page: Joi.string().regex(/^\d+$/).optional(),
       limit: Joi.string().regex(/^\d+$/).optional(),
-      type: Joi.string().valid("real-estate", "car", "jet", "yatch"),
+      type: Joi.string().valid("real-estate", "car", "jet", "yacht"),
     });
     const { error } = paramsSchema.validate(req.query);
     if (error) return res.status(200).send({ error: error.details[0].message });

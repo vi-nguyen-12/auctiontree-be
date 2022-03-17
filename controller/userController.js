@@ -7,6 +7,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const speakeasy = require("speakeasy");
 const { sendEmail } = require("../helper");
+const Joi = require("joi");
 
 const client_url =
   process.env.NODE_ENV === "production"
@@ -581,7 +582,7 @@ const getApprovedAuctionsOfSeller = async (req, res) => {
 };
 
 //@desc  Get pending listings of a seller
-//@route GET /api/users/:id/seller/pendingListings   // should changed to GET /api/users/:id/seller/properties/pending
+//@route GET /api/users/:id/seller/pendingListings   // should changed to GET /api/users/:id/seller/properties?status=pending
 const getPendingListingsOfSeller = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -599,24 +600,40 @@ const getPendingListingsOfSeller = async (req, res) => {
 };
 
 //@desc  Get pending listings of a seller
-//@route GET /api/users/:id/seller/approvedListings   // should changed to GET /api/users/:id/seller/properties/approved?inAuction=true/false
+//@route GET /api/users/:id/seller/approvedListings   // should changed to GET /api/users/:id/seller/properties?status= pending/fail/success & inAuction=true/false
 const getApprovedListingsOfSeller = async (req, res) => {
   try {
+    const querySchema = Joi.object({
+      status: Joi.string().valid("pending", "success", "fail").optional(),
+      inAuction: Joi.string().valid("true", "false").optional(),
+    });
+    const { error } = querySchema.validate(req.query);
+    if (error) return res.status(200).send({ error: error.details[0].message });
+
     const user = await User.findById(req.params.id);
-    const { inAuction } = req.query;
+    const { status, inAuction } = req.query;
     if (!user) return res.status(200).send("User not found");
 
     let approvedPropertyList = await Property.find({
       createdBy: user._id,
-      isApproved: "success",
+      isApproved: status,
     });
-
-    if (inAuction === "true") {
-      approvedPropertyList = await approvedPropertyList.filter(async (item) => {
-        const result = await Auction.findOne({ property: item._id });
-        console.log(result);
-        return result;
-      });
+    if (inAuction) {
+      approvedPropertyList = await filter(
+        approvedPropertyList,
+        async (item) => {
+          const result = await Auction.findOne({ property: item._id });
+          if (inAuction === "true") {
+            return result !== null;
+          }
+          return result === null;
+        }
+      );
+      // approvedPropertyList = await approvedPropertyList.filter(async (item) => {
+      //   const result = await Auction.findOne({ property: item._id });
+      //   console.log(result);
+      //   return result;
+      // });
       // for (let i = 0; i < approvedPropertyList.length; i++) {
       //   let result = await Auction.findOne({
       //     property: approvedPropertyList[i],
@@ -667,3 +684,12 @@ module.exports = {
   getApprovedListingsOfSeller,
   editProfile,
 };
+
+async function filter(arr, callback) {
+  const fail = Symbol();
+  return (
+    await Promise.all(
+      arr.map(async (item) => ((await callback(item)) ? item : fail))
+    )
+  ).filter((i) => i !== fail);
+}
