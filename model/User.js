@@ -18,6 +18,11 @@ const userSchema = new mongoose.Schema({
   temp_token: String,
   isSuspended: { type: Boolean, required: true, default: false },
   likedAuctions: [{ type: Schema.Types.ObjectId, ref: "Auction" }],
+  social_links: {
+    facebook: String,
+    instagram: String,
+    twitter: String,
+  },
 });
 
 module.exports = mongoose.model("User", userSchema);

@@ -34,7 +34,6 @@ const verifyKyc = async (req, res) => {
     var kycDet = await Kyc.findOne({ userId });
     if (!kycDet) {
       resp = await jumio.post(baseUrl, data);
-      console.log(resp);
       const kyc = new Kyc();
       kyc.userId = userId;
       kyc.kycId = "kyc_" + ref;
