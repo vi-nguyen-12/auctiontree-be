@@ -618,7 +618,7 @@ const getApprovedListingsOfSeller = async (req, res) => {
 
     let filter = { createdBy: user._id };
     if (status) {
-      filter[isApproved] = status;
+      filter["isApproved"] = status;
     }
     let approvedPropertyList = await Property.find(filter);
     if (inAuction) {
