@@ -10,7 +10,6 @@ const {
   editRealestate,
   getProperties,
   getProperty,
-  getRealEstatesStatusBuyer,
   approveProperty,
   verifyDocument,
   verifyImage,
@@ -31,7 +30,6 @@ router.get("/:id", getProperty);
 router.get("/", getProperties);
 
 //for logged in users
-router.get("/real-estates/status", auth, getRealEstatesStatusBuyer);
 router.post("/real-estates/", auth, validateProperty, createRealestate);
 router.post("/", auth, validateOthers, createOthers);
 router.put("/real-estates/:id", auth, validateProperty, editRealestate);

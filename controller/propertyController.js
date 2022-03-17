@@ -267,51 +267,6 @@ const getProperties = async (req, res) => {
   }
 };
 
-//@desc  List real-estates registered status for a logged in buyer
-//@route GET /api/properties/real-estates/status?buyer=true
-const getRealEstatesStatusBuyer = async (req, res) => {
-  const { buyer } = req.query;
-
-  if (!buyer) {
-    return res.status(403).send("Please specify if user is buyer or seller");
-  }
-  try {
-    const registeredList = await Buyer.find({ userId: req.user.userId });
-    if (registeredList.length === 0) {
-      return res
-        .status(200)
-        .send("This user has not register to buy any property");
-    }
-    for (let item of registeredList) {
-      const auction = await Auction.findOne({ _id: item.auctionId });
-      const property = await Property.findOne({ _id: auction.property });
-      item.auction = auction;
-      item.property = property;
-    }
-    const data = registeredList.map((item) => {
-      return {
-        _id: item.property._id,
-        type: item.property.type,
-        details: item.property.details,
-        images: item.property.images,
-        videos: item.property.videos,
-        documents: item.property.documents,
-        auctionDetails: {
-          _id: item.auction._id,
-          registerStartDate: item.auction.registerStartDate,
-          registerEndDate: item.auction.registerEndDate,
-          auctionStartDate: item.auction.auctionStartDate,
-          auctionEndDate: item.auction.auctionEndDate,
-        },
-        isApproved: item.isApproved,
-      };
-    });
-    res.status(200).send(data);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-};
-
 //@desc  Get a property
 //@route GET /api/properties/:id
 const getProperty = async (req, res) => {
@@ -329,13 +284,16 @@ const getProperty = async (req, res) => {
 };
 
 //@desc  Approve a property
-//@route PUT /api/properties/real-estates/:id/status body: {status: "pending"/"success"/"fail", rejectedReason:...  }
-
+//@route PUT /api/properties/:id/status body: {status: "pending"/"success"/"fail", rejectedReason:...  }
 const approveProperty = async (req, res) => {
   try {
     const bodySchema = Joi.object({
       status: Joi.string().valid("pending", "success", "fail"),
-      rejectedReason: Joi.string().optional(),
+      rejectedReason: Joi.when("status", {
+        is: "fail",
+        then: Joi.string().required(),
+        otherwise: Joi.string().allow(null),
+      }),
     });
     const { error } = bodySchema.validate(req.body);
     if (error) {
@@ -529,7 +487,6 @@ module.exports = {
   editRealestate,
   getProperties,
   getProperty,
-  getRealEstatesStatusBuyer,
   createOthers,
   approveProperty,
   verifyDocument,
