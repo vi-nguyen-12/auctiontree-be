@@ -40,6 +40,11 @@ const validateUpdateUser = (req, res, next) => {
     country: Joi.string(),
     city: Joi.string(),
     profileImage: Joi.string(),
+    social_links: Joi.object({
+      facebook: Joi.string(),
+      instagram: Joi.string(),
+      twitter: Joi.string(),
+    }),
     old_password: Joi.string(),
     new_password: Joi.when("old_password", {
       is: Joi.exist(),

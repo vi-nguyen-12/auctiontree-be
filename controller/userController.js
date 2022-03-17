@@ -345,6 +345,7 @@ const editProfile = async (req, res) => {
       country,
       city,
       profileImage,
+      social_links,
       old_password,
       new_password,
     } = req.body;
@@ -360,6 +361,7 @@ const editProfile = async (req, res) => {
     user.country = country || user.country;
     user.city = city || user.city;
     user.profileImage = profileImage;
+    user.social_links = social_links || user.social_links;
     if (old_password) {
       const match = await bcrypt.compare(old_password, user.password);
       if (!match) {
