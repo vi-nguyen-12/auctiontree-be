@@ -8,6 +8,7 @@ const jwt = require("jsonwebtoken");
 const speakeasy = require("speakeasy");
 const { sendEmail } = require("../helper");
 const Joi = require("joi");
+const { getBidsInformation } = require("../helper");
 
 const client_url =
   process.env.NODE_ENV === "production"
@@ -610,20 +611,50 @@ const getListingsOfSeller = async (req, res) => {
     if (status) {
       filter["isApproved"] = status;
     }
-    let approvedPropertyList = await Property.find(filter);
-    if (inAuction) {
-      approvedPropertyList = await doFilter(
-        approvedPropertyList,
-        async (item) => {
-          const result = await Auction.findOne({ property: item._id });
-          if (inAuction === "true") {
-            return result !== null;
-          }
-          return result === null;
+    let listings = await Property.find(filter);
+
+    listings = await Promise.all(
+      listings.map(async (item) => {
+        const result = await Auction.findOne({ property: item._id });
+        if (result) {
+          const { numberOfBids, highestBid, highestBidders } =
+            await getBidsInformation(result.bids, result.startingBid);
+          item = item.toJSON();
+          item["auctionDetails"] = {
+            startingBid: result.startingBid,
+            incrementAmount: result.incrementAmount,
+            registerStartDate: result.registerStartDate,
+            registerEndDate: result.registerEndDate,
+            auctionStartDate: result.auctionStartDate,
+            numberOfBids,
+            highestBid,
+            highestBidders,
+          };
         }
-      );
+        return item;
+      })
+    );
+    if (inAuction === "true") {
+      listings = listings.filter((item) => item.auctionDetails);
     }
-    res.status(200).send(approvedPropertyList);
+
+    if (inAuction === "false") {
+      listings = listings.filter((item) => !item.auctionDetails);
+    }
+
+    // if (inAuction) {
+    //   listings = await doFilter(
+    //     listings,
+    //     async (item) => {
+    //       const result = await Auction.findOne({ property: item._id })
+    //       if (inAuction === "true") {
+    //         return result !== null;
+    //       }
+    //       return result === null;
+    //     }
+    //   );
+    // }
+    res.status(200).send(listings);
   } catch (error) {
     res.status(500).send(error.message);
   }
