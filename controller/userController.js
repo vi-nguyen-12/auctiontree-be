@@ -622,7 +622,7 @@ const getApprovedListingsOfSeller = async (req, res) => {
     }
     let approvedPropertyList = await Property.find(filter);
     if (inAuction) {
-      approvedPropertyList = await filter(
+      approvedPropertyList = await doFilter(
         approvedPropertyList,
         async (item) => {
           const result = await Auction.findOne({ property: item._id });
@@ -632,32 +632,7 @@ const getApprovedListingsOfSeller = async (req, res) => {
           return result === null;
         }
       );
-      // approvedPropertyList = await approvedPropertyList.filter(async (item) => {
-      //   const result = await Auction.findOne({ property: item._id });
-      //   console.log(result);
-      //   return result;
-      // });
-      // for (let i = 0; i < approvedPropertyList.length; i++) {
-      //   let result = await Auction.findOne({
-      //     property: approvedPropertyList[i],
-      //   });
-      //   console.log(!result);
-      //   if (!result) {
-      //     approvedPropertyList = approvedPropertyList.splice(i, 1);
-      //     console.log(approvedPropertyList.length);
-      //   }
-      // }
     }
-
-    // await Promise.all(
-    //   approvedPropertyList.filter(async (item) => {
-    //     let isInAuction = await Auction.findOne({ property: item._id });
-    //     if ()
-    //     return isInAuction;
-    //   })
-    // );
-
-    console.log(approvedPropertyList.length);
     res.status(200).send(approvedPropertyList);
   } catch (error) {
     res.status(500).send(error.message);
@@ -688,7 +663,7 @@ module.exports = {
   editProfile,
 };
 
-async function filter(arr, callback) {
+async function doFilter(arr, callback) {
   const fail = Symbol();
   return (
     await Promise.all(
