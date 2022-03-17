@@ -516,17 +516,25 @@ const getBidAuctionsOfBuyer = async (req, res) => {
   }
 };
 
-//@desc  Get approved auctions of a buyer
-//@route GET /api/users/:id/buyer/approvedAuctions    //should changed to GET /api/users/:id/buyer/auctions/approved
-const getApprovedAuctionsOfBuyer = async (req, res) => {
+//@desc  Get auctions of a buyer
+//@route GET /api/users/:id/buyer/auctions?status=...
+const getAuctionsOfBuyer = async (req, res) => {
   try {
+    const querySchema = Joi.object({
+      status: Joi.string().valid("pending", "success", "fail").optional(),
+    });
+    const { error } = querySchema.validate(req.query);
+    if (error) return res.status(200).send({ error: error.details[0].message });
+
+    const { status } = req.query;
     const user = await User.findById(req.params.id);
     if (!user) return res.status(200).send("User not found");
 
-    const buyerApprovedList = await Buyer.find({
-      userId: user._id,
-      isApproved: "success",
-    }).populate({
+    let filter = { userId: user._id };
+    if (status) {
+      filter["isApproved"] = status;
+    }
+    const buyerApprovedList = await Buyer.find(filter).populate({
       path: "auctionId",
       select: "auctionId ",
       populate: {
@@ -562,7 +570,7 @@ const getWinAuctionsOfBuyer = async (req, res) => {
 
 //@desc  Get auctions of a seller
 //@route GET /api/users/:id/seller/auctions
-const getApprovedAuctionsOfSeller = async (req, res) => {
+const getAuctionsOfSeller = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(200).send("User not found");
@@ -637,9 +645,9 @@ module.exports = {
   setLikedAuction,
   setUnlikedAuction,
   getBidAuctionsOfBuyer,
-  getApprovedAuctionsOfBuyer,
+  getAuctionsOfBuyer,
   getWinAuctionsOfBuyer,
-  getApprovedAuctionsOfSeller,
+  getAuctionsOfSeller,
   getListingsOfSeller,
   editProfile,
 };
