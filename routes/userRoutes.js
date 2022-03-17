@@ -36,7 +36,7 @@ router.post("/password", resetForgotPassword);
 router.put("/:id/likes/:auctionId", setLikedAuction);
 router.delete("/:id/likes/:auctionId", setUnlikedAuction);
 router.get("/:id/likes", getLikedAuctions);
-router.get("/:id/buyer/bidAuctions", getBidAuctionsOfBuyer);
+router.get("/:id/buyer/auctions/bid", getBidAuctionsOfBuyer);
 router.get("/:id/buyer/auctions", getAuctionsOfBuyer);
 router.get("/:id/buyer/winAuctions", getWinAuctionsOfBuyer);
 router.get("/:id/seller/auctions", getAuctionsOfSeller);

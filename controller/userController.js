@@ -501,7 +501,7 @@ const setUnlikedAuction = async (req, res) => {
 };
 
 //@desc  Get bid auctions of a buyer
-//@route GET /api/users/:id/buyer/bidAuctions
+//@route GET /api/users/:id/buyer/auctions/bid
 const getBidAuctionsOfBuyer = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
