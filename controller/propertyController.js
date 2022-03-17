@@ -153,7 +153,7 @@ const editRealestate = async (req, res) => {
   }
 };
 
-//@desc  Create a car/jet/yatch
+//@desc  Create a car/jet/yacht
 //@route POST /api/properties body:{type, details, images, videos, documents, docusignId, reservedAmount, discussedAmount}
 const createOthers = async (req, res) => {
   {
