@@ -41,9 +41,9 @@ const validateUpdateUser = (req, res, next) => {
     city: Joi.string(),
     profileImage: Joi.string(),
     social_links: Joi.object({
-      facebook: Joi.string().allow(""),
-      instagram: Joi.string().allow(""),
-      twitter: Joi.string().allow(""),
+      facebook: Joi.string().allow("").allow(null),
+      instagram: Joi.string().allow("").allow(null),
+      twitter: Joi.string().allow("").allow(null),
     }),
     old_password: Joi.string(),
     new_password: Joi.when("old_password", {

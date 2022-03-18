@@ -19,10 +19,17 @@ const userSchema = new mongoose.Schema({
   isSuspended: { type: Boolean, required: true, default: false },
   likedAuctions: [{ type: Schema.Types.ObjectId, ref: "Auction" }],
   social_links: {
-    facebook: String,
-    instagram: String,
-    twitter: String,
+    facebook: { type: String, set: deleteEmpty },
+    instagram: { type: String, set: deleteEmpty },
+    twitter: { type: String, set: deleteEmpty },
   },
 });
 
 module.exports = mongoose.model("User", userSchema);
+
+function deleteEmpty(v) {
+  if (v === null || v === "") {
+    return undefined;
+  }
+  return v;
+}

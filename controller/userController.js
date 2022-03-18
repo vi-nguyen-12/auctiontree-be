@@ -385,6 +385,7 @@ const editProfile = async (req, res) => {
       country: savedUser.country,
       city: savedUser.city,
       profileImage: savedUser.profileImage,
+      social_links: savedUser.social_links,
     };
     res.status(200).send(result);
   } catch (err) {
