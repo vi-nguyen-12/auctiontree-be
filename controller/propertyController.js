@@ -5,9 +5,11 @@ const Auction = require("../model/Auction");
 const axios = require("axios");
 const { sendEmail, getBidsInformation } = require("../helper");
 const Joi = require("joi");
+Joi.objectId = require("joi-objectid")(Joi);
 
 //@desc  Search a real-estate with an address
 //@route POST /api/properties/real-estates/search query params:{street_address, city, state}
+// should be GET request because just get information
 const search = async (req, res) => {
   const { street_address, city, state } = req.query;
   try {
@@ -37,8 +39,8 @@ const search = async (req, res) => {
 };
 
 //@desc  Create a real-estate
-//@route POST /api/properties/real-estates/ body:{type, street_address, city, state, images, videos, documents, docusignId, reservedAmount, discussedAmount}
-const createRealestate = async (req, res) => {
+//@route POST /api/properties/real-estate/ body:{type, street_address, city, state, images, videos, documents, docusignId, reservedAmount, discussedAmount}
+const createRealestateOld = async (req, res) => {
   {
     try {
       const {
@@ -99,55 +101,422 @@ const createRealestate = async (req, res) => {
   }
 };
 
-//@desc  Edit a real-estate
-//@route PUT /api/properties/real-estates/:id body:{type, street_address, city, state, images, videos, documents, reservedAmount, discussedAmount}
-const editRealestate = async (req, res) => {
+const step1Schema = {
+  type: Joi.string().valid("real-estate").required(),
+  details: Joi.object({
+    owner_name: Joi.string().required(),
+    broker_name: Joi.string(),
+    broker_id: Joi.when("broker_name", {
+      is: Joi.exist(),
+      then: Joi.string().required(),
+      otherwise: Joi.string().min(1),
+    }),
+    address: Joi.string().required(),
+    email: Joi.string()
+      .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
+      .required(),
+    phone: Joi.string()
+      .length(10)
+      .pattern(/^[0-9]+$/)
+      .required(),
+  }).required(),
+  step: Joi.number().required().valid(1),
+};
+const step2Schema = {
+  street_address: Joi.string().required(),
+  city: Joi.string().required(),
+  state: Joi.string().required(),
+  zip_code: Joi.string().regex(/^\d+$/).length(5).required(),
+  // country: Joi.string().required(),
+  owner_name: Joi.string().required(),
+  rooms_count: Joi.number().required(),
+  beds_count: Joi.number().required(),
+  baths_count: Joi.number().required(),
+  standardized_land_use_type: Joi.string().required(),
+  total_value: Joi.number().required(),
+  area_sq_ft: Joi.number().required(),
+  reservedAmount: Joi.number().required(),
+  discussedAmount: Joi.number().required(),
+  step: Joi.number().required().valid(2),
+};
+const step3Schema = {
+  images: Joi.array()
+    .items(
+      Joi.object({
+        name: Joi.string().required(),
+        url: Joi.string().required(),
+      })
+    )
+    .required(),
+  videos: Joi.array().items(
+    Joi.object({
+      name: Joi.string().required(),
+      url: Joi.string().required(),
+    })
+  ),
+  step: Joi.number().required().valid(3),
+};
+const step4Schema = {
+  documents: Joi.array().items(
+    Joi.object({
+      officialName: Joi.string()
+        .valid(
+          "title_report",
+          "insurance_copy",
+          "financial_document",
+          "purchase_agreement",
+          "third-party_report",
+          "demographics",
+          "market_and_valuations",
+          "listing_agreement"
+        )
+        .required(),
+      url: Joi.string().required(),
+      name: Joi.string().required(),
+    })
+  ),
+  step: Joi.number().required().valid(4),
+};
+const step5Schema = {
+  docusignId: Joi.objectId().required(),
+  step: Joi.number().required().valid(5),
+};
+
+const createRealestate = async (req, res) => {
   try {
-    const property = await Property.findById(req.params.id);
-    if (!property) return res.status(404).send("No property is found!");
-    const {
+    let {
       type,
+      details,
       street_address,
       city,
       state,
+      zip_code,
+      // country,
+      owner_name,
+      rooms_count,
+      beds_count,
+      baths_count,
+      standardized_land_use_type,
+      total_value,
+      area_sq_ft,
+      reservedAmount,
+      discussedAmount,
       images,
       videos,
       documents,
       docusignId,
-      reservedAmount,
-      discussedAmount,
+      step,
     } = req.body;
-    // const { rooms_count, beds_count, baths } = fields;
+    let bodySchema;
 
-    if (discussedAmount > reservedAmount) {
-      return res.status(200).send({
-        error: "Discussed amount must be less than or equal to reserved amount",
+    if (!(step === 1 || step === 2 || step === 3 || step === 4 || step === 5)) {
+      return res
+        .status(200)
+        .send({ error: "step must be a number from 1 to 5" });
+    }
+    if (step === 1) {
+      bodySchema = Joi.object({ ...step1Schema });
+    }
+    if (step === 2) {
+      bodySchema = Joi.object({ ...step1Schema, ...step2Schema });
+    }
+    if (step === 3) {
+      bodySchema = Joi.object({
+        ...step1Schema,
+        ...step2Schema,
+        ...step3Schema,
       });
     }
-    const response = await axios.get(process.env.THIRD_PARTY_API, {
-      params: { street_address, city, state },
+    if (step === 4) {
+      bodySchema = Joi.object({
+        ...step1Schema,
+        ...step2Schema,
+        ...step3Schema,
+        ...step4Schema,
+      });
+    }
+    if (step === 5) {
+      bodySchema = Joi.object({
+        ...step1Schema,
+        ...step2Schema,
+        ...step3Schema,
+        ...step4Schema,
+        ...step5Schema,
+      });
+    }
+
+    const { error } = bodySchema.validate(req.body);
+    if (error) return res.status(200).send({ error: error.details[0].message });
+
+    //From step 2: check reservedAmount and disscussedAmount
+    //From step 2: get details of real-estate from Estated and from input and add to details field;
+    if (step !== 1) {
+      if (discussedAmount > reservedAmount) {
+        return res.status(200).send({
+          error:
+            "Discussed amount must be less than or equal to reserved amount",
+        });
+      }
+
+      const response = await axios.get(process.env.THIRD_PARTY_API, {
+        params: { street_address, city, state },
+      });
+      if (response.data.data) {
+        delete Object.assign(response.data.data, {
+          property_address: response.data.data.address,
+        })["address"];
+        details = response.data.data;
+      } else {
+        details.property_address.formatted_street_address = street_address;
+        details.property_address.city = city;
+        details.property_address.state = state;
+        details.property_address.zip_code = zip_code;
+      }
+      details.parcel.standardized_land_use_type = standardized_land_use_type;
+      details.parcel.area_sq_ft = area_sq_ft;
+      details.structure.rooms_count = rooms_count;
+      details.structure.beds_count = beds_count;
+      details.structure.baths = baths_count;
+      details.owner.name = owner_name;
+      details.market_assessments = [
+        { year: new Date().getFullYear(), total_value },
+      ];
+    }
+
+    const newProperty = new Property({
+      createdBy: req.user.userId,
+      type,
+      details,
+      reservedAmount,
+      discussedAmount,
+      images,
+      videos,
+      documents,
+      docusignId,
+      step,
+    });
+    const savedProperty = await newProperty.save();
+
+    const { email } = await User.findOne({ _id: req.user.userId }, "email");
+    sendEmail({
+      email,
+      subject: "Auction 10X-Listing real-estate status",
+      text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
     });
 
-    property.type = type;
-    property.street_address = street_address;
-    property.city = city;
-    property.state = state;
-    property.images = images;
-    property.videos = videos;
-    property.documents = documents;
-    property.docusignId = docusignId;
-    property.reservedAmount = reservedAmount;
-    property.discussedAmount = discussedAmount;
+    res.status(200).send(savedProperty);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
 
-    const updatedProperty = property.save();
+//@desc  Edit a real-estate
+//@route PUT /api/properties/real-estate/:id body:{type, street_address, city, state, images, videos, documents, reservedAmount, discussedAmount}
+const editRealestate = async (req, res) => {
+  try {
+    let {
+      type,
+      details,
+      street_address,
+      city,
+      state,
+      zip_code,
+      // country,
+      owner_name,
+      rooms_count,
+      beds_count,
+      baths_count,
+      standardized_land_use_type,
+      total_value,
+      area_sq_ft,
+      reservedAmount,
+      discussedAmount,
+      images,
+      videos,
+      documents,
+      docusignId,
+      step,
+    } = req.body;
+
+    const property = await Property.findOne({ _id: req.params.id });
+    if (!property) {
+      return res.status(200).send({ error: "Property not found" });
+    }
+    let bodySchema = {};
+    let isEditStep2;
+
+    if (!(step === 1 || step === 2 || step === 3 || step === 4 || step === 5)) {
+      return res
+        .status(200)
+        .send({ error: "step must be a number from 1 to 5" });
+    }
+
+    if (property.step === 1) {
+      switch (step) {
+        case 1:
+          bodySchema = Joi.object({ ...step1Schema });
+          break;
+        case 2:
+          bodySchema = Joi.object({ ...step2Schema });
+          isEditStep2 = true;
+          break;
+        case 3:
+          bodySchema = Joi.object({ ...step2Schema, ...step3Schema });
+          isEditStep2 = true;
+          break;
+        case 4:
+          bodySchema = Joi.object({
+            ...step2Schema,
+            ...step3Schema,
+            ...step4Schema,
+          });
+          isEditStep2 = true;
+          break;
+        case 5:
+          bodySchema = Joi.object({
+            ...step2Schema,
+            ...step3Schema,
+            ...step4Schema,
+            ...step5Schema,
+          });
+          isEditStep2 = true;
+      }
+    }
+    if (property.step === 2) {
+      switch (step) {
+        case 1:
+          bodySchema = Joi.object({ ...step1Schema });
+          break;
+        case 2:
+          bodySchema = Joi.object({ ...step2Schema });
+          isEditStep2 = true;
+          break;
+        case 3:
+          bodySchema = Joi.object({ ...step3Schema });
+          break;
+        case 4:
+          bodySchema = Joi.object({ ...step3Schema, ...step4Schema });
+          break;
+        case 5:
+          bodySchema = Joi.object({
+            ...step3Schema,
+            ...step4Schema,
+            ...step5Schema,
+          });
+      }
+    }
+    if (property.step === 3) {
+      switch (step) {
+        case 1:
+          bodySchema = Joi.object({ ...step1Schema });
+          break;
+        case 2:
+          bodySchema = Joi.object({ ...step2Schema });
+          isEditStep2 = true;
+          break;
+        case 3:
+          bodySchema = Joi.object({ ...step3Schema });
+          break;
+        case 4:
+          bodySchema = Joi.object({ ...step4Schema });
+          break;
+        case 5:
+          bodySchema = Joi.object({ ...step4Schema, ...step5Schema });
+      }
+    }
+    if (property.step === 4) {
+      switch (step) {
+        case 1:
+          bodySchema = Joi.object({ ...step1Schema });
+          break;
+        case 2:
+          bodySchema = Joi.object({ ...step2Schema });
+          isEditStep2 = true;
+          break;
+        case 3:
+          bodySchema = Joi.object({ ...step3Schema });
+          break;
+        case 4:
+          bodySchema = Joi.object({ ...step4Schema });
+          break;
+        case 5:
+          bodySchema = Joi.object({ ...step5Schema });
+      }
+    }
+    if (property.step === 5) {
+      switch (step) {
+        case 1:
+          bodySchema = Joi.object({ ...step1Schema });
+          break;
+        case 2:
+          bodySchema = Joi.object({ ...step2Schema });
+          isEditStep2 = true;
+          break;
+        case 3:
+          bodySchema = Joi.object({ ...step3Schema });
+          break;
+        case 4:
+          bodySchema = Joi.object({ ...step4Schema });
+          break;
+        case 5:
+          bodySchema = Joi.object({ ...step5Schema });
+      }
+    }
+
+    const { error } = bodySchema.validate(req.body);
+    if (error) return res.status(200).send({ error: error.details[0].message });
+
+    // if edit anything in step 2 need to be proccessed reservedAmount and get info from estated API
+    if (isEditStep2) {
+      if (discussedAmount > reservedAmount) {
+        return res.status(200).send({
+          error:
+            "Discussed amount must be less than or equal to reserved amount",
+        });
+      }
+
+      const response = await axios.get(process.env.THIRD_PARTY_API, {
+        params: { street_address, city, state },
+      });
+      if (response.data.data) {
+        delete Object.assign(response.data.data, {
+          property_address: response.data.data.address,
+        })["address"];
+        details = { ...property.details, ...response.data.data };
+      } else {
+        details.property_address.formatted_street_address = street_address;
+        details.property_address.city = city;
+        details.property_address.state = state;
+        details.property_address.zip_code = zip_code;
+      }
+      details.parcel.standardized_land_use_type = standardized_land_use_type;
+      details.parcel.area_sq_ft = area_sq_ft;
+      details.structure.rooms_count = rooms_count;
+      details.structure.beds_count = beds_count;
+      details.structure.baths = baths_count;
+      details.owner.name = owner_name;
+      details.market_assessments = [
+        { year: new Date().getFullYear(), total_value },
+      ];
+    }
+    property.type = type || property.type;
+    property.details = details || property.details;
+    property.reservedAmount = reservedAmount || property.reservedAmount;
+    property.discussedAmount = discussedAmount || property.discussedAmount;
+    property.images = images || property.images;
+    property.videos = videos || property.videos;
+    property.documents = documents || property.documents;
+    property.docusignId = docusignId || property.docusignId;
+    property.step = step >= property.step ? step : property.step;
+    const savedProperty = await property.save();
+
     const { email } = await User.findOne({ _id: req.user.userId }, "email");
     sendEmail({
       email,
       subject: "Auction 10X- Updating property",
       text: "Thank you for updating your property. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
     });
-
-    res.status(200).send(updatedProperty);
+    res.status(200).send(savedProperty);
   } catch (error) {
     res.status(500).send(error.message);
   }
@@ -483,8 +852,7 @@ const verifyImage = async (req, res) => {
 
 module.exports = {
   search,
-  createRealestate,
-  editRealestate,
+  createRealestateOld,
   getProperties,
   getProperty,
   createOthers,
@@ -492,4 +860,6 @@ module.exports = {
   verifyDocument,
   verifyImage,
   verifyVideo,
+  createRealestate,
+  editRealestate,
 };

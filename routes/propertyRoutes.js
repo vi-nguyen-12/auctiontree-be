@@ -6,8 +6,7 @@ const {
 } = require("../middleware/validateRequest");
 const {
   search,
-  createRealestate,
-  editRealestate,
+  createRealestateOld,
   getProperties,
   getProperty,
   approveProperty,
@@ -15,6 +14,8 @@ const {
   verifyImage,
   verifyVideo,
   createOthers,
+  createRealestate,
+  editRealestate,
 } = require("../controller/propertyController");
 
 router.get("/real-estates/search", search);
@@ -30,7 +31,8 @@ router.get("/:id", getProperty);
 router.get("/", getProperties);
 
 //for logged in users
-router.post("/real-estates/", auth, validateProperty, createRealestate);
+router.post("/real-estate", auth, createRealestate);
+router.put("/real-estate/:id", auth, editRealestate);
+router.post("/real-estates/", auth, validateProperty, createRealestateOld);
 router.post("/", auth, validateOthers, createOthers);
-router.put("/real-estates/:id", auth, validateProperty, editRealestate);
 module.exports = router;

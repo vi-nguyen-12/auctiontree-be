@@ -122,6 +122,7 @@ const validateProperty = (req, res, next) => {
   }
   next();
 };
+
 const validateOthers = (req, res, next) => {
   const propertySchema = Joi.object({
     type: Joi.string().valid("jet", "car", "yacht").required(),
