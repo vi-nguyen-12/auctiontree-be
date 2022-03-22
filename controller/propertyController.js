@@ -89,11 +89,11 @@ const createRealestateOld = async (req, res) => {
 
       const savedNewEstates = await newEstates.save();
       const { email } = await User.findOne({ _id: req.user.userId }, "email");
-      sendEmail({
-        email,
-        subject: "Auction 10X-Listing real-estate status",
-        text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
-      });
+      // sendEmail({
+      //   email,
+      //   subject: "Auction 10X-Listing real-estate status",
+      //   text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
+      // });
       res.status(200).send(savedNewEstates);
     } catch (error) {
       res.status(500).send(error.message);
@@ -147,6 +147,7 @@ const step3Schema = {
         url: Joi.string().required(),
       })
     )
+    .min(1)
     .required(),
   videos: Joi.array().items(
     Joi.object({
@@ -257,20 +258,33 @@ const createRealestate = async (req, res) => {
             "Discussed amount must be less than or equal to reserved amount",
         });
       }
-
-      const response = await axios.get(process.env.THIRD_PARTY_API, {
-        params: { street_address, city, state },
-      });
-      if (response.data.data) {
-        delete Object.assign(response.data.data, {
-          property_address: response.data.data.address,
+      let response;
+      axios
+        .get(process.env.THIRD_PARTY_API, {
+          params: { street_address, city, state },
+        })
+        .then((res) => {
+          response = res.data.data;
+        })
+        .catch(() => {
+          response = null;
+        });
+      if (response) {
+        delete Object.assign(response, {
+          property_address: response.address,
         })["address"];
-        details = response.data.data;
+        details = response;
       } else {
+        details.property_address = {};
         details.property_address.formatted_street_address = street_address;
         details.property_address.city = city;
         details.property_address.state = state;
         details.property_address.zip_code = zip_code;
+      }
+      if (!response) {
+        details.parcel = {};
+        details.structure = {};
+        details.owner = {};
       }
       details.parcel.standardized_land_use_type = standardized_land_use_type;
       details.parcel.area_sq_ft = area_sq_ft;
@@ -282,7 +296,6 @@ const createRealestate = async (req, res) => {
         { year: new Date().getFullYear(), total_value },
       ];
     }
-
     const newProperty = new Property({
       createdBy: req.user.userId,
       type,
@@ -298,11 +311,11 @@ const createRealestate = async (req, res) => {
     const savedProperty = await newProperty.save();
 
     const { email } = await User.findOne({ _id: req.user.userId }, "email");
-    sendEmail({
-      email,
-      subject: "Auction 10X-Listing real-estate status",
-      text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
-    });
+    // sendEmail({
+    //   email,
+    //   subject: "Auction 10X-Listing real-estate status",
+    //   text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
+    // }
 
     res.status(200).send(savedProperty);
   } catch (error) {
@@ -511,11 +524,11 @@ const editRealestate = async (req, res) => {
     const savedProperty = await property.save();
 
     const { email } = await User.findOne({ _id: req.user.userId }, "email");
-    sendEmail({
-      email,
-      subject: "Auction 10X- Updating property",
-      text: "Thank you for updating your property. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
-    });
+    // sendEmail({
+    //   email,
+    //   subject: "Auction 10X- Updating property",
+    //   text: "Thank you for updating your property. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
+    // });
     res.status(200).send(savedProperty);
   } catch (error) {
     res.status(500).send(error.message);
@@ -557,11 +570,11 @@ const createOthers = async (req, res) => {
       });
       const savedProperty = await newProperty.save();
       const { email } = await User.findOne({ _id: req.user.userId }, "email");
-      sendEmail({
-        email,
-        subject: `Auction 10X-Listing  ${type} status`,
-        text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
-      });
+      // sendEmail({
+      //   email,
+      //   subject: `Auction 10X-Listing  ${type} status`,
+      //   text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
+      // });
       res.status(200).send(savedProperty);
     } catch (error) {
       res.status(500).send(error.message);
@@ -700,11 +713,11 @@ const approveProperty = async (req, res) => {
             .status(200)
             .send({ error: `Document ${document.name}is not verified` });
       }
-      sendEmail({
-        email: user.email,
-        subject: "Auction10X- Property Application Approved",
-        text: `Congratulation, your application to sell property is approved`,
-      });
+      // sendEmail({
+      //   email: user.email,
+      //   subject: "Auction10X- Property Application Approved",
+      //   text: `Congratulation, your application to sell property is approved`,
+      // });
     }
     if (status === "fail") {
       if (!rejectedReason) {
@@ -713,11 +726,11 @@ const approveProperty = async (req, res) => {
           .send({ error: "Please specify reason for reject" });
       }
       property.rejectedReason = rejectedReason;
-      sendEmail({
-        email: user.email,
-        subject: "Auction10X- Property Application Rejected",
-        text: `Your application to sell property is rejected. Reason: ${rejectedReason}`,
-      });
+      // sendEmail({
+      //   email: user.email,
+      //   subject: "Auction10X- Property Application Rejected",
+      //   text: `Your application to sell property is rejected. Reason: ${rejectedReason}`,
+      // });
     }
     property.isApproved = status;
     const savedProperty = await property.save();
