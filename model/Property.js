@@ -34,10 +34,6 @@ const propertySchema = new Schema(
           },
         },
       ],
-      // validate: [(value) => value.length > 0, "No Image"],
-      required: function () {
-        return this.step === 3;
-      },
     },
     videos: [
       {
@@ -103,6 +99,11 @@ const propertySchema = new Schema(
   { timestamps: true }
 );
 propertySchema.pre("save", function (next) {
+  if (this.step === 3 || this.step === 4 || this.step === 5) {
+    if (this.images.length === 0) {
+      next(new Error(`At least one image is required`));
+    }
+  }
   if (this.step === 4) {
     let requiredDocuments;
     switch (this.type) {
