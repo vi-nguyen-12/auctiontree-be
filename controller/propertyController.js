@@ -4,7 +4,7 @@ const Buyer = require("../model/Buyer");
 const Auction = require("../model/Auction");
 const axios = require("axios");
 const { sendEmail, getBidsInformation } = require("../helper");
-const Joi = require("joi");
+const Joi = require("joi").extend(require("@joi/date"));
 Joi.objectId = require("joi-objectid")(Joi);
 
 //@desc  Search a real-estate with an address
