@@ -628,6 +628,7 @@ const getListingsOfSeller = async (req, res) => {
             registerStartDate: result.registerStartDate,
             registerEndDate: result.registerEndDate,
             auctionStartDate: result.auctionStartDate,
+            auctionEndDate: result.auctionEndDate,
             numberOfBids,
             highestBid,
             highestBidders,
