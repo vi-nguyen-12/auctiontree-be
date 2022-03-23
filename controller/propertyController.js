@@ -105,11 +105,11 @@ const step1Schema = {
   type: Joi.string().valid("real-estate").required(),
   details: Joi.object({
     owner_name: Joi.string().required(),
-    broker_name: Joi.string(),
+    broker_name: Joi.string().allow(null),
     broker_id: Joi.when("broker_name", {
       is: Joi.exist(),
       then: Joi.string().required(),
-      otherwise: Joi.string().min(1),
+      otherwise: Joi.string().allow(null),
     }),
     address: Joi.string().required(),
     email: Joi.string()
@@ -120,9 +120,27 @@ const step1Schema = {
       .pattern(/^[0-9]+$/)
       .required(),
   }).required(),
+  documents: Joi.when("details", {
+    is: Joi.object({
+      owner_name: Joi.exist(),
+      broker_name: Joi.exist(),
+      broker_id: Joi.exist(),
+      address: Joi.exist(),
+      email: Joi.exist(),
+      phone: Joi.exist(),
+    }),
+    then: Joi.array()
+      .items({
+        officialName: Joi.string().valid("listing_agreement"),
+        name: Joi.string().required(),
+        url: Joi.string().required(),
+      })
+      .required(),
+    otherwise: Joi.array().forbidden(),
+  }),
   step: Joi.number().required().valid(1),
 };
-const step2Schema = {
+const step2SchemaRealEstate = {
   street_address: Joi.string().required(),
   city: Joi.string().required(),
   state: Joi.string().required(),
@@ -138,6 +156,35 @@ const step2Schema = {
   reservedAmount: Joi.number().required(),
   discussedAmount: Joi.number().required(),
   step: Joi.number().required().valid(2),
+};
+const step2SchemaCar = {
+  make: Joi.string().required(),
+  model: Joi.string().required(),
+  year: Joi.date().format("YYYY").required(),
+  mileage: Joi.number().required(),
+  transmission: Joi.string().required(),
+  car_type: Joi.string().required(),
+  power: Joi.string().required(),
+  color: Joi.string().required(),
+  VIN: Joi.string().required(),
+  engine: Joi.string().required(),
+  fuel_type: Joi.string().required(),
+  condition: Joi.string().required(),
+  price: Joi.number().required(),
+  property_address: Joi.string().required(),
+};
+const step2SchemaYacht = {
+  vessel_registration_number: Joi.string().required(),
+  vessel_manufacturing_date: Joi.date().required(),
+  manufacture_mark: Joi.string().required(),
+  manufacturer_name: Joi.string().required(),
+  engine_type: Joi.string().required(),
+  engine_manufacture_name: Joi.string().required(),
+  engine_deck_type: Joi.string().required(),
+  detain: Joi.string(),
+  running_cost: Joi.number().required(),
+  no_of_crew_required: Joi.number().required(),
+  property_address: Joi.string().required(),
 };
 const step3Schema = {
   images: Joi.array()
@@ -208,6 +255,7 @@ const createRealestate = async (req, res) => {
       docusignId,
       step,
     } = req.body;
+
     let bodySchema;
 
     if (!(step === 1 || step === 2 || step === 3 || step === 4 || step === 5)) {
@@ -219,19 +267,19 @@ const createRealestate = async (req, res) => {
       bodySchema = Joi.object({ ...step1Schema });
     }
     if (step === 2) {
-      bodySchema = Joi.object({ ...step1Schema, ...step2Schema });
+      bodySchema = Joi.object({ ...step1Schema, ...step2SchemaRealEstate });
     }
     if (step === 3) {
       bodySchema = Joi.object({
         ...step1Schema,
-        ...step2Schema,
+        ...step2SchemaRealEstate,
         ...step3Schema,
       });
     }
     if (step === 4) {
       bodySchema = Joi.object({
         ...step1Schema,
-        ...step2Schema,
+        ...step2SchemaRealEstate,
         ...step3Schema,
         ...step4Schema,
       });
@@ -239,7 +287,7 @@ const createRealestate = async (req, res) => {
     if (step === 5) {
       bodySchema = Joi.object({
         ...step1Schema,
-        ...step2Schema,
+        ...step2SchemaRealEstate,
         ...step3Schema,
         ...step4Schema,
         ...step5Schema,
@@ -249,6 +297,18 @@ const createRealestate = async (req, res) => {
     const { error } = bodySchema.validate(req.body);
     if (error) return res.status(200).send({ error: error.details[0].message });
 
+    //Check if seller is a broker, require listing_agreement
+    if (details.broker_name) {
+      let isHavingListingAgreement = false;
+      for (let item of documents) {
+        if (item.officialName === "listing_agreement") {
+          isHavingListingAgreement = true;
+        }
+      }
+      if (!isHavingListingAgreement) {
+        return res.status(200).send({ error: "Listing Agreement is required" });
+      }
+    }
     //From step 2: check reservedAmount and disscussedAmount
     //From step 2: get details of real-estate from Estated and from input and add to details field;
     if (step !== 1) {
@@ -540,16 +600,18 @@ const editRealestate = async (req, res) => {
 const createOthers = async (req, res) => {
   {
     try {
-      const {
-        type,
-        details,
-        images,
-        videos,
-        documents,
-        docusignId,
-        reservedAmount,
-        discussedAmount,
-      } = req.body;
+      if (req.body.type === "car") {
+        let {
+          type,
+          details,
+          reservedAmount,
+          discussedAmount,
+          images,
+          videos,
+          documents,
+          docusignId,
+        } = req.body;
+      }
 
       if (discussedAmount > reservedAmount) {
         return res.status(200).send({
