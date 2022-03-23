@@ -105,11 +105,11 @@ const step1Schema = {
   type: Joi.string().valid("real-estate").required(),
   details: Joi.object({
     owner_name: Joi.string().required(),
-    broker_name: Joi.string().allow(null),
+    broker_name: Joi.string().allow("", null),
     broker_id: Joi.when("broker_name", {
-      is: Joi.exist(),
-      then: Joi.string().required(),
-      otherwise: Joi.string().allow(null),
+      is: Joi.any().valid(null, ""),
+      then: Joi.valid(null, ""),
+      otherwise: Joi.string().required(),
     }),
     address: Joi.string().required(),
     email: Joi.string()
@@ -186,6 +186,22 @@ const step2SchemaYacht = {
   no_of_crew_required: Joi.number().required(),
   property_address: Joi.string().required(),
 };
+
+const step2SchemaJet = {
+  registration_mark: Joi.string().required(),
+  aircraft_builder_name: Joi.string().required(),
+  aircraft_model_designation: Joi.string().required(),
+  aircraft_serial_no: Joi.string().required(),
+  engine_builder_name: Joi.string().required(),
+  engine_model_designation: Joi.string().required(),
+  number_of_engines: Joi.number().required(),
+  propeller_builder_name: Joi.string().required(),
+  propeller_model_designation: Joi.string().required(),
+  number_of_aircraft: Joi.string().required(),
+  imported_aircraft: Joi.boolean().required(),
+  property_address: Joi.string().required(),
+};
+
 const step3Schema = {
   images: Joi.array()
     .items(
@@ -600,35 +616,163 @@ const editRealestate = async (req, res) => {
 const createOthers = async (req, res) => {
   {
     try {
-      if (req.body.type === "car") {
+      let {
+        type,
+        details,
+        reservedAmount,
+        discussedAmount,
+        images,
+        videos,
+        documents,
+        docusignId,
+      } = req.body;
+
+      if (
+        !(step === 1 || step === 2 || step === 3 || step === 4 || step === 5)
+      ) {
+        return res
+          .status(200)
+          .send({ error: "step must be a number from 1 to 5" });
+      }
+      let bodySchema;
+      let step2Schema;
+
+      if (type === "car") {
         let {
-          type,
-          details,
-          reservedAmount,
-          discussedAmount,
-          images,
-          videos,
-          documents,
-          docusignId,
+          make,
+          model,
+          year,
+          mileage,
+          transmission,
+          car_type,
+          power,
+          color,
+          VIN,
+          engine,
+          fuel_type,
+          condition,
+          price,
+          property_address,
         } = req.body;
+        step2Schema = step2SchemaCar;
+      }
+      if (type === "yacht") {
+        let {
+          vessel_registration_number,
+          vessel_manufacturing_date,
+          manufacture_mark,
+          manufacturer_name,
+          engine_type,
+          engine_manufacture_name,
+          engine_deck_type,
+          detain,
+          running_cost,
+          no_of_crew_required,
+          property_address,
+        } = req.body;
+        step2Schema = step2SchemaYacht;
+      }
+      if (type === "jet") {
+        let {
+          registration_mark,
+          aircraft_builder_name,
+          aircraft_model_designation,
+          aircraft_serial_no,
+          engine_builder_name,
+          engine_model_designation,
+          number_of_engines,
+          propeller_builder_name,
+          propeller_model_designation,
+          number_of_aircraft,
+          imported_aircraft,
+          property_address,
+        } = req.body;
+        step2Schema = step2SchemaJet;
       }
 
+      //should use while loop or for loop
+      switch (step) {
+        case 1:
+          bodySchema = { ...step1Schema };
+          break;
+        case 2:
+          bodySchema = { ...step1Schema, ...step2Schema };
+          break;
+        case 3:
+          bodyShema = { ...step1Schema, ...step2Schema, ...step3Schema };
+          break;
+        case 4:
+          bodyShema = {
+            ...step1Schema,
+            ...step2Schema,
+            ...step3Schema,
+            ...step4Schema,
+          };
+          break;
+        case 5:
+          bodyShema = {
+            ...step1Schema,
+            ...step2Schema,
+            ...step3Schema,
+            ...step4Schema,
+            ...step5Schema,
+          };
+      }
+
+      const { error } = bodySchema.validate(req.body);
+      if (error)
+        return res.status(200).send({ error: error.details[0].message });
+
+      //Check if seller is a broker, require listing_agreement
+      if (details.broker_name) {
+        let isHavingListingAgreement = false;
+        for (let item of documents) {
+          if (item.officialName === "listing_agreement") {
+            isHavingListingAgreement = true;
+          }
+        }
+        if (!isHavingListingAgreement) {
+          return res
+            .status(200)
+            .send({ error: "Listing Agreement is required" });
+        }
+      }
+
+      // Step 2: check discussedAmount and reservedAmount
       if (discussedAmount > reservedAmount) {
         return res.status(200).send({
           error:
             "Discussed amount must be less than or equal to reserved amount",
         });
       }
+      details = [
+        ...details,
+        make,
+        model,
+        year,
+        mileage,
+        transmission,
+        car_type,
+        power,
+        color,
+        VIN,
+        engine,
+        fuel_type,
+        condition,
+        price,
+        property_address,
+      ];
+
       const newProperty = new Property({
         createdBy: req.user.userId,
         type,
         details,
+        reservedAmount,
+        discussedAmount,
         images,
         videos,
         documents,
         docusignId,
-        reservedAmount,
-        discussedAmount,
       });
       const savedProperty = await newProperty.save();
       const { email } = await User.findOne({ _id: req.user.userId }, "email");
