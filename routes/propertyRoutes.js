@@ -1,12 +1,8 @@
 const router = require("express").Router();
 const { auth } = require("../middleware/verifyToken");
-const {
-  validateProperty,
-  validateOthers,
-} = require("../middleware/validateRequest");
+const {} = require("../middleware/validateRequest");
 const {
   search,
-  createRealestateOld,
   getProperties,
   getProperty,
   approveProperty,
@@ -14,8 +10,10 @@ const {
   verifyImage,
   verifyVideo,
   createOthers,
+  editOthers,
   createRealestate,
   editRealestate,
+  test,
 } = require("../controller/propertyController");
 
 router.get("/real-estates/search", search);
@@ -31,8 +29,9 @@ router.get("/:id", getProperty);
 router.get("/", getProperties);
 
 //for logged in users
+router.post("/real-estate/test", auth, test);
 router.post("/real-estate", auth, createRealestate);
 router.put("/real-estate/:id", auth, editRealestate);
-router.post("/real-estates/", auth, validateProperty, createRealestateOld);
-router.post("/", auth, validateOthers, createOthers);
+router.post("/", auth, createOthers);
+router.put("/:id", auth, editOthers);
 module.exports = router;

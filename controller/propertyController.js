@@ -16,19 +16,6 @@ const search = async (req, res) => {
     const response = await axios.get(process.env.THIRD_PARTY_API, {
       params: { street_address, city, state },
     });
-    // const addressExist = await Property.findOne({
-    //   type: "real-estate",
-    //   "details.property_address.formatted_street_address": response.data.data.address.formatted_street_address,
-    // });
-    // console.log(addressExist.createdAt);
-    // if (
-    //   addressExist
-    //   //   && addressExit.createdAt - Date.now() > 182 * 24 * 60 * 60 * 1000
-    // ) {
-    //   res.status(200).send({ data: "This address is already registed to sell" });
-    // } else {
-    //   res.status(200).send({ data: response.data.data });
-    // }
     if (response.status !== 200) {
       console.log(response);
     }
@@ -38,71 +25,8 @@ const search = async (req, res) => {
   }
 };
 
-//@desc  Create a real-estate
-//@route POST /api/properties/real-estate/ body:{type, street_address, city, state, images, videos, documents, docusignId, reservedAmount, discussedAmount}
-const createRealestateOld = async (req, res) => {
-  {
-    try {
-      const {
-        type,
-        street_address,
-        city,
-        state,
-        images,
-        videos,
-        documents,
-        docusignId,
-        reservedAmount,
-        discussedAmount,
-        details,
-      } = req.body;
-
-      // const { rooms_count, beds_count, baths } = fields;
-
-      if (discussedAmount > reservedAmount) {
-        return res.status(200).send({
-          error:
-            "Discussed amount must be less than or equal to reserved amount",
-        });
-      }
-      const response = await axios.get(process.env.THIRD_PARTY_API, {
-        params: { street_address, city, state },
-      });
-      delete Object.assign(response.data.data, {
-        property_address: response.data.data.address,
-      })["address"];
-
-      const newEstates = new Property({
-        createdBy: req.user.userId,
-        type,
-        details: { ...details, ...response.data.data },
-        images,
-        videos,
-        documents,
-        docusignId,
-        reservedAmount,
-        discussedAmount,
-      });
-      // newEstates.details.structure.rooms_count = rooms_count;
-      // newEstates.details.structure.beds_count = beds_count;
-      // newEstates.details.structure.baths = baths;
-
-      const savedNewEstates = await newEstates.save();
-      const { email } = await User.findOne({ _id: req.user.userId }, "email");
-      // sendEmail({
-      //   email,
-      //   subject: "Auction 10X-Listing real-estate status",
-      //   text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
-      // });
-      res.status(200).send(savedNewEstates);
-    } catch (error) {
-      res.status(500).send(error.message);
-    }
-  }
-};
-
 const step1Schema = {
-  type: Joi.string().valid("real-estate").required(),
+  type: Joi.string().valid("real-estate", "car", "yacht", "jet").required(),
   details: Joi.object({
     owner_name: Joi.string().required(),
     broker_name: Joi.string().allow("", null),
@@ -123,8 +47,8 @@ const step1Schema = {
   documents: Joi.when("details", {
     is: Joi.object({
       owner_name: Joi.exist(),
-      broker_name: Joi.exist(),
-      broker_id: Joi.exist(),
+      broker_name: Joi.string(),
+      broker_id: Joi.string(),
       address: Joi.exist(),
       email: Joi.exist(),
       phone: Joi.exist(),
@@ -157,49 +81,59 @@ const step2SchemaRealEstate = {
   discussedAmount: Joi.number().required(),
   step: Joi.number().required().valid(2),
 };
-const step2SchemaCar = {
-  make: Joi.string().required(),
-  model: Joi.string().required(),
-  year: Joi.date().format("YYYY").required(),
-  mileage: Joi.number().required(),
-  transmission: Joi.string().required(),
-  car_type: Joi.string().required(),
-  power: Joi.string().required(),
-  color: Joi.string().required(),
-  VIN: Joi.string().required(),
-  engine: Joi.string().required(),
-  fuel_type: Joi.string().required(),
-  condition: Joi.string().required(),
-  price: Joi.number().required(),
-  property_address: Joi.string().required(),
-};
-const step2SchemaYacht = {
-  vessel_registration_number: Joi.string().required(),
-  vessel_manufacturing_date: Joi.date().required(),
-  manufacture_mark: Joi.string().required(),
-  manufacturer_name: Joi.string().required(),
-  engine_type: Joi.string().required(),
-  engine_manufacture_name: Joi.string().required(),
-  engine_deck_type: Joi.string().required(),
-  detain: Joi.string(),
-  running_cost: Joi.number().required(),
-  no_of_crew_required: Joi.number().required(),
-  property_address: Joi.string().required(),
-};
-
-const step2SchemaJet = {
-  registration_mark: Joi.string().required(),
-  aircraft_builder_name: Joi.string().required(),
-  aircraft_model_designation: Joi.string().required(),
-  aircraft_serial_no: Joi.string().required(),
-  engine_builder_name: Joi.string().required(),
-  engine_model_designation: Joi.string().required(),
-  number_of_engines: Joi.number().required(),
-  propeller_builder_name: Joi.string().required(),
-  propeller_model_designation: Joi.string().required(),
-  number_of_aircraft: Joi.string().required(),
-  imported_aircraft: Joi.boolean().required(),
-  property_address: Joi.string().required(),
+const step2SchemaOthers = {
+  car: {
+    make: Joi.string().required(),
+    model: Joi.string().required(),
+    year: Joi.date().format("YYYY").required(),
+    mileage: Joi.number().required(),
+    transmission: Joi.string().required(),
+    car_type: Joi.string().required(),
+    power: Joi.string().required(),
+    color: Joi.string().required(),
+    VIN: Joi.string().required(),
+    engine: Joi.string().required(),
+    fuel_type: Joi.string().required(),
+    condition: Joi.string().required(),
+    price: Joi.number().required(),
+    property_address: Joi.string().required(),
+    reservedAmount: Joi.number().required(),
+    discussedAmount: Joi.number().required(),
+    step: Joi.number().required().valid(2),
+  },
+  yacht: {
+    vessel_registration_number: Joi.string().required(),
+    vessel_manufacturing_date: Joi.date().required(),
+    manufacture_mark: Joi.string().required(),
+    manufacturer_name: Joi.string().required(),
+    engine_type: Joi.string().required(),
+    engine_manufacture_name: Joi.string().required(),
+    engine_deck_type: Joi.string().required(),
+    detain: Joi.string(),
+    running_cost: Joi.number().required(),
+    no_of_crew_required: Joi.number().required(),
+    property_address: Joi.string().required(),
+    reservedAmount: Joi.number().required(),
+    discussedAmount: Joi.number().required(),
+    step: Joi.number().required().valid(5),
+  },
+  jet: {
+    registration_mark: Joi.string().required(),
+    aircraft_builder_name: Joi.string().required(),
+    aircraft_model_designation: Joi.string().required(),
+    aircraft_serial_no: Joi.string().required(),
+    engine_builder_name: Joi.string().required(),
+    engine_model_designation: Joi.string().required(),
+    number_of_engines: Joi.number().required(),
+    propeller_builder_name: Joi.string().required(),
+    propeller_model_designation: Joi.string().required(),
+    number_of_aircraft: Joi.string().required(),
+    imported_aircraft: Joi.boolean().required(),
+    property_address: Joi.string().required(),
+    reservedAmount: Joi.number().required(),
+    discussedAmount: Joi.number().required(),
+    step: Joi.number().required().valid(5),
+  },
 };
 
 const step3Schema = {
@@ -241,9 +175,180 @@ const step4Schema = {
   ),
   step: Joi.number().required().valid(4),
 };
+const step4SchemaOthers = {
+  car: {
+    documents: Joi.array().items({
+      officialName: Joi.string()
+        .valid(
+          "ownership_document",
+          "registration_document",
+          "title_certificate",
+          "inspection_report",
+          "engine_details",
+          "insurance_document",
+          "loan_document",
+          "valuation_report",
+          "listing_agreement",
+          "others"
+        )
+        .required(),
+      name: Joi.string().required(),
+      url: Joi.string().required(),
+    }),
+    step: Joi.number().required().valid(4),
+  },
+  yacht: {
+    documents: Joi.array().items({
+      officialName: Joi.string()
+        .valid(
+          "vessel_registration",
+          "vessel_maintenance_report",
+          "vessel_engine_type",
+          "vessel_performance_report",
+          "vessel_deck_details",
+          "vessel_insurance",
+          "vessel_marine_surveyor_report",
+          "vessel_valuation_report",
+          "listing_agreement",
+          "others"
+        )
+        .required(),
+      name: Joi.string().required(),
+      url: Joi.string().required(),
+    }),
+    step: Joi.number().required().valid(4),
+  },
+  jet: {
+    documents: Joi.array().items({
+      officialName: Joi.string()
+        .valid(
+          "ownership_document",
+          "registration_document",
+          "title_certificate",
+          "detail_specification",
+          "insurance_document",
+          "loan_document",
+          "jet_detail_history",
+          "fitness_report",
+          "electric_work_details",
+          "engine_details",
+          "inspection_report",
+          "valuation_report",
+          "listing_agreement",
+          "others"
+        )
+        .required(),
+      name: Joi.string().required(),
+      url: Joi.string().required(),
+    }),
+    step: Joi.number().required().valid(4),
+  },
+};
 const step5Schema = {
   docusignId: Joi.objectId().required(),
   step: Joi.number().required().valid(5),
+};
+
+const testObjectSchema = {
+  step1: {
+    type: Joi.string().valid("real-estate", "car", "yacht", "jet").required(),
+    details: Joi.object({
+      owner_name: Joi.string().required(),
+      broker_name: Joi.string().allow("", null),
+      broker_id: Joi.when("broker_name", {
+        is: Joi.any().valid(null, ""),
+        then: Joi.valid(null, ""),
+        otherwise: Joi.string().required(),
+      }),
+      address: Joi.string().required(),
+      email: Joi.string()
+        .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
+        .required(),
+      phone: Joi.string()
+        .length(10)
+        .pattern(/^[0-9]+$/)
+        .required(),
+    }).required(),
+    documents: Joi.when("details", {
+      is: Joi.object({
+        owner_name: Joi.exist(),
+        broker_name: Joi.exist(),
+        broker_id: Joi.exist(),
+        address: Joi.exist(),
+        email: Joi.exist(),
+        phone: Joi.exist(),
+      }),
+      then: Joi.array()
+        .items({
+          officialName: Joi.string().valid("listing_agreement"),
+          name: Joi.string().required(),
+          url: Joi.string().required(),
+        })
+        .required(),
+      otherwise: Joi.array().forbidden(),
+    }),
+    step: Joi.number().required().valid(1),
+  },
+  step2: {
+    street_address: Joi.string().required(),
+    city: Joi.string().required(),
+    state: Joi.string().required(),
+    zip_code: Joi.string().regex(/^\d+$/).length(5).required(),
+    country: Joi.string().required(),
+    owner_name: Joi.string().required(),
+    rooms_count: Joi.number().required(),
+    beds_count: Joi.number().required(),
+    baths_count: Joi.number().required(),
+    standardized_land_use_type: Joi.string().required(),
+    total_value: Joi.number().required(),
+    area_sq_ft: Joi.number().required(),
+    reservedAmount: Joi.number().required(),
+    discussedAmount: Joi.number().required(),
+    step: Joi.number().required().valid(2),
+  },
+  step3: {
+    images: Joi.array()
+      .items(
+        Joi.object({
+          name: Joi.string().required(),
+          url: Joi.string().required(),
+        })
+      )
+      .min(1)
+      .required(),
+    videos: Joi.array().items(
+      Joi.object({
+        name: Joi.string().required(),
+        url: Joi.string().required(),
+      })
+    ),
+    step: Joi.number().required().valid(3),
+  },
+  step4: {
+    documents: Joi.array().items(
+      Joi.object({
+        officialName: Joi.string()
+          .valid(
+            "title_report",
+            "insurance_copy",
+            "financial_document",
+            "purchase_agreement",
+            "third-party_report",
+            "demographics",
+            "market_and_valuations",
+            "listing_agreement"
+          )
+          .required(),
+        url: Joi.string().required(),
+        name: Joi.string().required(),
+      })
+    ),
+    step: Joi.number().required().valid(4),
+  },
+  step5: {
+    docusignId: Joi.objectId().required(),
+    step: Joi.number().required().valid(5),
+  },
 };
 
 const createRealestate = async (req, res) => {
@@ -255,7 +360,7 @@ const createRealestate = async (req, res) => {
       city,
       state,
       zip_code,
-      // country,
+      country,
       owner_name,
       rooms_count,
       beds_count,
@@ -310,6 +415,135 @@ const createRealestate = async (req, res) => {
       });
     }
 
+    const { error } = bodySchema.validate(req.body);
+    if (error) return res.status(200).send({ error: error.details[0].message });
+
+    //Check if seller is a broker, require listing_agreement
+    if (details.broker_name) {
+      let isHavingListingAgreement = false;
+      for (let item of documents) {
+        if (item.officialName === "listing_agreement") {
+          isHavingListingAgreement = true;
+        }
+      }
+      if (!isHavingListingAgreement) {
+        return res.status(200).send({ error: "Listing Agreement is required" });
+      }
+    }
+    //From step 2: check reservedAmount and disscussedAmount
+    //From step 2: get details of real-estate from Estated and from input and add to details field;
+    if (step !== 1) {
+      if (discussedAmount > reservedAmount) {
+        return res.status(200).send({
+          error:
+            "Discussed amount must be less than or equal to reserved amount",
+        });
+      }
+      let response;
+      axios
+        .get(process.env.THIRD_PARTY_API, {
+          params: { street_address, city, state },
+        })
+        .then((res) => {
+          response = res.data.data;
+        })
+        .catch(() => {
+          response = null;
+        });
+      if (response) {
+        delete Object.assign(response, {
+          property_address: response.address,
+        })["address"];
+        details = { ...details, ...response };
+      } else {
+        details.property_address = {};
+        details.property_address.formatted_street_address = street_address;
+        details.property_address.city = city;
+        details.property_address.state = state;
+        details.property_address.zip_code = zip_code;
+      }
+      details.property_address.country = country;
+      if (!response) {
+        details.parcel = {};
+        details.structure = {};
+        details.owner = {};
+      }
+      details.parcel.standardized_land_use_type = standardized_land_use_type;
+      details.parcel.area_sq_ft = area_sq_ft;
+      details.structure.rooms_count = rooms_count;
+      details.structure.beds_count = beds_count;
+      details.structure.baths = baths_count;
+      details.owner.name = owner_name;
+      details.market_assessments = [
+        { year: new Date().getFullYear(), total_value },
+      ];
+    }
+    const newProperty = new Property({
+      createdBy: req.user.userId,
+      type,
+      details,
+      reservedAmount,
+      discussedAmount,
+      images,
+      videos,
+      documents,
+      docusignId,
+      step,
+    });
+    const savedProperty = await newProperty.save();
+
+    const { email } = await User.findOne({ _id: req.user.userId }, "email");
+    // sendEmail({
+    //   email,
+    //   subject: "Auction 10X-Listing real-estate status",
+    //   text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
+    // }
+
+    res.status(200).send(savedProperty);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+const test = async (req, res) => {
+  try {
+    let {
+      type,
+      details,
+      street_address,
+      city,
+      state,
+      zip_code,
+      // country,
+      owner_name,
+      rooms_count,
+      beds_count,
+      baths_count,
+      standardized_land_use_type,
+      total_value,
+      area_sq_ft,
+      reservedAmount,
+      discussedAmount,
+      images,
+      videos,
+      documents,
+      docusignId,
+      step,
+    } = req.body;
+
+    let bodySchema = {};
+
+    if (!(step === 1 || step === 2 || step === 3 || step === 4 || step === 5)) {
+      return res
+        .status(200)
+        .send({ error: "step must be a number from 1 to 5" });
+    }
+
+    for (let i = 1; i <= step; i++) {
+      bodySchema = { ...bodySchema, ...testObjectSchema[`step${i}`] };
+    }
+    console.log(bodySchema);
+    bodySchema = Joi.object(bodySchema);
+    // console.log(bodySchema);
     const { error } = bodySchema.validate(req.body);
     if (error) return res.status(200).send({ error: error.details[0].message });
 
@@ -443,19 +677,19 @@ const editRealestate = async (req, res) => {
     if (property.step === 1) {
       switch (step) {
         case 1:
-          bodySchema = Joi.object({ ...step1Schema });
+          bodySchema = Joi.object(step1Schema);
           break;
         case 2:
-          bodySchema = Joi.object({ ...step2Schema });
+          bodySchema = Joi.object(step2SchemaRealEstate);
           isEditStep2 = true;
           break;
         case 3:
-          bodySchema = Joi.object({ ...step2Schema, ...step3Schema });
+          bodySchema = Joi.object({ ...step2SchemaRealEstate, ...step3Schema });
           isEditStep2 = true;
           break;
         case 4:
           bodySchema = Joi.object({
-            ...step2Schema,
+            ...step2SchemaRealEstate,
             ...step3Schema,
             ...step4Schema,
           });
@@ -463,7 +697,7 @@ const editRealestate = async (req, res) => {
           break;
         case 5:
           bodySchema = Joi.object({
-            ...step2Schema,
+            ...step2SchemaRealEstate,
             ...step3Schema,
             ...step4Schema,
             ...step5Schema,
@@ -474,14 +708,14 @@ const editRealestate = async (req, res) => {
     if (property.step === 2) {
       switch (step) {
         case 1:
-          bodySchema = Joi.object({ ...step1Schema });
+          bodySchema = Joi.object(step1Schema);
           break;
         case 2:
-          bodySchema = Joi.object({ ...step2Schema });
+          bodySchema = Joi.object(step2SchemaRealEstate);
           isEditStep2 = true;
           break;
         case 3:
-          bodySchema = Joi.object({ ...step3Schema });
+          bodySchema = Joi.object(step3Schema);
           break;
         case 4:
           bodySchema = Joi.object({ ...step3Schema, ...step4Schema });
@@ -497,17 +731,17 @@ const editRealestate = async (req, res) => {
     if (property.step === 3) {
       switch (step) {
         case 1:
-          bodySchema = Joi.object({ ...step1Schema });
+          bodySchema = Joi.object(step1Schema);
           break;
         case 2:
-          bodySchema = Joi.object({ ...step2Schema });
+          bodySchema = Joi.object(step2SchemaRealEstate);
           isEditStep2 = true;
           break;
         case 3:
-          bodySchema = Joi.object({ ...step3Schema });
+          bodySchema = Joi.object(step3Schema);
           break;
         case 4:
-          bodySchema = Joi.object({ ...step4Schema });
+          bodySchema = Joi.object(step4Schema);
           break;
         case 5:
           bodySchema = Joi.object({ ...step4Schema, ...step5Schema });
@@ -516,39 +750,39 @@ const editRealestate = async (req, res) => {
     if (property.step === 4) {
       switch (step) {
         case 1:
-          bodySchema = Joi.object({ ...step1Schema });
+          bodySchema = Joi.object(step1Schema);
           break;
         case 2:
-          bodySchema = Joi.object({ ...step2Schema });
+          bodySchema = Joi.object(step2SchemaRealEstate);
           isEditStep2 = true;
           break;
         case 3:
-          bodySchema = Joi.object({ ...step3Schema });
+          bodySchema = Joi.object(step3Schema);
           break;
         case 4:
-          bodySchema = Joi.object({ ...step4Schema });
+          bodySchema = Joi.object(step4Schema);
           break;
         case 5:
-          bodySchema = Joi.object({ ...step5Schema });
+          bodySchema = Joi.object(step5Schema);
       }
     }
     if (property.step === 5) {
       switch (step) {
         case 1:
-          bodySchema = Joi.object({ ...step1Schema });
+          bodySchema = Joi.object(step1Schema);
           break;
         case 2:
-          bodySchema = Joi.object({ ...step2Schema });
+          bodySchema = Joi.object(step2SchemaRealEstate);
           isEditStep2 = true;
           break;
         case 3:
-          bodySchema = Joi.object({ ...step3Schema });
+          bodySchema = Joi.object(step3Schema);
           break;
         case 4:
-          bodySchema = Joi.object({ ...step4Schema });
+          bodySchema = Joi.object(step4Schema);
           break;
         case 5:
-          bodySchema = Joi.object({ ...step5Schema });
+          bodySchema = Joi.object(step5Schema);
       }
     }
 
@@ -564,27 +798,38 @@ const editRealestate = async (req, res) => {
         });
       }
 
-      const response = await axios.get(process.env.THIRD_PARTY_API, {
-        params: { street_address, city, state },
-      });
-      if (response.data.data) {
-        delete Object.assign(response.data.data, {
-          property_address: response.data.data.address,
+      let response;
+      axios
+        .get(process.env.THIRD_PARTY_API, {
+          params: { street_address, city, state },
+        })
+        .then((res) => {
+          response = res.data.data;
+        })
+        .catch(() => {
+          response = null;
+        });
+
+      if (response) {
+        delete Object.assign(response, {
+          property_address: response.address,
         })["address"];
-        details = { ...property.details, ...response.data.data };
+        details = { ...property.details, ...response };
       } else {
-        details.property_address.formatted_street_address = street_address;
-        details.property_address.city = city;
-        details.property_address.state = state;
-        details.property_address.zip_code = zip_code;
+        property.details.property_address.formatted_street_address =
+          street_address;
+        property.details.property_address.city = city;
+        property.details.property_address.state = state;
+        property.details.property_address.zip_code = zip_code;
       }
-      details.parcel.standardized_land_use_type = standardized_land_use_type;
-      details.parcel.area_sq_ft = area_sq_ft;
-      details.structure.rooms_count = rooms_count;
-      details.structure.beds_count = beds_count;
-      details.structure.baths = baths_count;
-      details.owner.name = owner_name;
-      details.market_assessments = [
+      property.details.parcel.standardized_land_use_type =
+        standardized_land_use_type;
+      property.details.parcel.area_sq_ft = area_sq_ft;
+      property.details.structure.rooms_count = rooms_count;
+      property.details.structure.beds_count = beds_count;
+      property.details.structure.baths = baths_count;
+      property.details.owner.name = owner_name;
+      property.details.market_assessments = [
         { year: new Date().getFullYear(), total_value },
       ];
     }
@@ -612,7 +857,7 @@ const editRealestate = async (req, res) => {
 };
 
 //@desc  Create a car/jet/yacht
-//@route POST /api/properties body:{type, details, images, videos, documents, docusignId, reservedAmount, discussedAmount}
+//@route POST /api/properties/:id body:{type, details, images, videos, documents, docusignId, reservedAmount, discussedAmount}
 const createOthers = async (req, res) => {
   {
     try {
@@ -625,6 +870,7 @@ const createOthers = async (req, res) => {
         videos,
         documents,
         docusignId,
+        step,
       } = req.body;
 
       if (
@@ -635,88 +881,43 @@ const createOthers = async (req, res) => {
           .send({ error: "step must be a number from 1 to 5" });
       }
       let bodySchema;
-      let step2Schema;
+      let step2Schema = step2SchemaOthers[`${type}`];
+      let step4Schema = step4SchemaOthers[`${type}`];
 
-      if (type === "car") {
-        let {
-          make,
-          model,
-          year,
-          mileage,
-          transmission,
-          car_type,
-          power,
-          color,
-          VIN,
-          engine,
-          fuel_type,
-          condition,
-          price,
-          property_address,
-        } = req.body;
-        step2Schema = step2SchemaCar;
-      }
-      if (type === "yacht") {
-        let {
-          vessel_registration_number,
-          vessel_manufacturing_date,
-          manufacture_mark,
-          manufacturer_name,
-          engine_type,
-          engine_manufacture_name,
-          engine_deck_type,
-          detain,
-          running_cost,
-          no_of_crew_required,
-          property_address,
-        } = req.body;
-        step2Schema = step2SchemaYacht;
-      }
-      if (type === "jet") {
-        let {
-          registration_mark,
-          aircraft_builder_name,
-          aircraft_model_designation,
-          aircraft_serial_no,
-          engine_builder_name,
-          engine_model_designation,
-          number_of_engines,
-          propeller_builder_name,
-          propeller_model_designation,
-          number_of_aircraft,
-          imported_aircraft,
-          property_address,
-        } = req.body;
-        step2Schema = step2SchemaJet;
-      }
+      //should : can we use replace depend on ${car}
 
       //should use while loop or for loop
       switch (step) {
         case 1:
-          bodySchema = { ...step1Schema };
+          bodySchema = Joi.object({ ...step1Schema });
           break;
         case 2:
-          bodySchema = { ...step1Schema, ...step2Schema };
+          bodySchema = Joi.object({ ...step1Schema, ...step2Schema });
           break;
         case 3:
-          bodyShema = { ...step1Schema, ...step2Schema, ...step3Schema };
+          bodySchema = Joi.object({
+            ...step1Schema,
+            ...step2Schema,
+            ...step3Schema,
+          });
           break;
         case 4:
-          bodyShema = {
+          bodySchema = Joi.object({
             ...step1Schema,
             ...step2Schema,
             ...step3Schema,
             ...step4Schema,
-          };
+          });
           break;
         case 5:
-          bodyShema = {
+          bodySchema = Joi.object({
             ...step1Schema,
             ...step2Schema,
             ...step3Schema,
             ...step4Schema,
             ...step5Schema,
-          };
+          });
+          break;
       }
 
       const { error } = bodySchema.validate(req.body);
@@ -745,23 +946,95 @@ const createOthers = async (req, res) => {
             "Discussed amount must be less than or equal to reserved amount",
         });
       }
-      details = [
-        ...details,
-        make,
-        model,
-        year,
-        mileage,
-        transmission,
-        car_type,
-        power,
-        color,
-        VIN,
-        engine,
-        fuel_type,
-        condition,
-        price,
-        property_address,
-      ];
+
+      if (step !== 1) {
+        if (type === "car") {
+          let {
+            make,
+            model,
+            year,
+            mileage,
+            transmission,
+            car_type,
+            power,
+            color,
+            VIN,
+            engine,
+            fuel_type,
+            condition,
+            price,
+            property_address,
+          } = req.body;
+          details.make = make;
+          details.model = model;
+          details.year = year;
+          details.mileage = mileage;
+          details.transmission = transmission;
+          details.car_type = car_type;
+          details.power = power;
+          details.color = color;
+          details.VIN = VIN;
+          details.engine = engine;
+          details.fuel_type = fuel_type;
+          details.condition = condition;
+          details.price = price;
+          details.property_address = property_address;
+        }
+        if (type === "yacht") {
+          let {
+            vessel_registration_number,
+            vessel_manufacturing_date,
+            manufacture_mark,
+            manufacturer_name,
+            engine_type,
+            engine_manufacture_name,
+            engine_deck_type,
+            detain,
+            running_cost,
+            no_of_crew_required,
+            property_address,
+          } = req.body;
+          details.vessel_registration_number = vessel_registration_number;
+          details.vessel_manufacturing_date = vessel_manufacturing_date;
+          details.manufacture_mark = manufacture_mark;
+          details.manufacturer_name = manufacturer_name;
+          details.engine_type = engine_type;
+          details.engine_manufacture_name = engine_manufacture_name;
+          details.engine_deck_type = engine_deck_type;
+          details.detain = detain;
+          details.running_cost = running_cost;
+          details.no_of_crew_required = no_of_crew_required;
+          details.property_address = property_address;
+        }
+        if (type === "jet") {
+          let {
+            registration_mark,
+            aircraft_builder_name,
+            aircraft_model_designation,
+            aircraft_serial_no,
+            engine_builder_name,
+            engine_model_designation,
+            number_of_engines,
+            propeller_builder_name,
+            propeller_model_designation,
+            number_of_aircraft,
+            imported_aircraft,
+            property_address,
+          } = req.body;
+          details.registration_mark = registration_mark;
+          details.aircraft_builder_name = aircraft_builder_name;
+          details.aircraft_model_designation = aircraft_model_designation;
+          details.aircraft_serial_no = aircraft_serial_no;
+          details.engine_builder_name = engine_builder_name;
+          details.engine_model_designation = engine_model_designation;
+          details.number_of_engines = number_of_engines;
+          details.propeller_builder_name = propeller_builder_name;
+          details.propeller_model_designation = propeller_model_designation;
+          details.number_of_aircraft = number_of_aircraft;
+          details.imported_aircraft = imported_aircraft;
+          details.property_address = property_address;
+        }
+      }
 
       const newProperty = new Property({
         createdBy: req.user.userId,
@@ -773,6 +1046,7 @@ const createOthers = async (req, res) => {
         videos,
         documents,
         docusignId,
+        step,
       });
       const savedProperty = await newProperty.save();
       const { email } = await User.findOne({ _id: req.user.userId }, "email");
@@ -789,6 +1063,269 @@ const createOthers = async (req, res) => {
 };
 
 //@desc  Edit a car/jet/yacht
+const editOthers = async (req, res) => {
+  try {
+    let {
+      type,
+      details,
+      reservedAmount,
+      discussedAmount,
+      images,
+      videos,
+      documents,
+      docusignId,
+      step,
+    } = req.body;
+
+    const property = await Property.findOne({ _id: req.params.id });
+    if (!property) {
+      return res.status(200).send({ error: "Property not found" });
+    }
+    let bodySchema;
+    let step2Schema = step2SchemaOthers[`{type}`];
+    let isEditStep2;
+
+    if (!(step === 1 || step === 2 || step === 3 || step === 4 || step === 5)) {
+      return res
+        .status(200)
+        .send({ error: "step must be a number from 1 to 5" });
+    }
+
+    if (property.step === 1) {
+      switch (step) {
+        case 1:
+          bodySchema = Joi.object(step1Schema);
+          break;
+        case 2:
+          bodySchema = Joi.object(step2Schema);
+          isEditStep2 = true;
+          break;
+        case 3:
+          bodySchema = Joi.object({ ...step2Schema, ...step3Schema });
+          isEditStep2 = true;
+          break;
+        case 4:
+          bodySchema = Joi.object({
+            ...step2Schema,
+            ...step3Schema,
+            ...step4Schema,
+          });
+          isEditStep2 = true;
+          break;
+        case 5:
+          bodySchema = Joi.object({
+            ...step2SchemaOthers,
+            ...step3Schema,
+            ...step4Schema,
+            ...step5Schema,
+          });
+          isEditStep2 = true;
+      }
+    }
+    if (property.step === 2) {
+      switch (step) {
+        case 1:
+          bodySchema = Joi.object(step1Schema);
+          break;
+        case 2:
+          bodySchema = Joi.object(step2Schema);
+          isEditStep2 = true;
+          break;
+        case 3:
+          bodySchema = Joi.object(step2Schema);
+          break;
+        case 4:
+          bodySchema = Joi.object({ ...step3Schema, ...step4Schema });
+          break;
+        case 5:
+          bodySchema = Joi.object({
+            ...step3Schema,
+            ...step4Schema,
+            ...step5Schema,
+          });
+      }
+    }
+    if (property.step === 3) {
+      switch (step) {
+        case 1:
+          bodySchema = Joi.object(step1Schema);
+          break;
+        case 2:
+          bodySchema = Joi.object(step2Schema);
+          isEditStep2 = true;
+          break;
+        case 3:
+          bodySchema = Joi.object(step3Schema);
+          break;
+        case 4:
+          bodySchema = Joi.object(step4Schema);
+          break;
+        case 5:
+          bodySchema = Joi.object({ ...step4Schema, ...step5Schema });
+      }
+    }
+    if (property.step === 4) {
+      switch (step) {
+        case 1:
+          bodySchema = Joi.object(step1Schema);
+          break;
+        case 2:
+          bodySchema = Joi.object(step2Schema);
+          isEditStep2 = true;
+          break;
+        case 3:
+          bodySchema = Joi.object(step3Schema);
+          break;
+        case 4:
+          bodySchema = Joi.object(step4Schema);
+          break;
+        case 5:
+          bodySchema = Joi.object(step5Schema);
+      }
+    }
+    if (property.step === 5) {
+      switch (step) {
+        case 1:
+          bodySchema = Joi.object(step1Schema);
+          break;
+        case 2:
+          bodySchema = Joi.object(step2Schema);
+          isEditStep2 = true;
+          break;
+        case 3:
+          bodySchema = Joi.object(step3Schema);
+          break;
+        case 4:
+          bodySchema = Joi.object(step4Schema);
+          break;
+        case 5:
+          bodySchema = Joi.object(step5Schema);
+      }
+    }
+    console.log(bodySchema);
+    const { error } = bodySchema.validate(req.body);
+    if (error) return res.status(200).send({ error: error.details[0].message });
+
+    // if edit anything in step 2 need to be proccessed reservedAmount and get info from estated API
+    if (isEditStep2) {
+      if (discussedAmount > reservedAmount) {
+        return res.status(200).send({
+          error:
+            "Discussed amount must be less than or equal to reserved amount",
+        });
+      }
+      if (property.type === "car") {
+        let {
+          make,
+          model,
+          year,
+          mileage,
+          transmission,
+          car_type,
+          power,
+          color,
+          VIN,
+          engine,
+          fuel_type,
+          condition,
+          price,
+          property_address,
+        } = req.body;
+        property.details.make = make;
+        property.details.model = model;
+        property.details.year = year;
+        property.details.mileage = mileage;
+        property.details.transmission = transmission;
+        property.details.car_type = car_type;
+        property.details.power = power;
+        property.details.color = color;
+        property.details.VIN = VIN;
+        property.details.engine = engine;
+        property.details.fuel_type = fuel_type;
+        property.details.condition = condition;
+        property.details.price = price;
+        property.details.property_address = property_address;
+      }
+      if (property.type === "yacht") {
+        let {
+          vessel_registration_number,
+          vessel_manufacturing_date,
+          manufacture_mark,
+          manufacturer_name,
+          engine_type,
+          engine_manufacture_name,
+          engine_deck_type,
+          detain,
+          running_cost,
+          no_of_crew_required,
+          property_address,
+        } = req.body;
+        property.details.vessel_registration_number =
+          vessel_registration_number;
+        property.details.vessel_manufacturing_date = vessel_manufacturing_date;
+        property.details.manufacture_mark = manufacture_mark;
+        property.details.manufacturer_name = manufacturer_name;
+        property.details.engine_type = engine_type;
+        property.details.engine_manufacture_name = engine_manufacture_name;
+        property.details.engine_deck_type = engine_deck_type;
+        property.details.detain = detain;
+        property.details.running_cost = running_cost;
+        property.details.no_of_crew_required = no_of_crew_required;
+        property.details.property_address = property_address;
+      }
+      if (type === "jet") {
+        let {
+          registration_mark,
+          aircraft_builder_name,
+          aircraft_model_designation,
+          aircraft_serial_no,
+          engine_builder_name,
+          engine_model_designation,
+          number_of_engines,
+          propeller_builder_name,
+          propeller_model_designation,
+          number_of_aircraft,
+          imported_aircraft,
+          property_address,
+        } = req.body;
+        property.details.registration_mark = registration_mark;
+        property.details.aircraft_builder_name = aircraft_builder_name;
+        property.details.aircraft_model_designation =
+          aircraft_model_designation;
+        property.details.aircraft_serial_no = aircraft_serial_no;
+        property.details.engine_builder_name = engine_builder_name;
+        property.details.engine_model_designation = engine_model_designation;
+        property.details.number_of_engines = number_of_engines;
+        property.details.propeller_builder_name = propeller_builder_name;
+        property.details.propeller_model_designation =
+          propeller_model_designation;
+        property.details.number_of_aircraft = number_of_aircraft;
+        property.details.imported_aircraft = imported_aircraft;
+        property.details.property_address = property_address;
+      }
+    }
+    property.type = type || property.type;
+    property.details = details || property.details;
+    property.reservedAmount = reservedAmount || property.reservedAmount;
+    property.discussedAmount = discussedAmount || property.discussedAmount;
+    property.images = images || property.images;
+    property.videos = videos || property.videos;
+    property.documents = documents || property.documents;
+    property.docusignId = docusignId || property.docusignId;
+    property.step = step >= property.step ? step : property.step;
+    const savedProperty = await property.save();
+
+    const { email } = await User.findOne({ _id: req.user.userId }, "email");
+    // sendEmail({
+    //   email,
+    //   subject: "Auction 10X- Updating property",
+    //   text: "Thank you for updating your property. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
+    // });
+    res.status(200).send(savedProperty);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
 
 //@desc  Get properties (sorting by created date) by page and limit
 //@desc filter by: ?type=... & status=... & inAuction=true
@@ -1071,14 +1608,15 @@ const verifyImage = async (req, res) => {
 
 module.exports = {
   search,
-  createRealestateOld,
   getProperties,
   getProperty,
   createOthers,
+  editOthers,
   approveProperty,
   verifyDocument,
   verifyImage,
   verifyVideo,
   createRealestate,
   editRealestate,
+  test,
 };
