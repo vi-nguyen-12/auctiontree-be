@@ -23,6 +23,29 @@ const userSchema = new mongoose.Schema({
     instagram: { type: String, set: deleteEmpty },
     twitter: { type: String, set: deleteEmpty },
   },
+  wallet: { type: Number, default: 0 },
+  financialDocuments: [
+    {
+      officialName: {
+        type: String,
+        required: true,
+        enum: [
+          "bank_statement",
+          "brokerage_account_statement",
+          "crypto_account_statement",
+          "line_of_credit_doc",
+        ],
+      },
+      name: { type: String, required: true },
+      url: { type: String, required: true },
+      isVerified: {
+        type: String,
+        required: true,
+        enum: ["pending", "success", "fail"],
+        default: "pending",
+      },
+    },
+  ],
 });
 
 module.exports = mongoose.model("User", userSchema);

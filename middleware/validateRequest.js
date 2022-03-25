@@ -111,10 +111,235 @@ const validateAuction = (req, res, next) => {
   }
   next();
 };
+
+const propertyObjectSchema = {
+  step1: {
+    type: Joi.string().valid("real-estate", "car", "yacht", "jet").required(),
+    details: Joi.object({
+      owner_name: Joi.string().required(),
+      broker_name: Joi.string().allow("", null).optional(),
+      broker_id: Joi.when("broker_name", {
+        is: Joi.any().valid(null, ""),
+        then: Joi.valid(null, "").optional(),
+        otherwise: Joi.string().required(),
+      }),
+      address: Joi.string().required(),
+      email: Joi.string()
+        .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
+        .required(),
+      phone: Joi.string()
+        .length(10)
+        .pattern(/^[0-9]+$/)
+        .required(),
+    }).required(),
+    documents: Joi.when("details", {
+      is: Joi.object({
+        owner_name: Joi.exist(),
+        broker_name: Joi.string(),
+        broker_id: Joi.string(),
+        address: Joi.exist(),
+        email: Joi.exist(),
+        phone: Joi.exist(),
+      }),
+      then: Joi.array()
+        .items({
+          officialName: Joi.string().valid("listing_agreement"),
+          name: Joi.string().required(),
+          url: Joi.string().required(),
+        })
+        .required(),
+      otherwise: Joi.array().optional(),
+    }),
+    step: Joi.number().required().valid(1),
+  },
+  step2: {
+    "real-estate": {
+      street_address: Joi.string().required(),
+      city: Joi.string().required(),
+      state: Joi.string().required(),
+      zip_code: Joi.string().regex(/^\d+$/).length(5).required(),
+      country: Joi.string().required(),
+      owner_name: Joi.string().required(),
+      rooms_count: Joi.number().required(),
+      beds_count: Joi.number().required(),
+      baths_count: Joi.number().required(),
+      standardized_land_use_type: Joi.string().required(),
+      total_value: Joi.number().required(),
+      area_sq_ft: Joi.number().required(),
+      reservedAmount: Joi.number().required(),
+      discussedAmount: Joi.number().required(),
+      step: Joi.number().required().valid(2),
+    },
+    car: {
+      make: Joi.string().required(),
+      model: Joi.string().required(),
+      year: Joi.date().format("YYYY").required(),
+      mileage: Joi.number().required(),
+      transmission: Joi.string().required(),
+      car_type: Joi.string().required(),
+      power: Joi.string().required(),
+      color: Joi.string().required(),
+      VIN: Joi.string().required(),
+      engine: Joi.string().required(),
+      fuel_type: Joi.string().required(),
+      condition: Joi.string().required(),
+      price: Joi.number().required(),
+      property_address: Joi.string().required(),
+      reservedAmount: Joi.number().required(),
+      discussedAmount: Joi.number().required(),
+      step: Joi.number().required().valid(2),
+    },
+    yacht: {
+      vessel_registration_number: Joi.string().required(),
+      vessel_manufacturing_date: Joi.date().required(),
+      manufacture_mark: Joi.string().required(),
+      manufacturer_name: Joi.string().required(),
+      engine_type: Joi.string().required(),
+      engine_manufacture_name: Joi.string().required(),
+      engine_deck_type: Joi.string().required(),
+      detain: Joi.string(),
+      running_cost: Joi.number().required(),
+      no_of_crew_required: Joi.number().required(),
+      property_address: Joi.string().required(),
+      reservedAmount: Joi.number().required(),
+      discussedAmount: Joi.number().required(),
+      step: Joi.number().required().valid(5),
+    },
+    jet: {
+      registration_mark: Joi.string().required(),
+      aircraft_builder_name: Joi.string().required(),
+      aircraft_model_designation: Joi.string().required(),
+      aircraft_serial_no: Joi.string().required(),
+      engine_builder_name: Joi.string().required(),
+      engine_model_designation: Joi.string().required(),
+      number_of_engines: Joi.number().required(),
+      propeller_builder_name: Joi.string().required(),
+      propeller_model_designation: Joi.string().required(),
+      number_of_aircraft: Joi.string().required(),
+      imported_aircraft: Joi.boolean().required(),
+      property_address: Joi.string().required(),
+      reservedAmount: Joi.number().required(),
+      discussedAmount: Joi.number().required(),
+      step: Joi.number().required().valid(5),
+    },
+  },
+  step3: {
+    images: Joi.array()
+      .items(
+        Joi.object({
+          name: Joi.string().required(),
+          url: Joi.string().required(),
+        })
+      )
+      .min(1)
+      .required(),
+    videos: Joi.array().items(
+      Joi.object({
+        name: Joi.string().required(),
+        url: Joi.string().required(),
+      })
+    ),
+    step: Joi.number().required().valid(3),
+  },
+  step4: {
+    "real-estate": {
+      documents: Joi.array().items(
+        Joi.object({
+          officialName: Joi.string()
+            .valid(
+              "title_report",
+              "insurance_copy",
+              "financial_document",
+              "purchase_agreement",
+              "third-party_report",
+              "demographics",
+              "market_and_valuations",
+              "listing_agreement"
+            )
+            .required(),
+          url: Joi.string().required(),
+          name: Joi.string().required(),
+        })
+      ),
+      step: Joi.number().required().valid(4),
+    },
+    car: {
+      documents: Joi.array().items({
+        officialName: Joi.string()
+          .valid(
+            "ownership_document",
+            "registration_document",
+            "title_certificate",
+            "inspection_report",
+            "engine_details",
+            "insurance_document",
+            "loan_document",
+            "valuation_report",
+            "listing_agreement",
+            "others"
+          )
+          .required(),
+        name: Joi.string().required(),
+        url: Joi.string().required(),
+      }),
+      step: Joi.number().required().valid(4),
+    },
+    yacht: {
+      documents: Joi.array().items({
+        officialName: Joi.string()
+          .valid(
+            "vessel_registration",
+            "vessel_maintenance_report",
+            "vessel_engine_type",
+            "vessel_performance_report",
+            "vessel_deck_details",
+            "vessel_insurance",
+            "vessel_marine_surveyor_report",
+            "vessel_valuation_report",
+            "listing_agreement",
+            "others"
+          )
+          .required(),
+        name: Joi.string().required(),
+        url: Joi.string().required(),
+      }),
+      step: Joi.number().required().valid(4),
+    },
+    jet: {
+      documents: Joi.array().items({
+        officialName: Joi.string()
+          .valid(
+            "ownership_document",
+            "registration_document",
+            "title_certificate",
+            "detail_specification",
+            "insurance_document",
+            "loan_document",
+            "jet_detail_history",
+            "fitness_report",
+            "electric_work_details",
+            "engine_details",
+            "inspection_report",
+            "valuation_report",
+            "listing_agreement",
+            "others"
+          )
+          .required(),
+        name: Joi.string().required(),
+        url: Joi.string().required(),
+      }),
+      step: Joi.number().required().valid(4),
+    },
+  },
+  step5: {
+    docusignId: Joi.objectId().required(),
+    step: Joi.number().required().valid(5),
+  },
+};
 module.exports = {
   validateUser,
   validateUpdateUser,
-
   validateBuyer,
   validateAuction,
+  propertyObjectSchema,
 };

@@ -44,10 +44,10 @@ const buyerSchema = new Schema(
         },
       },
     ],
-    docusign: {
-      name: String,
-      url: String,
-      isSigned: { type: Boolean, default: false },
+    docusignId: {
+      type: Schema.Types.ObjectId,
+      ref: "Docusign",
+      required: true,
     },
     TC: {
       time: { type: String, required: true },
@@ -59,10 +59,21 @@ const buyerSchema = new Schema(
       enum: ["pending", "success", "fail"],
       default: "pending",
     },
-    walletAmount: Number,
     rejectedReason: String,
   },
   { timestamp: true }
 );
+buyerSchema.pre("save", function (next) {
+  let isAllAnsweredNo = true;
+  for (let answer of this.answers) {
+    if (answer.answer === "yes") {
+      isAllAnsweredNo = false;
+    }
+  }
+  if (isAllAnsweredNo) {
+    this.isApproved = "success";
+  }
+  next();
+});
 
 module.exports = mongoose.model("Buyer", buyerSchema);

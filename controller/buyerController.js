@@ -7,22 +7,25 @@ const Auction = require("../model/Auction");
 const { sendEmail } = require("../helper");
 
 //@desc  Create a buyer
-//@route POST /api/buyers body:{auctionId, documents, docusign,TC, answers:[{questionId, answer: "yes"/"no", explanation:"", files:[{name:...url:...}]}] } TC:ISOString format
+//@route POST /api/buyers body:{auctionId, docusignId,TC, answers:[{questionId, answer: "yes"/"no", explanation:"", files:[{name:...url:...}]}] } TC:ISOString format
 const createBuyer = async (req, res) => {
-  const user = await User.findOne({ _id: req.user.userId });
+  // const requiredDocuments = [
+  //   "bank_statement",
+  //   "brokerage_account_statement",
+  //   "crypto_account_statement",
+  //   "line_of_credit_doc",
+  // ];
 
-  const { auctionId, documents, docusign, TC, answers } = req.body;
-  const requiredDocuments = [
-    "bank_statement",
-    "brokerage_account_statement",
-    "crypto_account_statement",
-    "line_of_credit_doc",
-  ];
-  // const timeOfTC = new Date(TC);
   try {
+    const user = await User.findOne({ _id: req.user.userId });
+    const { auctionId, docusignId, TC, answers } = req.body;
     const auction = await Auction.findOne({ _id: auctionId });
+    const docusign = await Docusign.findOne({ _id: docusignId });
     if (!auction) {
       return res.status(200).send({ error: "Auction not found" });
+    }
+    if (!docusign) {
+      return res.status(200).send({ error: "Docusign not found" });
     }
 
     const isRegisteredAuction = await Buyer.findOne({
@@ -34,43 +37,25 @@ const createBuyer = async (req, res) => {
         error: "This user is already registered to buy this property",
       });
     }
-    for (let item of requiredDocuments) {
-      if (!documents.find((i) => i.officialName === item)) {
-        return res.status(200).send({ error: `Document ${item} is required` });
-      }
-    }
-    let checkQuestion = true;
-    await Promise.all(
-      answers.map(async (item) => {
-        let result = await Question.findOne({ _id: item.questionId });
-        if (!result) checkQuestion = false;
-      })
-    );
 
-    if (!checkQuestion) {
-      return res.status(404).send("Question not found");
-    }
-    let questionsTotal = await Question.count();
-    if (answers.length < questionsTotal) {
-      let numOfMissingQuestion = questionsTotal - answers.length;
-      return res.status(200).send({
-        error: `Missing answers ${numOfMissingQuestion} confidential ${
-          numOfMissingQuestion === 1 ? "question" : "questions"
-        }`,
-      });
+    const questions = await Question.find({});
+    for (let item of questions) {
+      if (!answers.find((i) => i.questionId === item._id)) {
+        return res.status(200).send({
+          error: `Answer of question "${item.questionText}" is required`,
+        });
+      }
     }
 
     const newBuyer = new Buyer({
       userId: user._id,
       auctionId,
-      documents,
-      docusign,
+      docusignId,
       TC,
       answers,
     });
 
     const savedBuyer = await newBuyer.save();
-
     const property = await Property.findOne({ _id: auction.property });
 
     const result = {
@@ -103,12 +88,12 @@ const createBuyer = async (req, res) => {
 };
 
 //@desc  Approve a buyer
-//@route PUT /api/buyers/:id/status body: {status:"pending"/"success"/"fail", walletAmount:...,rejectedReason:...}
+//@route PUT /api/buyers/:id/status body: {status:"pending"/"success"/"fail", rejectedReason:...}
 const approveBuyer = async (req, res) => {
   try {
     const bodySchema = Joi.object({
       status: Joi.string().valid("pending", "success", "fail"),
-      walletAmount: Joi.number().strict(),
+      // walletAmount: Joi.number().strict(),
       rejectedReason: Joi.string().optional(),
     });
     const { error } = bodySchema.validate(req.body);
@@ -122,22 +107,13 @@ const approveBuyer = async (req, res) => {
       return res.status(200).send({ error: "Buyer not found" });
     }
     if (status === "success") {
-      if (!walletAmount)
-        return res
-          .status(200)
-          .send({ error: "Please specify the amount for wallet" });
-      // if (!buyer.docusign.isSigned) {
-      //   return res
-      //     .status(200)
-      //     .send({ error: "Approved failed. Docusign is not signed" });
+      // for (let document of buyer.documents) {
+      //   if (document.isVerified !== "success") {
+      //     return res.status(200).send({
+      //       error: `Approved failed. Document ${document.name} is not verified`,
+      //     });
+      //   }
       // }
-      for (let document of buyer.documents) {
-        if (document.isVerified !== "success") {
-          return res.status(200).send({
-            error: `Approved failed. Document ${document.name} is not verified`,
-          });
-        }
-      }
       for (let item of buyer.answers) {
         if (item.isApproved === false) {
           const question = await Question.findById(item.questionId);
@@ -151,7 +127,6 @@ const approveBuyer = async (req, res) => {
         subject: "Auction10X- Buyer Application Approved",
         text: `Congratulation, your application application is approved with $${walletAmount} in your wallet. This amount is available for your bidding.`,
       });
-      buyer.walletAmount = walletAmount;
     }
     if (status === "fail") {
       if (!rejectedReason) {

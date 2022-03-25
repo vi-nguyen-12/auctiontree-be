@@ -468,9 +468,10 @@ const placeBidding = async (req, res) => {
     const property = await Property.findOne({ _id: auction.property });
 
     //check wallet is sufficient
-    if (buyer.walletAmount < biddingPrice) {
-      return res.status(200).send({ error: "Wallet is insufficient for bid" });
-    }
+    // should check from user.walletAmount
+    // if (buyer.walletAmount < biddingPrice) {
+    //   return res.status(200).send({ error: "Wallet is insufficient for bid" });
+    // }
 
     //check bidding time
     if (biddingTime.getTime() < auction.auctionStartDate.getTime()) {
