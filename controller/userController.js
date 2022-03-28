@@ -234,7 +234,11 @@ const getUserByBuyerId = async (req, res) => {
       _id: user.id,
       firstName: user.firstName,
       lastName: user.lastName,
+      userName: user.userName,
       email: user.email,
+      phone: user.phone,
+      country: user.country,
+      city: user.city,
     };
     res.status(200).send(result);
   } catch (err) {
