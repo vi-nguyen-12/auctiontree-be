@@ -2,12 +2,12 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const userSchema = new mongoose.Schema({
-  firstName: { type: String, required: true },
-  lastName: { type: String, required: true },
-  email: { type: String, required: true },
-  phone: { type: String, required: true },
-  password: { type: String, required: true },
-  userName: { type: String, required: true },
+  firstName: { type: String, required: [true, "First name is required"] },
+  lastName: { type: String, required: [true, "Last name is required"] },
+  email: { type: String, required: [true, "Email is required"] },
+  phone: { type: String, required: [true, "Phone is required"] },
+  password: { type: String, required: [true, "Password is required"] },
+  userName: { type: String, required: [true, "User name is required"] },
   country: { type: String },
   city: { type: String },
   date: { type: Date, default: Date.now },
@@ -23,29 +23,11 @@ const userSchema = new mongoose.Schema({
     instagram: { type: String, set: deleteEmpty },
     twitter: { type: String, set: deleteEmpty },
   },
-  wallet: { type: Number, default: 0 },
-  financialDocuments: [
-    {
-      officialName: {
-        type: String,
-        required: true,
-        enum: [
-          "bank_statement",
-          "brokerage_account_statement",
-          "crypto_account_statement",
-          "line_of_credit_doc",
-        ],
-      },
-      name: { type: String, required: true },
-      url: { type: String, required: true },
-      isVerified: {
-        type: String,
-        required: true,
-        enum: ["pending", "success", "fail"],
-        default: "pending",
-      },
-    },
-  ],
+  wallet: {
+    type: Number,
+    default: 0,
+    min: [0, "Wallet must be greater than 0"],
+  },
 });
 
 module.exports = mongoose.model("User", userSchema);

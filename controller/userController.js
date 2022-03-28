@@ -191,6 +191,11 @@ const login = async (req, res) => {
       secure: true,
     });
 
+    const wallet = await Buyer.aggregate([
+      { $match: { userId: user._id, isApproved: "success" } },
+      { $group: { _id: null, wallet: { $sum: "$walletAmount" } } },
+    ]);
+
     res.status(200).send({
       message: "Login successful",
       data: {
@@ -204,6 +209,7 @@ const login = async (req, res) => {
         city: user.city,
         isActive: user.isActive,
         KYC: user.isKYC,
+        wallet: wallet[0].wallet,
         token,
       },
     });
@@ -333,7 +339,7 @@ const resetForgotPassword = async (req, res) => {
 };
 
 //@desc  Edit profile
-//@route POST /api/users/:id body {firstName, lastName, email, phone, userName, country, city, old_password, new_password}
+//@route PUT /api/users/:id body {firstName, lastName, email, phone, userName, country, city, old_password, new_password}
 const editProfile = async (req, res) => {
   try {
     const { id } = req.params;
@@ -354,6 +360,8 @@ const editProfile = async (req, res) => {
       return res.status(200).send({ error: "User not found" });
     }
     const user = await User.findOne({ _id: req.user.userId });
+
+    // should if change email and userName, check if they are already exists
     user.firstName = firstName || user.firstName;
     user.lastName = lastName || user.lastName;
     user.email = email || user.email;
@@ -685,12 +693,3 @@ module.exports = {
   getListingsOfSeller,
   editProfile,
 };
-
-async function doFilter(arr, callback) {
-  const fail = Symbol();
-  return (
-    await Promise.all(
-      arr.map(async (item) => ((await callback(item)) ? item : fail))
-    )
-  ).filter((i) => i !== fail);
-}

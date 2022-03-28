@@ -49,5 +49,4 @@ router.put("/:id", auth, validateUpdateUser, editProfile);
 //only for admin
 router.get("/buyerId/:buyerId", getUserByBuyerId);
 router.get("/propertyId/:propertyId", getUserByPropertyId);
-
 module.exports = router;

@@ -455,7 +455,7 @@ const placeBidding = async (req, res) => {
     if (!buyer) {
       return res.status(200).send({ error: "User did not register to buy" });
     }
-    console.log(buyer.isApproved !== "success");
+
     if (buyer.isApproved !== "success") {
       return res.status(200).send({ error: "User is not approved to bid yet" });
     }
@@ -468,7 +468,7 @@ const placeBidding = async (req, res) => {
     const property = await Property.findOne({ _id: auction.property });
 
     //check wallet is sufficient
-    // should check from user.walletAmount
+    // should check from user total wallet that person has enough money
     // if (buyer.walletAmount < biddingPrice) {
     //   return res.status(200).send({ error: "Wallet is insufficient for bid" });
     // }

@@ -13,7 +13,10 @@ const propertySchema = new Schema(
     type: {
       type: String,
       required: true,
-      enum: ["real-estate", "jet", "car", "yacht"],
+      enum: {
+        values: ["real-estate", "jet", "car", "yacht"],
+        message: "Property type {VALUE} is not supported",
+      },
     },
     details: {
       type: Object,
@@ -77,15 +80,26 @@ const propertySchema = new Schema(
     },
     reservedAmount: {
       type: Number,
-      required: function () {
-        return this.step === 2;
-      },
+      min: [0, "Reserved amount cannot be negative"],
+      required: [
+        function () {
+          return this.step === 2;
+        },
+        "Reserved amount is required",
+      ],
     },
     discussedAmount: {
       type: Number,
-      required: function () {
-        return this.step === 2;
+      min: [0, "Discussed amount cannot be negative"],
+      validate: function (value) {
+        return value < this.reservedAmount;
       },
+      required: [
+        function () {
+          return this.step === 2;
+        },
+        "Discussed amount is required",
+      ],
     },
     isApproved: {
       type: String,

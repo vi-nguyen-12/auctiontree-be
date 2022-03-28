@@ -66,6 +66,11 @@ const validateBuyer = (req, res, next) => {
       Joi.object({
         questionId: Joi.objectId().required(),
         answer: Joi.string().valid("yes", "no").required(),
+        explanation: Joi.when("answer", {
+          is: Joi.string().valid("yes"),
+          then: Joi.string().required(),
+          otherwise: Joi.string().allow(null, ""),
+        }),
       })
     ),
     documents: Joi.array().items(
@@ -82,7 +87,7 @@ const validateBuyer = (req, res, next) => {
         name: Joi.string().required(),
       })
     ),
-    docusign: Joi.objectId().required(),
+    docusignId: Joi.objectId().required(),
     TC: Joi.object({
       time: Joi.date().iso().required(),
       IPAddress: Joi.string().required(),

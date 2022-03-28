@@ -33,9 +33,24 @@ const buyerSchema = new Schema(
     ],
     documents: [
       {
-        officialName: { type: String, required: true },
-        name: { type: String, required: true },
-        url: { type: String, required: true },
+        officialName: {
+          type: String,
+          required: true,
+          enum: {
+            values: [
+              "bank_statement",
+              "brokerage_account_statement",
+              "crypto_account_statement",
+              "line_of_credit_doc",
+            ],
+            message: "Document with official name {VALUE} is not a supported",
+          },
+        },
+        name: {
+          type: String,
+          required: [true, "Name of document is required"],
+        },
+        url: { type: String, required: [true, "Url of document is required"] },
         isVerified: {
           type: String,
           required: true,
@@ -59,6 +74,7 @@ const buyerSchema = new Schema(
       enum: ["pending", "success", "fail"],
       default: "pending",
     },
+    approvedFund: { type: Number, min: [0, "Fund must be greater than 0"] },
     rejectedReason: String,
   },
   { timestamp: true }

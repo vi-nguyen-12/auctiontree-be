@@ -144,7 +144,6 @@ const sendEnvelope = async (req, res) => {
     cc1: { email: "nguyen.vi.1292@gmail.com", name: "tiho" },
   };
   let envelopesApi = new docusign.EnvelopesApi(dsApiClient);
-  // let envelope = makeEnvelope(envelopeArgs);
   let envelope = makeEnvelope(envelopeArgs);
 
   let results = await envelopesApi.createEnvelope(apiArgs.accountId, {
