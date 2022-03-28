@@ -468,10 +468,17 @@ const placeBidding = async (req, res) => {
     const property = await Property.findOne({ _id: auction.property });
 
     //check wallet is sufficient
-    // should check from user total wallet that person has enough money
-    // if (buyer.walletAmount < biddingPrice) {
-    //   return res.status(200).send({ error: "Wallet is insufficient for bid" });
-    // }
+    //should 1 line of function
+    let wallet;
+    await Buyer.aggregate([
+      { $match: { userId: req.user.userId, isApproved: "success" } },
+      { $group: { _id: null, wallet: { $sum: "$approvedFund" } } },
+    ]).then((result) => {
+      wallet = result[0].wallet;
+    });
+    if (wallet < biddingPrice) {
+      return res.status(200).send({ error: "Wallet is insufficient for bid" });
+    }
 
     //check bidding time
     if (biddingTime.getTime() < auction.auctionStartDate.getTime()) {

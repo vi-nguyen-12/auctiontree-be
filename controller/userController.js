@@ -190,11 +190,13 @@ const login = async (req, res) => {
       sameSite: "none",
       secure: true,
     });
-
-    const wallet = await Buyer.aggregate([
+    let wallet;
+    await Buyer.aggregate([
       { $match: { userId: user._id, isApproved: "success" } },
-      { $group: { _id: null, wallet: { $sum: "$walletAmount" } } },
-    ]);
+      { $group: { _id: null, wallet: { $sum: "$approvedFund" } } },
+    ]).then((response) => {
+      wallet = response[0].wallet;
+    });
 
     res.status(200).send({
       message: "Login successful",
@@ -209,7 +211,7 @@ const login = async (req, res) => {
         city: user.city,
         isActive: user.isActive,
         KYC: user.isKYC,
-        wallet: wallet[0].wallet,
+        wallet,
         token,
       },
     });
