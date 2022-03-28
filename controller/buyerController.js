@@ -119,6 +119,9 @@ const approveBuyer = async (req, res) => {
         }
       }
       buyer.approvedFund = approvedFund;
+      const user = await User.findOne({ _id: buyer.userId });
+      user.wallet = user.wallet + approvedFund;
+      await user.save();
       sendEmail({
         email: buyer.userId.email,
         subject: "Auction10X- Buyer Application Approved",

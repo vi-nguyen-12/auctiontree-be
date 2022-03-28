@@ -452,6 +452,7 @@ const placeBidding = async (req, res) => {
   const biddingTime = new Date(biddingTimeISOString);
   try {
     const buyer = await Buyer.findOne({ userId: req.user.userId, auctionId });
+    const user = await User.findById(req.user.userId);
     if (!buyer) {
       return res.status(200).send({ error: "User did not register to buy" });
     }
@@ -467,17 +468,8 @@ const placeBidding = async (req, res) => {
 
     const property = await Property.findOne({ _id: auction.property });
 
-    //check wallet is sufficient
-    //should 1 line of function
-    let wallet;
-    await Buyer.aggregate([
-      { $match: { userId: req.user.userId, isApproved: "success" } },
-      { $group: { _id: null, wallet: { $sum: "$approvedFund" } } },
-    ]).then((result) => {
-      wallet = result[0].wallet;
-    });
-    if (wallet < biddingPrice) {
-      return res.status(200).send({ error: "Wallet is insufficient for bid" });
+    if (user.wallet < biddingPrice) {
+      return res.status(200).send({ error: "Wallet is insufficient to bid" });
     }
 
     //check bidding time
@@ -504,8 +496,21 @@ const placeBidding = async (req, res) => {
       });
     }
 
+    //deduct amount from wallet;
+    user.wallet = user.wallet - biddingPrice;
+    await user.save();
+
+    //add money back to wallet of 4th highest bidder;
+    if (auction.bids.length > 3) {
+      const fourthHighestBidder = auction.bids.slice(-4)[0];
+      const fourthHighestBidderUser = await User.findById(
+        fourthHighestBidder.userId
+      );
+      fourthHighestBidderUser.wallet =
+        fourthHighestBidderUser.wallet + fourthHighestBidder.amount;
+      await fourthHighestBidderUser.save();
+    }
     //send email;
-    let user = await User.findById(req.user.userId);
     let email = user.email;
     let subject = "Auction10X- Bidding completed successfully";
     let text = `Hi ${user.firstName} ${user.lastName} Thank you for your bid. Your price is highest with ${biddingPrice} at ${biddingTime}`;
