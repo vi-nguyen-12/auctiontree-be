@@ -118,9 +118,10 @@ const approveBuyer = async (req, res) => {
           });
         }
       }
+      let previousFund = buyer.approvedFund || 0;
       buyer.approvedFund = approvedFund;
       const user = await User.findOne({ _id: buyer.userId });
-      user.wallet = user.wallet + approvedFund;
+      user.wallet = user.wallet - previousFund + approvedFund;
       await user.save();
       sendEmail({
         email: buyer.userId.email,
