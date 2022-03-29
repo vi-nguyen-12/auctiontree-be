@@ -31,34 +31,40 @@ const buyerSchema = new Schema(
         },
       },
     ],
-    documents: [
-      {
-        officialName: {
-          type: String,
-          required: true,
-          enum: {
-            values: [
-              "bank_statement",
-              "brokerage_account_statement",
-              "crypto_account_statement",
-              "line_of_credit_doc",
-            ],
-            message: "Document with official name {VALUE} is not a supported",
+    documents: {
+      type: [
+        {
+          officialName: {
+            type: String,
+            required: true,
+            enum: {
+              values: [
+                "bank_statement",
+                "brokerage_account_statement",
+                "crypto_account_statement",
+                "line_of_credit_doc",
+              ],
+              message: "Document with official name {VALUE} is not a supported",
+            },
+          },
+          name: {
+            type: String,
+            required: [true, "Name of document is required"],
+          },
+          url: {
+            type: String,
+            required: [true, "Url of document is required"],
+          },
+          isVerified: {
+            type: String,
+            required: true,
+            enum: ["pending", "success", "fail"],
+            default: "pending",
           },
         },
-        name: {
-          type: String,
-          required: [true, "Name of document is required"],
-        },
-        url: { type: String, required: [true, "Url of document is required"] },
-        isVerified: {
-          type: String,
-          required: true,
-          enum: ["pending", "success", "fail"],
-          default: "pending",
-        },
-      },
-    ],
+      ],
+      required: true,
+    },
     docusignId: {
       type: Schema.Types.ObjectId,
       ref: "Docusign",
@@ -79,17 +85,5 @@ const buyerSchema = new Schema(
   },
   { timestamp: true }
 );
-buyerSchema.pre("save", function (next) {
-  let isAllAnsweredNo = true;
-  for (let answer of this.answers) {
-    if (answer.answer === "yes") {
-      isAllAnsweredNo = false;
-    }
-  }
-  if (isAllAnsweredNo) {
-    this.isApproved = "success";
-  }
-  next();
-});
 
 module.exports = mongoose.model("Buyer", buyerSchema);

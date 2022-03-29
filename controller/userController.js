@@ -204,7 +204,7 @@ const login = async (req, res) => {
         city: user.city,
         isActive: user.isActive,
         KYC: user.isKYC,
-        wallet,
+        wallet: user.wallet,
         token,
       },
     });
