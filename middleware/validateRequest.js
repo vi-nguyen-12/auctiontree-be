@@ -73,20 +73,22 @@ const validateBuyer = (req, res, next) => {
         }),
       })
     ),
-    documents: Joi.array().items(
-      Joi.object({
-        officialName: Joi.string()
-          .valid(
-            "bank_statement",
-            "brokerage_account_statement",
-            "crypto_account_statement",
-            "line_of_credit_doc"
-          )
-          .required(),
-        url: Joi.string().required(),
-        name: Joi.string().required(),
-      })
-    ),
+    documents: Joi.array()
+      .items(
+        Joi.object({
+          officialName: Joi.string()
+            .valid(
+              "bank_statement",
+              "brokerage_account_statement",
+              "crypto_account_statement",
+              "line_of_credit_doc"
+            )
+            .required(),
+          url: Joi.string().required(),
+          name: Joi.string().required(),
+        })
+      )
+      .required(),
     docusignId: Joi.objectId().required(),
     TC: Joi.object({
       time: Joi.date().iso().required(),
