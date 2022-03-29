@@ -33,7 +33,7 @@ router.get("/status", auth, getRealEstateAuctionsStatusBuyer);
 router.get("/result/:id", getAuctionResult);
 router.get("/propertyId/:propertyId", getAuction);
 router.get("/:id", getAuction);
-router.put("/:id", validateAuction, editAuction);
+router.put("/:id", editAuction);
 router.delete("/:id", deleteAuction);
 
 module.exports = router;

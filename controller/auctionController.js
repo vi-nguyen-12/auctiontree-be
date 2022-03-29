@@ -1,4 +1,4 @@
-const Joi = require("joi");
+const Joi = require("joi").extend(require("@joi/date"));
 const Auction = require("../model/Auction");
 const Property = require("../model/Property");
 const Buyer = require("../model/Buyer");
@@ -93,17 +93,30 @@ const editAuction = async (req, res) => {
       startingBid,
       incrementAmount,
     } = req.body;
-    //should  validate the body
-
-    const registerStartDate =
-      new Date(registerStartDateISOString) || auction.registerStartDate;
-    const registerEndDate =
-      new Date(registerEndDateISOString) || auction.registerEndDate;
-    const auctionStartDate =
-      new Date(auctionStartDateISOString) || auction.auctionStartDate;
-    const auctionEndDate =
-      new Date(auctionEndDateISOString) || auction.auctionEndDate;
-
+    const bodySchema = {
+      registerStartDate: Joi.date().iso(),
+      registerEndDate: Joi.date().iso(),
+      auctionStartDate: Joi.date().iso(),
+      auctionEndDate: Joi.date().iso(),
+      startingBid: Joi.number().min(0),
+      incrementAmount: Joi.number().min(0),
+    };
+    const { error } = Joi.validate(req.body, bodySchema);
+    if (error) {
+      return res.status(200).send({ error: error.details[0].message });
+    }
+    const registerStartDate = registerStartDateISOString
+      ? new Date(registerStartDateISOString)
+      : auction.registerStartDate;
+    const registerEndDate = registerEndDateISOString
+      ? new Date(registerEndDateISOString)
+      : auction.registerEndDate;
+    const auctionStartDate = auctionStartDateISOString
+      ? new Date(auctionStartDateISOString)
+      : auction.auctionStartDate;
+    const auctionEndDate = auctionEndDateISOString
+      ? new Date(auctionEndDateISOString)
+      : auction.auctionEndDate;
     if (!auction.property.isApproved) {
       return res.status(200).send({ error: "Property is not approved" });
     }
@@ -131,7 +144,7 @@ const editAuction = async (req, res) => {
     auction.auctionEndDate = auctionEndDate;
     auction.startingBid = startingBid || auction.startingBid;
     auction.incrementAmount = incrementAmount || auction.incrementAmount;
-
+    console.log(auction);
     const updatedAuction = await auction.save();
     res.status(200).send(updatedAuction);
   } catch (err) {
