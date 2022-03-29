@@ -142,8 +142,8 @@ const propertyObjectSchema = {
     documents: Joi.when("details", {
       is: Joi.object({
         owner_name: Joi.exist(),
-        broker_name: Joi.string(),
-        broker_id: Joi.string(),
+        broker_name: Joi.exist(),
+        broker_id: Joi.exist(),
         address: Joi.exist(),
         email: Joi.exist(),
         phone: Joi.exist(),
