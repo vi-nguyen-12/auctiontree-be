@@ -49,12 +49,12 @@ const createAuction = async (req, res) => {
       });
     }
 
-    if (auctionStartDate.getTime() >= auctionEndDate.getTime()) {
-      return res.status(200).send({
-        error:
-          "Auction end time is earlier than or equal to auction start time",
-      });
-    }
+    // if (auctionStartDate.getTime() >= auctionEndDate.getTime()) {
+    //   return res.status(200).send({
+    //     error:
+    //       "Auction end time is earlier than or equal to auction start time",
+    //   });
+    // }
     const newAuction = new Auction({
       property: property._id,
       registerStartDate,
@@ -82,42 +82,29 @@ const createAuction = async (req, res) => {
 //@route PUT api/auctions/:id  body:{propertyId, registerStartDate,registerEndDate,auctionStartDate,auctionEndDate,startingBid,incrementAmount}  all dates are in ISOString format
 
 const editAuction = async (req, res) => {
-  const auction = await Auction.findById(req.params.id);
-  if (!auction) return res.status(200).send({ error: "Auction not found!" });
-  const {
-    propertyId,
-    registerStartDate: registerStartDateISOString,
-    registerEndDate: registerEndDateISOString,
-    auctionStartDate: auctionStartDateISOString,
-    auctionEndDate: auctionEndDateISOString,
-    startingBid,
-    incrementAmount,
-  } = req.body;
-
   try {
-    const auctionWithPropertyId = await Auction.findOne({
-      property: propertyId,
-    });
-    if (
-      auctionWithPropertyId !== null &&
-      auctionWithPropertyId._id !== auction._id
-    ) {
-      return res
-        .status(200)
-        .send({ error: "This property is already created for auction" });
-    }
+    const auction = await Auction.findById(req.params.id).populate("property");
+    if (!auction) return res.status(200).send({ error: "Auction not found!" });
+    const {
+      registerStartDate: registerStartDateISOString,
+      registerEndDate: registerEndDateISOString,
+      auctionStartDate: auctionStartDateISOString,
+      auctionEndDate: auctionEndDateISOString,
+      startingBid,
+      incrementAmount,
+    } = req.body;
+    //should  validate the body
 
-    const registerStartDate = new Date(registerStartDateISOString);
-    const registerEndDate = new Date(registerEndDateISOString);
-    const auctionStartDate = new Date(auctionStartDateISOString);
-    const auctionEndDate = new Date(auctionEndDateISOString);
+    const registerStartDate =
+      new Date(registerStartDateISOString) || auction.registerStartDate;
+    const registerEndDate =
+      new Date(registerEndDateISOString) || auction.registerEndDate;
+    const auctionStartDate =
+      new Date(auctionStartDateISOString) || auction.auctionStartDate;
+    const auctionEndDate =
+      new Date(auctionEndDateISOString) || auction.auctionEndDate;
 
-    const property = await Property.findOne({ _id: req.body.propertyId });
-
-    if (!property) {
-      return res.status(200).send({ error: "Property not found" });
-    }
-    if (!property.isApproved) {
+    if (!auction.property.isApproved) {
       return res.status(200).send({ error: "Property is not approved" });
     }
     if (registerStartDate.getTime() >= registerEndDate.getTime()) {
@@ -132,18 +119,18 @@ const editAuction = async (req, res) => {
           "Auction end time is earlier than or equal to auction start time",
       });
     }
-    if (registerEndDate.getTime() > auctionStartDate.getTime()) {
-      return res.status(200).send({
-        error: "Auction start time is earlier than register end time",
-      });
-    }
-    auction.property = property._id;
+    // if (registerEndDate.getTime() > auctionStartDate.getTime()) {
+    //   return res.status(200).send({
+    //     error: "Auction start time is earlier than register end time",
+    //   });
+    // }
+
     auction.registerStartDate = registerStartDate;
     auction.registerEndDate = registerEndDate;
     auction.auctionStartDate = auctionStartDate;
     auction.auctionEndDate = auctionEndDate;
-    auction.startingBid = startingBid;
-    auction.incrementAmount = incrementAmount;
+    auction.startingBid = startingBid || auction.startingBid;
+    auction.incrementAmount = incrementAmount || auction.incrementAmount;
 
     const updatedAuction = await auction.save();
     res.status(200).send(updatedAuction);
