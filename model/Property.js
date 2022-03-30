@@ -118,7 +118,7 @@ propertySchema.pre("save", function (next) {
       next(new Error(`At least one image is required`));
     }
   }
-  if (this.step === 4) {
+  if (this.step === 4 || this.step === 5) {
     let requiredDocuments;
     switch (this.type) {
       case "real-estate":
