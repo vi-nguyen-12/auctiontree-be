@@ -664,7 +664,7 @@ const editOthers = async (req, res) => {
 };
 
 //@desc  Get properties (sorting by created date) by page and limit
-//@desc filter by: ?type=... & status=... & inAuction=true
+//@desc filter by: ?type=... & status=... & inAuction=true &completed=true
 //@route GET /api/properties
 const getProperties = async (req, res) => {
   try {
@@ -676,7 +676,8 @@ const getProperties = async (req, res) => {
       inAuction: Joi.string().valid("true", "false").optional(),
       page: Joi.string().regex(/^\d+$/).optional(),
       limit: Joi.string().regex(/^\d+$/).optional(),
-      type: Joi.string().valid("real-estate", "car", "jet", "yacht"),
+      type: Joi.string().valid("real-estate", "car", "jet", "yacht").optional(),
+      completed: Joi.string().valid("true", "false").optional(),
     });
     const { error } = paramsSchema.validate(req.query);
     if (error) return res.status(200).send({ error: error.details[0].message });
@@ -684,7 +685,7 @@ const getProperties = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 100;
     const { inAuction, status: isApproved, type } = req.query;
-    let filters = {};
+    let filters = { step: 5 };
     if (isApproved) {
       filters.isApproved = isApproved;
     }
@@ -693,6 +694,11 @@ const getProperties = async (req, res) => {
     }
 
     let properties = [];
+    if (completed === "true") {
+      filters.step = 5;
+    } else {
+      filters.step = { $lt: 5 };
+    }
     if (inAuction === "true") {
       const auctions = await Auction.find().select("property");
       const propertyIds = auctions.map((auction) => auction.property);
