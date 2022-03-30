@@ -525,6 +525,45 @@ const getBidAuctionsOfBuyer = async (req, res) => {
   }
 };
 
+//@desc  Get auctions of all buyers (grouped by user)
+//@route GET /api/users/buyer/auctions?status=...
+const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
+  try {
+    const buyersGroupedByUserId = await Buyer.aggregate(
+      [
+        { $group: { _id: "$userId" } },
+        {
+          $lookup: {
+            from: "buyers",
+            localField: "_id",
+            foreignField: "userId",
+            pipeline: [
+              // {
+              //   $project: { _id: "$auctionId" },
+              // },
+              // {
+              //   $lookup: {
+              //     from: "auctions",
+              //     localField: "_id",
+              //     foreignField: "_id",
+              //     as: "_id",
+              //   },
+              // },
+            ],
+            as: "auctions",
+          },
+        },
+      ],
+      function (err, result) {
+        console.log(result);
+      }
+    );
+    res.status(200).send(buyersGroupedByUserId);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
 //@desc  Get auctions of a buyer
 //@route GET /api/users/:id/buyer/auctions?status=...
 const getAuctionsOfBuyer = async (req, res) => {
@@ -543,18 +582,23 @@ const getAuctionsOfBuyer = async (req, res) => {
     if (status) {
       filter["isApproved"] = status;
     }
-    const buyerApprovedList = await Buyer.find(filter).populate({
-      path: "auctionId",
-      select: "auctionId ",
-      populate: {
-        path: "property",
-        select: "type details images",
-      },
+    const buyerApprovedList = await Buyer.find(filter)
+      .select("auctionId answers documents isApproved approvedFund")
+      .populate({
+        path: "auctionId",
+        select:
+          "property startingBid incrementAmount registerStartDate registerEndDate auctionStartDate auctionEndDate bids",
+        populate: {
+          path: "property",
+          select: "type details images ",
+        },
+      });
+    //should check if admin return all bidders, if just a user return only 5 highest bidders
+
+    const result = buyerApprovedList.map((buyer) => {
+      return;
     });
-    const result = buyerApprovedList.map((item) => {
-      return item.auctionId;
-    });
-    res.status(200).send(result);
+    res.status(200).send(buyerApprovedList);
   } catch (error) {
     res.status(500).send(error.message);
   }
@@ -600,24 +644,28 @@ const getAuctionsOfSeller = async (req, res) => {
   }
 };
 
-//@desc  Get listings of a seller
-//@route GET /api/users/:id/seller/properties?status= pending/fail/success & inAuction=true/false
+//@desc  Get listings of a seller (completed and not completed)
+//@route GET /api/users/:id/seller/properties?status= pending/fail/success & inAuction=true/false & completed=true/false
 const getListingsOfSeller = async (req, res) => {
   try {
     const querySchema = Joi.object({
       status: Joi.string().valid("pending", "success", "fail").optional(),
       inAuction: Joi.string().valid("true", "false").optional(),
+      completed: Joi.string().valid("true", "false").optional(),
     });
     const { error } = querySchema.validate(req.query);
     if (error) return res.status(200).send({ error: error.details[0].message });
 
     const user = await User.findById(req.params.id);
-    const { status, inAuction } = req.query;
+    const { status, inAuction, completed } = req.query;
     if (!user) return res.status(200).send("User not found");
 
     let filter = { createdBy: user._id };
     if (status) {
       filter["isApproved"] = status;
+    }
+    if (completed === "false") {
+      filter["step"] = { $in: ["1", "2", "3", "4"] };
     }
     let listings = await Property.find(filter);
 
@@ -626,7 +674,7 @@ const getListingsOfSeller = async (req, res) => {
         const result = await Auction.findOne({ property: item._id });
         if (result) {
           const { numberOfBids, highestBid, highestBidders } =
-            await getBidsInformation(result.bids, result.startingBid);
+            getBidsInformation(result.bids, result.startingBid);
           item = item.toJSON();
           item["auctionDetails"] = {
             _id: result._id,
@@ -652,18 +700,6 @@ const getListingsOfSeller = async (req, res) => {
       listings = listings.filter((item) => !item.auctionDetails);
     }
 
-    // if (inAuction) {
-    //   listings = await doFilter(
-    //     listings,
-    //     async (item) => {
-    //       const result = await Auction.findOne({ property: item._id })
-    //       if (inAuction === "true") {
-    //         return result !== null;
-    //       }
-    //       return result === null;
-    //     }
-    //   );
-    // }
     res.status(200).send(listings);
   } catch (error) {
     res.status(500).send(error.message);
@@ -691,4 +727,5 @@ module.exports = {
   getAuctionsOfSeller,
   getListingsOfSeller,
   editProfile,
+  getAuctionsOfAllBuyersGroupedByUser,
 };
