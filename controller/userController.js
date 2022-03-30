@@ -526,39 +526,45 @@ const getBidAuctionsOfBuyer = async (req, res) => {
 };
 
 //@desc  Get auctions of all buyers (grouped by user)
-//@route GET /api/users/buyer/auctions?status=...
+//@route GET /api/users/buyer/auctions
 const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
   try {
-    const buyersGroupedByUserId = await Buyer.aggregate(
-      [
-        { $group: { _id: "$userId" } },
-        {
-          $lookup: {
-            from: "buyers",
-            localField: "_id",
-            foreignField: "userId",
-            pipeline: [
-              // {
-              //   $project: { _id: "$auctionId" },
-              // },
-              // {
-              //   $lookup: {
-              //     from: "auctions",
-              //     localField: "_id",
-              //     foreignField: "_id",
-              //     as: "_id",
-              //   },
-              // },
-            ],
-            as: "auctions",
-          },
+    const aggregate = await Buyer.aggregate([
+      { $group: { _id: "$userId" } },
+      {
+        $lookup: {
+          from: "buyers",
+          localField: "_id",
+          foreignField: "userId",
+          pipeline: [
+            {
+              $project: {
+                _id: "$auctionId",
+                documents: "$documents",
+                isApproved: "$isApproved",
+                approvedFund: "$approvedFund",
+              },
+            },
+          ],
+          as: "auctions",
         },
-      ],
-      function (err, result) {
-        console.log(result);
-      }
+      },
+    ]);
+    const result = await Promise.all(
+      aggregate.map(async (item) => {
+        console.log(item);
+        const auctions = await Promise.all(
+          item.auctions.map(async (item) => {
+            const auction = await Auction.findById(item._id);
+            return auction;
+          })
+        );
+
+        return { ...item, auctions };
+      })
     );
-    res.status(200).send(buyersGroupedByUserId);
+
+    res.status(200).send(result);
   } catch (error) {
     res.status(500).send(error.message);
   }

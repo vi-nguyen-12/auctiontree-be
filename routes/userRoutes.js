@@ -25,6 +25,7 @@ const {
   getAuctionsOfSeller,
   getListingsOfSeller,
   editProfile,
+  getAuctionsOfAllBuyersGroupedByUser,
 } = require("../controller/userController");
 
 router.post("/register", validateUser, registerUser);
@@ -39,6 +40,7 @@ router.get("/:id/likes", getLikedAuctions);
 router.get("/:id/buyer/auctions/bid", getBidAuctionsOfBuyer);
 router.get("/:id/buyer/auctions", getAuctionsOfBuyer);
 router.get("/:id/buyer/winAuctions", getWinAuctionsOfBuyer);
+router.get("/buyer/auctions", getAuctionsOfAllBuyersGroupedByUser);
 router.get("/:id/seller/auctions", getAuctionsOfSeller);
 router.get("/:id/seller/properties", getListingsOfSeller);
 //only for login user
