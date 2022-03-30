@@ -93,21 +93,22 @@ const editAuction = async (req, res) => {
       startingBid,
       incrementAmount,
     } = req.body;
-    const bodySchema = {
-      registerStartDate: Joi.date().iso(),
-      registerEndDate: Joi.date().iso(),
-      auctionStartDate: Joi.date().iso(),
-      auctionEndDate: Joi.date().iso(),
-      startingBid: Joi.number().min(0),
-      incrementAmount: Joi.number().min(0),
-    };
-    const { error } = Joi.validate(req.body, bodySchema);
+    const bodySchema = Joi.object({
+      registerStartDate: Joi.date().iso().optional(),
+      registerEndDate: Joi.date().iso().optional(),
+      auctionStartDate: Joi.date().iso().optional(),
+      auctionEndDate: Joi.date().iso().optional(),
+      startingBid: Joi.number().min(0).optional(),
+      incrementAmount: Joi.number().min(0).optional(),
+    });
+    const { error } = bodySchema.validate(req.body);
     if (error) {
       return res.status(200).send({ error: error.details[0].message });
     }
     const registerStartDate = registerStartDateISOString
       ? new Date(registerStartDateISOString)
       : auction.registerStartDate;
+
     const registerEndDate = registerEndDateISOString
       ? new Date(registerEndDateISOString)
       : auction.registerEndDate;
@@ -117,6 +118,7 @@ const editAuction = async (req, res) => {
     const auctionEndDate = auctionEndDateISOString
       ? new Date(auctionEndDateISOString)
       : auction.auctionEndDate;
+
     if (!auction.property.isApproved) {
       return res.status(200).send({ error: "Property is not approved" });
     }
