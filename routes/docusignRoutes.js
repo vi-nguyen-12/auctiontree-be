@@ -8,11 +8,7 @@ const {
 } = require("../controller/docusignController");
 
 //how many docusigns are there in process??
-router.get(
-  "/signature/sellerAgreement/uiviews",
-  auth,
-  getSellerAgreementUIViews
-);
+router.get("/signature/:docName/uiviews", auth, getSellerAgreementUIViews);
 router.get("/callback/:envelopeId", callback);
 router.get("/envelopes/:envelopeId/status", getEnvelopeStatus);
 router.get("/createAndSendEvelope", sendEnvelope);

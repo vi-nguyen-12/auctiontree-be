@@ -5,9 +5,9 @@ const docusignSchema = new Schema(
   {
     envelopeId: { type: String, required: true },
     recipientId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    type: {
+    name: {
       type: String,
-      enum: ["seller_agreement", "buying_agreement"],
+      enum: ["selling_agreement", "buying_agreement"],
       required: true,
     },
     status: {

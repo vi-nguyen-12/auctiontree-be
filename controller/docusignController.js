@@ -71,7 +71,7 @@ const returnUrlArgs = {
 
 const makeEnvelope = (args) => {
   let doc1DocxBytes = fs.readFileSync(
-    path.resolve(__dirname, "../public/test_word.docx")
+    path.resolve(__dirname, `../public/${args.docName}.docx`)
   );
 
   let env = new docusign.EnvelopeDefinition();
@@ -80,7 +80,7 @@ const makeEnvelope = (args) => {
   let doc1b64 = Buffer.from(doc1DocxBytes).toString("base64");
   let doc1 = new docusign.Document.constructFromObject({
     documentBase64: doc1b64,
-    name: "seller_agreement",
+    name: args.docName,
     fileExtension: "docx",
     documentId: "1",
   });
@@ -142,6 +142,7 @@ const sendEnvelope = async (req, res) => {
     templateId: "bd152cb4-2387-466a-a080-e74e37864be7",
     signer1: { email: "nguyen.vi.1292@gmail.com", name: "Hello there" },
     cc1: { email: "nguyen.vi.1292@gmail.com", name: "tiho" },
+    docName: "selling_agreement",
   };
   let envelopesApi = new docusign.EnvelopesApi(dsApiClient);
   let envelope = makeEnvelope(envelopeArgs);
@@ -172,6 +173,7 @@ const getSellerAgreementUIViews = async (req, res) => {
   const accessToken = await getAccessToken();
   const user = await User.findById(req.user.userId);
   let envelopeId = req.query.envelopeId;
+  let docName = req.params.docName;
   let dcs;
 
   let dsApiClient = new docusign.ApiClient();
@@ -199,6 +201,7 @@ const getSellerAgreementUIViews = async (req, res) => {
         recipientId: "2",
         // clientUserId: "1002",
       },
+      docName,
     };
     let envelope = makeEnvelope(envelopeArgs);
     envelopeResult = await envelopesApi.createEnvelope(apiArgs.accountId, {
@@ -214,7 +217,7 @@ const getSellerAgreementUIViews = async (req, res) => {
     envelopeId = envelopeResult.envelopeId;
     const newEnvelope = new Docusign({
       envelopeId,
-      type: "seller_agreement",
+      name: docName,
       recipientId: user._id,
     });
     await newEnvelope.save();
