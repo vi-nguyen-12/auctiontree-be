@@ -553,6 +553,10 @@ const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
 
     const result = await Promise.all(
       aggregate.map(async (item) => {
+        const user = await User.findById(item._id).select(
+          "firstName lastName userName phone email city country wallet"
+        );
+        item = { ...item, ...user.toObject() };
         const auctions = await Promise.all(
           item.auctions.map(async (item) => {
             const auction = await Auction.findById(item._id);
