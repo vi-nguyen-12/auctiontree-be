@@ -684,7 +684,7 @@ const getProperties = async (req, res) => {
 
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 100;
-    const { inAuction, status: isApproved, type } = req.query;
+    const { inAuction, status: isApproved, type, completed } = req.query;
     let filters = { step: 5 };
     if (isApproved) {
       filters.isApproved = isApproved;
