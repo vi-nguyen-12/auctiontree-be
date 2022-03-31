@@ -49,12 +49,18 @@ const createAuction = async (req, res) => {
       });
     }
 
-    // if (auctionStartDate.getTime() >= auctionEndDate.getTime()) {
-    //   return res.status(200).send({
-    //     error:
-    //       "Auction end time is earlier than or equal to auction start time",
-    //   });
-    // }
+    if (registerEndDate.getTime() >= auctionEndDate.getTime()) {
+      return res.status(200).send({
+        error: "Auction end time is earlier than or equal to register end time",
+      });
+    }
+
+    if (auctionStartDate.getTime() >= auctionEndDate.getTime()) {
+      return res.status(200).send({
+        error:
+          "Auction end time is earlier than or equal to auction start time",
+      });
+    }
     const newAuction = new Auction({
       property: property._id,
       registerStartDate,
@@ -108,7 +114,6 @@ const editAuction = async (req, res) => {
     const registerStartDate = registerStartDateISOString
       ? new Date(registerStartDateISOString)
       : auction.registerStartDate;
-
     const registerEndDate = registerEndDateISOString
       ? new Date(registerEndDateISOString)
       : auction.registerEndDate;
@@ -134,11 +139,11 @@ const editAuction = async (req, res) => {
           "Auction end time is earlier than or equal to auction start time",
       });
     }
-    // if (registerEndDate.getTime() > auctionStartDate.getTime()) {
-    //   return res.status(200).send({
-    //     error: "Auction start time is earlier than register end time",
-    //   });
-    // }
+    if (registerEndDate.getTime() >= auctionEndDate.getTime()) {
+      return res.status(200).send({
+        error: "Auction end time is earlier than register end time",
+      });
+    }
 
     auction.registerStartDate = registerStartDate;
     auction.registerEndDate = registerEndDate;
