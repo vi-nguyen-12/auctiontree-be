@@ -696,7 +696,7 @@ const getProperties = async (req, res) => {
     let properties = [];
     if (completed === "true") {
       filters.step = 5;
-    } else {
+    } else if (completed === "false") {
       filters.step = { $lt: 5 };
     }
     if (inAuction === "true") {
