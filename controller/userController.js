@@ -559,7 +559,16 @@ const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
         item = { ...item, ...user.toObject() };
         const auctions = await Promise.all(
           item.auctions.map(async (item) => {
-            const auction = await Auction.findById(item._id);
+            const auction = await Auction.findById(item._id).select(
+              "_id registerStartDate registerEndDate auctionStartDate auctionEndDate bids"
+            );
+            auction.bids = auction.bids
+              .filter((item) => item.userId.toString() === user._id.toString())
+              .map((item) => {
+                item = item.toObject();
+                delete item.userId;
+                return item;
+              });
             return { ...item, ...auction.toObject() };
           })
         );
