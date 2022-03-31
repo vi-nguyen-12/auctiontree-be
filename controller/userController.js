@@ -550,13 +550,13 @@ const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
         },
       },
     ]);
+
     const result = await Promise.all(
       aggregate.map(async (item) => {
-        console.log(item);
         const auctions = await Promise.all(
           item.auctions.map(async (item) => {
             const auction = await Auction.findById(item._id);
-            return auction;
+            return { ...item, ...auction.toObject() };
           })
         );
 
