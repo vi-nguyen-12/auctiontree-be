@@ -6,7 +6,13 @@ const auth = (req, res, next) => {
   try {
     const token = authHeader.split(" ")[1];
     const verified = jwt.verify(token, process.env.TOKEN_KEY);
-    req.user = verified; //{userId:...} / {adminId:...}
+    if (verified.userId) {
+      req.user = verified; //{userId:...}
+    }
+    if (verified.adminId) {
+      req.admin = verified.adminId; // {adminId:...}
+    }
+
     next();
   } catch (err) {
     res.status(400).send("Invalid Token");
