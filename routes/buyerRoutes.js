@@ -4,6 +4,7 @@ const { validateBuyer } = require("../middleware/validateRequest");
 const { checkKyc } = require("../middleware/checkKyc");
 const {
   createBuyer,
+  editBuyer,
   approveBuyer,
   verifyDocument,
   getBuyers,
@@ -11,6 +12,7 @@ const {
 } = require("../controller/buyerController");
 
 router.post("/", auth, checkKyc, validateBuyer, createBuyer);
+router.put("/:id", auth, editBuyer);
 
 //this should be only for admin
 router.put("/:buyerId/documents/:documentId/status", verifyDocument);

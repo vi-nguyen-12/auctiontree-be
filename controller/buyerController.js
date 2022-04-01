@@ -83,6 +83,43 @@ const createBuyer = async (req, res) => {
   }
 };
 
+//@desc  Request more funding
+//@route PUT /api/buyers/:id body:{documents:[{_id:...}{officialName:..., name:...,url:...}]}}
+const editBuyer = async (req, res) => {
+  try {
+    let { documents } = req.body;
+    const buyer = await Buyer.findById(req.params.id);
+    if (buyer.userId.toString() !== req.user.userId) {
+      return res.status(200).send({ error: "Unauthorized" });
+    }
+    if (!buyer) {
+      return res.status(200).send({ error: "Buyer not found" });
+    }
+
+    documents = documents.map((item) => {
+      if (item._id) {
+        for (let doc of buyer.documents) {
+          if (doc._id.toString() === item._id) {
+            return doc;
+          }
+        }
+      }
+      return { ...item, isVerified: "pending" };
+    });
+    buyer.documents = documents;
+
+    buyer.isApproved = "pending";
+    const savedBuyer = await buyer.save();
+    const result = {
+      _id: savedBuyer._id,
+      documents: savedBuyer.documents,
+    };
+    res.status(200).send(result);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+
 //@desc  Approve a buyer
 //@route PUT /api/buyers/:id/status body: {status:"pending"/"success"/"fail", approvedFund:..., rejectedReason:...}
 const approveBuyer = async (req, res) => {
@@ -255,6 +292,7 @@ const getBuyers = async (req, res) => {
 
 module.exports = {
   createBuyer,
+  editBuyer,
   approveBuyer,
   verifyDocument,
   getBuyers,
