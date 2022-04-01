@@ -261,7 +261,8 @@ const propertyObjectSchema = {
               "third-party_report",
               "demographics",
               "market_and_valuations",
-              "listing_agreement"
+              "listing_agreement",
+              "others"
             )
             .required(),
           url: Joi.string().required(),

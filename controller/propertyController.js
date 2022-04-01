@@ -135,7 +135,7 @@ const createRealestate = async (req, res) => {
       ];
     }
     const newProperty = new Property({
-      createdBy: req.user.userId,
+      createdBy: req.user.id,
       type,
       details,
       reservedAmount,
@@ -148,7 +148,7 @@ const createRealestate = async (req, res) => {
     });
     const savedProperty = await newProperty.save();
 
-    const { email } = await User.findOne({ _id: req.user.userId }, "email");
+    const { email } = await User.findOne({ _id: req.user.id }, "email");
     // sendEmail({
     //   email,
     //   subject: "Auction 10X-Listing real-estate status",
@@ -315,7 +315,7 @@ const createOthers = async (req, res) => {
       }
 
       const newProperty = new Property({
-        createdBy: req.user.userId,
+        createdBy: req.user.id,
         type,
         details,
         reservedAmount,
@@ -327,7 +327,7 @@ const createOthers = async (req, res) => {
         step,
       });
       const savedProperty = await newProperty.save();
-      const { email } = await User.findOne({ _id: req.user.userId }, "email");
+      const { email } = await User.findOne({ _id: req.user.id }, "email");
       // sendEmail({
       //   email,
       //   subject: `Auction 10X-Listing  ${type} status`,
@@ -476,7 +476,7 @@ const editRealestate = async (req, res) => {
     property.step = step >= property.step ? step : property.step;
     const savedProperty = await property.save();
 
-    const { email } = await User.findOne({ _id: req.user.userId }, "email");
+    const { email } = await User.findOne({ _id: req.user.id }, "email");
     // sendEmail({
     //   email,
     //   subject: "Auction 10X- Updating property",
@@ -651,7 +651,7 @@ const editOthers = async (req, res) => {
     property.step = step >= property.step ? step : property.step;
     const savedProperty = await property.save();
 
-    const { email } = await User.findOne({ _id: req.user.userId }, "email");
+    const { email } = await User.findOne({ _id: req.user.id }, "email");
     // sendEmail({
     //   email,
     //   subject: "Auction 10X- Updating property",

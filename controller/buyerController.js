@@ -11,7 +11,7 @@ const { sendEmail } = require("../helper");
 //@route POST /api/buyers body:{auctionId, docusignId,TC, answers:[{questionId, answer: "yes"/"no", explanation:"", documents:[{officialName:..., name:...,url:...}]}] } TC:{time: ISOString format, IPAddress:...}
 const createBuyer = async (req, res) => {
   try {
-    const user = await User.findOne({ _id: req.user.userId });
+    const user = await User.findOne({ _id: req.user.id });
     const { auctionId, documents, docusignId, TC, answers } = req.body;
     const auction = await Auction.findOne({ _id: auctionId });
     const docusign = await Docusign.findOne({ _id: docusignId });
@@ -89,7 +89,7 @@ const editBuyer = async (req, res) => {
   try {
     let { documents } = req.body;
     const buyer = await Buyer.findById(req.params.id);
-    if (buyer.userId.toString() !== req.user.userId) {
+    if (buyer.userId.toString() !== req.user.id) {
       return res.status(200).send({ error: "Unauthorized" });
     }
     if (!buyer) {

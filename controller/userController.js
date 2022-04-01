@@ -355,10 +355,10 @@ const editProfile = async (req, res) => {
       old_password,
       new_password,
     } = req.body;
-    if (req.user.userId !== id) {
+    if (req.user.id !== id) {
       return res.status(200).send({ error: "User not found" });
     }
-    const user = await User.findOne({ _id: req.user.userId });
+    const user = await User.findOne({ _id: req.user.id });
 
     // should if change email and userName, check if they are already exists
     user.firstName = firstName || user.firstName;
@@ -557,6 +557,7 @@ const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
         const user = await User.findById(item._id).select(
           "firstName lastName userName phone email city country wallet"
         );
+
         item = { ...item, ...user.toObject() };
         const auctions = await Promise.all(
           item.auctions.map(async (item) => {

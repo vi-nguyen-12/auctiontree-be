@@ -8,7 +8,7 @@ const { sendEmail } = require("../helper");
 //@route GET /api/kyc/verifyKyc params:{userId:...}
 
 const verifyKyc = async (req, res) => {
-  let userId = req.user.userId;
+  let userId = req.user.id;
   let resp;
   try {
     let ref = uuid();

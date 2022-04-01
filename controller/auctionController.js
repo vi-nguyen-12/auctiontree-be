@@ -410,7 +410,7 @@ const getRealEstateAuctionsStatusBuyer = async (req, res) => {
       .send({ error: "Please specify if user is buyer or seller" });
   }
   try {
-    const registeredList = await Buyer.find({ userId: req.user.userId });
+    const registeredList = await Buyer.find({ userId: req.user.id });
     let data = [];
     if (registeredList.length !== 0) {
       for (let item of registeredList) {
@@ -458,8 +458,8 @@ const placeBidding = async (req, res) => {
   const { biddingTime: biddingTimeISOString, biddingPrice } = req.body;
   const biddingTime = new Date(biddingTimeISOString);
   try {
-    const buyer = await Buyer.findOne({ userId: req.user.userId, auctionId });
-    const user = await User.findById(req.user.userId);
+    const buyer = await Buyer.findOne({ userId: req.user.id, auctionId });
+    const user = await User.findById(req.user.id);
     if (!buyer) {
       return res.status(200).send({ error: "User did not register to buy" });
     }
@@ -524,7 +524,7 @@ const placeBidding = async (req, res) => {
     sendEmail({ email, subject, text });
 
     const newBidder = {
-      userId: req.user.userId,
+      userId: req.user.id,
       amount: biddingPrice,
       time: biddingTime,
     };

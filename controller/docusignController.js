@@ -171,7 +171,7 @@ const makeRecipientViewRequest = (args) => {
 
 const getSellerAgreementUIViews = async (req, res) => {
   const accessToken = await getAccessToken();
-  const user = await User.findById(req.user.userId);
+  const user = await User.findById(req.user.id);
   let envelopeId = req.query.envelopeId;
   let docName = req.params.docName;
   let dcs;
