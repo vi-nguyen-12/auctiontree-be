@@ -540,6 +540,7 @@ const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
             {
               $project: {
                 _id: "$auctionId",
+                buyerId: "$_id",
                 documents: "$documents",
                 isApproved: "$isApproved",
                 approvedFund: "$approvedFund",
