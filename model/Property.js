@@ -130,7 +130,7 @@ propertySchema.pre("save", function (next) {
           "third-party_report",
           "demographics",
           "market_and_valuations",
-          "others",
+        
         ];
         break;
       case "car":
@@ -142,7 +142,7 @@ propertySchema.pre("save", function (next) {
           "engine_details",
           "insurance_document",
           "valuation_report",
-          "others",
+         
         ];
         break;
       case "yacht":
@@ -155,7 +155,7 @@ propertySchema.pre("save", function (next) {
           "vessel_insurance",
           "vessel_marine_surveyor_report",
           "vessel_valuation_report",
-          "others",
+         
         ];
         break;
       case "jet":
@@ -171,7 +171,7 @@ propertySchema.pre("save", function (next) {
           "engine_details",
           "inspection_report",
           "valuation_report",
-          "others",
+        
         ];
         break;
     }
