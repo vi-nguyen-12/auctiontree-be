@@ -162,7 +162,7 @@ const createRealestate = async (req, res) => {
 };
 
 //@desc  Create a car/jet/yacht
-//@route POST /api/properties/:id
+//@route POST /api/properties
 const createOthers = async (req, res) => {
   {
     try {
@@ -505,6 +505,7 @@ const editOthers = async (req, res) => {
     } = req.body;
 
     const property = await Property.findOne({ _id: req.params.id });
+
     if (!property) {
       return res.status(200).send({ error: "Property not found" });
     }
@@ -514,9 +515,9 @@ const editOthers = async (req, res) => {
     let isEditStep2;
     let objectSchema = {
       step1: propertyObjectSchema.step1,
-      step2: propertyObjectSchema.step2[`${type}`],
+      step2: propertyObjectSchema.step2[`${property.type}`],
       step3: propertyObjectSchema.step3,
-      step4: propertyObjectSchema.step4[`${type}`],
+      step4: propertyObjectSchema.step4[`${property.type}`],
       step5: propertyObjectSchema.step5,
     };
 
