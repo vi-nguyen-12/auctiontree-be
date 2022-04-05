@@ -7,7 +7,7 @@ const adminSchema = new mongoose.Schema({
   password: { type: String, required: true },
   location: { type: String, required: true },
   IPAddress: { type: String, required: true },
-  role: {
+  title: {
     type: String,
     enum: [
       "general_admin",
@@ -40,34 +40,93 @@ const adminSchema = new mongoose.Schema({
       "financial",
       "legal",
       "technical",
+      "escrow",
     ],
     required: true,
   },
+  roles: [
+    {
+      type: String,
+      enum: {
+        values: [
+          "admin_delete",
+          "admin_edit",
+          "admin_create",
+          "admin_read",
+          "auction_delete",
+          "auction_edit",
+          "auction_create",
+          "auction_read",
+          "auction_winner_edit",
+          "auction_winner_read",
+          "property_delete",
+          "property_edit",
+          "property_create",
+          "property_read",
+          "property_image_approval",
+          "property_document_approval",
+          "buyer_delete",
+          "buyer_edit",
+          "buyer_create",
+          "buyer_read",
+          "buyer_document_approval",
+        ],
+        message: "Role {VALUE} is not supported",
+      },
+      required: true,
+    },
+  ],
   image: { type: String },
   designation: { type: String },
   description: { type: String },
 });
 
 adminSchema.pre("save", function (next) {
-  if (this.role === "super_admin" || this.role === "administrator") {
+  if (this.title === "general_admin" || this.title === "regional_admin") {
     this.department = "administration";
     next();
   }
-  if (this.role === "business" || this.role === "marketing") {
+  if (
+    this.title === "marketing_admin" ||
+    this.title === "marketing_manager" ||
+    this.title === "marketing_coordinator"
+  ) {
     this.department = "marketing";
     next();
   }
-  if (this.role === "financial") {
+  if (
+    this.title === "business_admin" ||
+    this.title === "business_manager" ||
+    this.title === "business_coordinator"
+  ) {
+    this.department = "business";
+  }
+  if (
+    this.title === "financial_admin" ||
+    this.title === "financial_manager" ||
+    this.title === "financial_coordinator"
+  ) {
     this.department = "financial";
     next();
   }
-  if (this.role === "legal") {
+  if (
+    this.title === "legal_admin" ||
+    this.title === "legal_manager" ||
+    this.title === "legal_coordinator"
+  ) {
     this.department = "legal";
     next();
   }
-  if (this.role === "technical") {
+  if (
+    this.title === "technical_admin" ||
+    this.title === "technical_manager" ||
+    this.title === "technical_coordinator"
+  ) {
     this.department = "technical";
     next();
+  }
+  if (this.role === "escrow_agent") {
+    this.department = "escrow";
   }
   next(new Error("Invalid role for this department"));
 });

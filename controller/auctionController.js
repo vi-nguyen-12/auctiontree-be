@@ -9,17 +9,19 @@ const { sendEmail, getBidsInformation } = require("../helper");
 //@route POST api/auctions/  body:{propertyId, registerStartDate,registerEndDate,auctionStartDate,auctionEndDate,startingBid,incrementAmount}  all dates are in ISOString format
 
 const createAuction = async (req, res) => {
-  const {
-    propertyId,
-    registerStartDate: registerStartDateISOString,
-    registerEndDate: registerEndDateISOString,
-    auctionStartDate: auctionStartDateISOString,
-    auctionEndDate: auctionEndDateISOString,
-    startingBid,
-    incrementAmount,
-  } = req.body;
-
   try {
+    if (!req.admin || !req.admin.roles.includes("auction_create")) {
+      return res.status(200).send({ error: "Not allowed to create auction" });
+    }
+    const {
+      propertyId,
+      registerStartDate: registerStartDateISOString,
+      registerEndDate: registerEndDateISOString,
+      auctionStartDate: auctionStartDateISOString,
+      auctionEndDate: auctionEndDateISOString,
+      startingBid,
+      incrementAmount,
+    } = req.body;
     const isPropertyInAuction = await Auction.findOne({ property: propertyId });
     if (isPropertyInAuction) {
       return res
@@ -89,6 +91,9 @@ const createAuction = async (req, res) => {
 
 const editAuction = async (req, res) => {
   try {
+    if (!req.admins || !req.admins.roles.includes("auction_edit")) {
+      return res.status(200).send({ error: "Not allowed to edit auction" });
+    }
     const auction = await Auction.findById(req.params.id).populate("property");
     if (!auction) return res.status(200).send({ error: "Auction not found!" });
     const {
@@ -162,9 +167,12 @@ const editAuction = async (req, res) => {
 //@desc  Delete an auction
 //@route DELETE api/auctions/:id
 const deleteAuction = async (req, res) => {
-  const auction = await Auction.findById(req.params.id);
-  if (!auction) return res.status(200).send({ error: "Auction not found!" });
   try {
+    if (!req.admin || !req.admin.roles.includes("auction_delete")) {
+      return res.status(200).send({ error: "Not allowed to delete auction" });
+    }
+    const auction = await Auction.findById(req.params.id);
+    if (!auction) return res.status(200).send({ error: "Auction not found!" });
     await Auction.deleteOne({ _id: auction._id });
     res.status(204).send({ message: "Auction deleted successfully" });
   } catch (err) {
@@ -176,44 +184,52 @@ const deleteAuction = async (req, res) => {
 //@route GET /api/auctions/:id
 //@route GET /api/auction/propertyId/:propertyId
 const getAuction = async (req, res) => {
-  const url = req.originalUrl;
   try {
-    let auction;
-    if (url.includes("propertyId")) {
-      auction = await Auction.findOne({ property: req.params.propertyId });
+    const url = req.originalUrl;
+    let auction, result;
+
+    let filter = {};
+    if (!url.includes("propertyId")) {
+      filter["_id"] = req.params.id;
     } else {
-      auction = await Auction.findOne({ _id: req.params.id });
+      filter["property"] = req.params.propertyId;
     }
-    if (!auction) {
-      return res
-        .status(200)
-        .send({ error: "Auction for this property is not found" });
+
+    if (!req.admin) {
+      auction = await Auction.findOne(filter).populate({
+        path: "property",
+        select:
+          "-createdBy -discussedAmount -isApproved -step -docusignId -createdAt -updatedAt",
+      });
+      if (!auction)
+        return res.status(200).send({ error: "Auction not found!" });
+
+      const { numberOfBids, highestBid, highestBidders } =
+        await getBidsInformation(auction.bids, auction.startingBid);
+      //should check if isReservedMet
+      let isReservedMet =
+        highestBid >= auction.property.reservedAmount ? true : false;
+      result = {
+        ...auction.toObject(),
+        numberOfBids,
+        highestBid,
+        highestBidders,
+        isReservedMet,
+      };
+      delete result.bids;
+      delete result.property.reservedAmount;
+      return res.status(200).send(result);
     }
-    const property = await Property.findOne({ _id: auction.property });
-    const { numberOfBids, highestBid, highestBidders } =
-      await getBidsInformation(auction.bids, auction.startingBid);
-    const result = {
-      _id: auction._id,
-      startingBid: auction.startingBid,
-      incrementAmount: auction.incrementAmount,
-      registerStartDate: auction.registerStartDate,
-      registerEndDate: auction.registerEndDate,
-      auctionStartDate: auction.auctionStartDate,
-      auctionEndDate: auction.auctionEndDate,
-      highestBid,
-      numberOfBids,
-      highestBidders,
-      property: {
-        _id: property._id,
-        type: property.type,
-        details: property.details,
-        images: property.images,
-        videos: property.videos,
-        documents: property.documents,
-        reservedAmount: property.reservedAmount,
-      },
-    };
-    res.status(200).send(result);
+
+    if (req.admin?.roles.includes("auction_read")) {
+      auction = await Auction.findOne(filter).populate({
+        path: "property",
+        select: "-step",
+      });
+      res.status(200).send(auction);
+    } else {
+      return res.status(200).send({ error: "Not allowed to view auction" });
+    }
   } catch (error) {
     res.status(500).send(error.message);
   }
@@ -221,81 +237,74 @@ const getAuction = async (req, res) => {
 
 //@desc  Get upcoming auctions
 //@route GET /api/auctions/upcoming
+//@route GET /api/auctions/upcoming/:type
 const getUpcomingAuctions = async (req, res) => {
   try {
+    const type = req.params.type;
     const now = new Date();
-    const allAuctions = await Auction.find({
-      auctionStartDate: { $gte: now },
-    })
-      .populate("property")
+    let filter = { auctionStartDate: { $gte: now } };
+    if (type) {
+      filter["type"] = type;
+    }
+    let allAuctions = await Auction.find(filter)
+      .populate({
+        path: "property",
+        match: type ? { type } : {},
+        select:
+          "-createdBy -discussedAmount -isApproved -step -docusignId -createdAt -updatedAt",
+      })
       .sort({ auctionStartDate: 1 });
-
-    const data = allAuctions.map((auction) => {
-      return {
-        _id: auction._id,
-        registerStartDate: auction.registerStartDate,
-        registerEndDate: auction.registerEndDate,
-        auctionStartDate: auction.auctionStartDate,
-        auctionEndDate: auction.auctionEndDate,
-        startingBid: auction.startingBid,
-        incrementAmount: auction.incrementAmount,
-        property: {
-          _id: auction.property._id,
-          type: auction.property.type,
-          details: auction.property.details,
-          images: auction.property.images,
-          videos: auction.property.videos,
-          documents: auction.property.documents,
-        },
-      };
-    });
-    res.status(200).send(data);
+    allAuctions = allAuctions.filter((auction) => auction.property);
+    res.status(200).send(allAuctions);
   } catch (err) {
     res.status(500).send(err.message);
   }
 };
 //@desc  Get ongoing auctions
 //@route GET /api/auctions/ongoing
+//@route GET /api/auctions/ongoing/:type
 const getOngoingAuctions = async (req, res) => {
   try {
+    let type = req.params.type;
     const now = new Date();
-    const allAuctions = await Auction.find({
+    let filter = {
       auctionStartDate: { $lte: now },
       auctionEndDate: { $gte: now },
-    }).sort({ auctionStartDate: 1 });
+    };
 
-    for (let auction of allAuctions) {
-      const property = await Property.findOne({ _id: auction.property });
-      const { numberOfBids, highestBid, highestBidders } =
-        await getBidsInformation(auction.bids, auction.startingBid);
-      auction.property = property;
-      auction.numberOfBids = numberOfBids;
-      auction.highestBid = highestBid;
-      auction.highestBidders = highestBidders;
+    if (type) {
+      filter["type"] = type;
     }
-    const data = allAuctions.map((auction) => {
-      return {
-        _id: auction._id,
-        registerStartDate: auction.registerStartDate,
-        registerEndDate: auction.registerEndDate,
-        auctionStartDate: auction.auctionStartDate,
-        auctionEndDate: auction.auctionEndDate,
-        startingBid: auction.startingBid,
-        incrementAmount: auction.incrementAmount,
-        numberOfBids: auction.numberOfBids,
-        highestBid: auction.highestBid,
-        highestBidders: auction.highestBidders,
-        property: {
-          _id: auction.property._id,
-          type: auction.property.type,
-          details: auction.property.details,
-          images: auction.property.images,
-          videos: auction.property.videos,
-          documents: auction.property.documents,
-        },
-      };
-    });
-    res.status(200).send(data);
+    let allAuctions = await Auction.find(filter)
+      .sort({ auctionStartDate: 1 })
+      .populate({
+        path: "property",
+        match: type ? { type } : {},
+        select:
+          "-createdBy -discussedAmount -isApproved -step -docusignId -createdAt -updatedAt",
+      });
+
+    allAuctions = allAuctions
+      .filter((auction) => auction.property)
+      .map((auction) => {
+        const { numberOfBids, highestBid, highestBidders } = getBidsInformation(
+          auction.bids,
+          auction.startingBid
+        );
+        let isReservedMet =
+          highestBid >= auction.property.reservedAmount ? true : false;
+        auction = {
+          ...auction.toObject(),
+          numberOfBids,
+          highestBid,
+          highestBidders,
+          isReservedMet,
+        };
+        delete auction.bids;
+        delete auction.property.reservedAmount;
+        return auction;
+      });
+    res.status(200).send(allAuctions);
   } catch (err) {
     res.status(500).send(err.message);
   }

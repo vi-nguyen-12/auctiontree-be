@@ -19,7 +19,7 @@ const sendEmail = ({ email, subject, text }) => {
     });
 };
 
-const getBidsInformation = async (bids, startingBid) => {
+const getBidsInformation = (bids, startingBid) => {
   const numberOfBids = bids.length;
   const highestBid = bids.length === 0 ? startingBid : bids.slice(-1)[0].amount;
   let highestBidders = bids.slice(-5);

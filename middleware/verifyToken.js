@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const Admin = require("../model/Admin");
 
+// user has to login as user or admin
 const auth = async (req, res, next) => {
   const authHeader = req.header("Authorization");
   if (!authHeader) return res.status(401).send("Access Denied");
@@ -12,8 +13,7 @@ const auth = async (req, res, next) => {
     }
     if (verified.adminId) {
       const admin = await Admin.findById(verified.adminId);
-      req.admin = { id: admin._id };
-      req.role = { role: admin.role }; //{id:..., role:...}
+      req.admin = { id: admin._id, roles: admin.roles }; //{id:..., roles:...}
     }
 
     next();
@@ -22,4 +22,27 @@ const auth = async (req, res, next) => {
   }
 };
 
-module.exports = { auth };
+//user don't need to login
+const authNotStrict = async (req, res, next) => {
+  const authHeader = req.header("Authorization");
+  if (!authHeader) {
+    next();
+  } else {
+    const token = authHeader.split(" ")[1];
+    const verified = jwt.verify(token, process.env.TOKEN_KEY);
+    if (!verified) {
+      next();
+    }
+    if (verified.userId) {
+      req.user = { id: verified.userId }; //{id:...}
+      next();
+    }
+    if (verified.adminId) {
+      const admin = await Admin.findById(verified.adminId);
+      req.admin = { id: admin._id, roles: admin.roles };
+      next();
+    }
+  }
+};
+
+module.exports = { auth, authNotStrict };
