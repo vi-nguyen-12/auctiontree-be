@@ -13,6 +13,7 @@ const {
   editOthers,
   createRealestate,
   editRealestate,
+  deleteProperty,
 } = require("../controller/propertyController");
 
 router.get("/real-estates/search", search);
@@ -32,4 +33,5 @@ router.post("/real-estate", auth, createRealestate);
 router.post("/", auth, createOthers);
 router.put("/real-estate/:id", auth, editRealestate);
 router.put("/:id", auth, editOthers);
+router.delete("/:id", auth, deleteProperty);
 module.exports = router;

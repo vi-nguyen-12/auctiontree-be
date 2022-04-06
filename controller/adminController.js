@@ -6,6 +6,9 @@ const jwt = require("jsonwebtoken");
 //@route POST /api/admins body={fullName,email,phone, password,location,role, department,image, designation,description}
 const createAdmin = async (req, res) => {
   try {
+    if (!req.admin || !req.admin.roles.includes("admin_create")) {
+      return res.status(200).send({ error: "Not allowed to create admin" });
+    }
     const {
       fullName,
       email,
@@ -99,7 +102,51 @@ const login = async (req, res) => {
   }
 };
 
+//@desc  Edit an admin
+//@route POST /api/admins/:id body={fullName,email,phone, location,role, department,image, designation,description}
+const editAdmin = async (req, res) => {
+  try {
+    if (!req.admin || !req.admin.roles.includes("admin_edit")) {
+      return res.status(200).send({ error: "Not allowed to edit admin" });
+    }
+    const {
+      fullName,
+      email,
+      phone,
+      location,
+      IPAddress,
+      title,
+      roles,
+      department,
+      image,
+      designation,
+      description,
+    } = req.body;
+    const admin = await Admin.findOne({ _id: req.params.id });
+    if (!admin) {
+      return res.status(200).send({ error: "Admin not found" });
+    }
+    admin.fullName = fullName || admin.fullName;
+    admin.email = email || admin.email;
+    admin.phone = phone || admin.phone;
+    admin.location = location || admin.location;
+    admin.IPAddress = IPAddress || admin.IPAddress;
+    admin.title = title || admin.title;
+    admin.roles = roles || admin.roles;
+    admin.department = department || admin.department;
+    admin.image = image || admin.image;
+    admin.designation = designation || admin.designation;
+    admin.description = description || admin.description;
+    const savedAdmin = await admin.save();
+    delete savedAdmin.password;
+    return res.status(200).send(savedAdmin);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+
 module.exports = {
   createAdmin,
+  editAdmin,
   login,
 };
