@@ -374,6 +374,16 @@ const editRealestate = async (req, res) => {
       return res.status(200).send({ error: "Property not found" });
     }
 
+    //Authentication
+    if (
+      (req.user && req.user.id !== property.createdBy.toString()) ||
+      (req.admin && !req.admin.roles.includes("property_edit"))
+    ) {
+      return res
+        .status(200)
+        .send({ error: "Not allowed to edit this property" });
+    }
+
     // Validate body
     let bodySchema = {};
     let isEditStep2;
@@ -508,6 +518,16 @@ const editOthers = async (req, res) => {
 
     if (!property) {
       return res.status(200).send({ error: "Property not found" });
+    }
+
+    //Authentication
+    if (
+      (req.user && req.user.id !== property.createdBy.toString()) ||
+      (req.admin && !req.admin.roles.includes("property_edit"))
+    ) {
+      return res
+        .status(200)
+        .send({ error: "Not allowed to edit this property" });
     }
 
     // Validate body
@@ -751,6 +771,28 @@ const getProperty = async (req, res) => {
   }
 };
 
+//@desc  Delete a property
+//@route DELETE api/properties/:id
+const deleteProperty = async (req, res) => {
+  try {
+    const property = await Property.findOne({ _id: req.params.id }).select(
+      "createdBy"
+    );
+    if (
+      (req.user && req.user.id !== property.createdBy.toString()) ||
+      (req.admin && !req.admin.roles.includes("property_delete"))
+    ) {
+      return res
+        .status(200)
+        .send({ error: "Not allowed to delete this property" });
+    }
+    await Property.deleteOne({ _id: req.params.id });
+    res.status(200).send("Property deleted");
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
 //@desc  Approve a property
 //@route PUT /api/properties/:id/status body: {status: "pending"/"success"/"fail", rejectedReason:...  }
 const approveProperty = async (req, res) => {
@@ -953,12 +995,13 @@ module.exports = {
   search,
   getProperties,
   getProperty,
+  createRealestate,
+  editRealestate,
   createOthers,
   editOthers,
+  deleteProperty,
   approveProperty,
   verifyDocument,
   verifyImage,
   verifyVideo,
-  createRealestate,
-  editRealestate,
 };
