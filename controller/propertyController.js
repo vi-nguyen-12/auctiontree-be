@@ -3,7 +3,7 @@ const User = require("../model/User");
 const Buyer = require("../model/Buyer");
 const Auction = require("../model/Auction");
 const axios = require("axios");
-const { sendEmail, getBidsInformation } = require("../helper");
+const { sendEmail } = require("../helper");
 const Joi = require("joi").extend(require("@joi/date"));
 Joi.objectId = require("joi-objectid")(Joi);
 const { propertyObjectSchema } = require("../middleware/validateRequest");
@@ -376,7 +376,7 @@ const editRealestate = async (req, res) => {
 
     //Authentication
     if (
-      (req.user && req.user.id !== property.createdBy.toString()) ||
+      (req.user && req.user.id.toSring() !== property.createdBy.toString()) ||
       (req.admin && !req.admin.roles.includes("property_edit"))
     ) {
       return res
@@ -522,7 +522,7 @@ const editOthers = async (req, res) => {
 
     //Authentication
     if (
-      (req.user && req.user.id !== property.createdBy.toString()) ||
+      (req.user && req.user.id.toString() !== property.createdBy.toString()) ||
       (req.admin && !req.admin.roles.includes("property_edit"))
     ) {
       return res
@@ -689,67 +689,72 @@ const editOthers = async (req, res) => {
 //@route GET /api/properties
 const getProperties = async (req, res) => {
   try {
-    const paramsSchema = Joi.object({
-      status: Joi.alternatives(
-        Joi.string().valid("pending", "success", "fail"),
-        Joi.array().items(Joi.string())
-      ).optional(),
-      inAuction: Joi.string().valid("true", "false").optional(),
-      page: Joi.string().regex(/^\d+$/).optional(),
-      limit: Joi.string().regex(/^\d+$/).optional(),
-      type: Joi.string().valid("real-estate", "car", "jet", "yacht").optional(),
-      completed: Joi.string().valid("true", "false").optional(),
-    });
-    const { error } = paramsSchema.validate(req.query);
-    if (error) return res.status(200).send({ error: error.details[0].message });
+    if (req.admin?.roles.includes("property_read")) {
+      const paramsSchema = Joi.object({
+        status: Joi.alternatives(
+          Joi.string().valid("pending", "success", "fail"),
+          Joi.array().items(Joi.string())
+        ).optional(),
+        inAuction: Joi.string().valid("true", "false").optional(),
+        page: Joi.string().regex(/^\d+$/).optional(),
+        limit: Joi.string().regex(/^\d+$/).optional(),
+        type: Joi.string()
+          .valid("real-estate", "car", "jet", "yacht")
+          .optional(),
+        completed: Joi.string().valid("true", "false").optional(),
+      });
+      const { error } = paramsSchema.validate(req.query);
+      if (error)
+        return res.status(200).send({ error: error.details[0].message });
 
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 100;
-    const { inAuction, status: isApproved, type, completed } = req.query;
-    let filters = { step: 5 };
-    if (isApproved) {
-      filters.isApproved = isApproved;
-    }
-    if (type) {
-      filters.type = type;
-    }
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 100;
+      const { inAuction, status: isApproved, type, completed } = req.query;
+      let filters = { step: 5 };
+      if (isApproved) {
+        filters.isApproved = isApproved;
+      }
+      if (type) {
+        filters.type = type;
+      }
 
-    let properties = [];
-    if (completed === "true") {
-      filters.step = 5;
-    } else if (completed === "false") {
-      filters.step = { $lt: 5 };
+      let properties = [];
+      if (completed === "true") {
+        filters.step = 5;
+      } else if (completed === "false") {
+        filters.step = { $lt: 5 };
+      }
+      if (inAuction === "true") {
+        const auctions = await Auction.find().select("property");
+        const propertyIds = auctions.map((auction) => auction.property);
+        properties = await Property.find({ _id: propertyIds })
+          .find(filters)
+          .sort({
+            createdAt: -1,
+          })
+          .skip((page - 1) * limit)
+          .limit(limit);
+      } else if (inAuction === "false") {
+        const auctions = await Auction.find().select("property");
+        const propertyIds = auctions.map((auction) => auction.property);
+        properties = await Property.find({ _id: { $nin: propertyIds } })
+          .find(filters)
+          .sort({
+            createdAt: -1,
+          })
+          .skip((page - 1) * limit)
+          .limit(limit);
+      } else {
+        properties = await Property.find(filters)
+          .sort({
+            createdAt: -1,
+          })
+          .skip((page - 1) * limit)
+          .limit(limit);
+      }
+      return res.status(200).send(properties);
     }
-    if (inAuction === "true") {
-      const auctions = await Auction.find().select("property");
-      const propertyIds = auctions.map((auction) => auction.property);
-      properties = await Property.find({ _id: propertyIds })
-        .find(filters)
-        .sort({
-          createdAt: -1,
-        })
-        .skip((page - 1) * limit)
-        .limit(limit);
-    } else if (inAuction === "false") {
-      const auctions = await Auction.find().select("property");
-      const propertyIds = auctions.map((auction) => auction.property);
-      properties = await Property.find({ _id: { $nin: propertyIds } })
-        .find(filters)
-        .sort({
-          createdAt: -1,
-        })
-        .skip((page - 1) * limit)
-        .limit(limit);
-    } else {
-      properties = await Property.find(filters)
-        .sort({
-          createdAt: -1,
-        })
-        .skip((page - 1) * limit)
-        .limit(limit);
-    }
-
-    res.status(200).send(properties);
+    res.status(200).send("Not allowed to view properties");
   } catch (err) {
     res.status(500).send(err.message);
   }
@@ -765,7 +770,14 @@ const getProperty = async (req, res) => {
     if (!property) {
       return res.status(200).send("No property found");
     }
-    res.status(200).send(property);
+    //Authenticate: only owner of property or admin with permission can view
+    if (
+      req.user?.id.toString() === property.createdBy.toString() ||
+      req.admin?.roles.includes("property_read")
+    ) {
+      return res.status(200).send(property);
+    }
+    res.status(200).send({ error: "Not allowed to view this property" });
   } catch (error) {
     res.send(error);
   }
@@ -775,19 +787,15 @@ const getProperty = async (req, res) => {
 //@route DELETE api/properties/:id
 const deleteProperty = async (req, res) => {
   try {
-    const property = await Property.findOne({ _id: req.params.id }).select(
-      "createdBy"
-    );
+    const property = await Property.findById(req.params.id).select("createdBy");
     if (
-      (req.user && req.user.id !== property.createdBy.toString()) ||
-      (req.admin && !req.admin.roles.includes("property_delete"))
+      req.user?.id.toString() === property.createdBy.toString() ||
+      req.admin?.roles.includes("property_delete")
     ) {
-      return res
-        .status(200)
-        .send({ error: "Not allowed to delete this property" });
+      await Property.deleteOne({ _id: req.params.id });
+      return res.status(200).send("Property deleted");
     }
-    await Property.deleteOne({ _id: req.params.id });
-    res.status(200).send("Property deleted");
+    res.status(200).send({ error: "Not allowed to delete this property" });
   } catch (error) {
     res.status(500).send(error.message);
   }
@@ -797,79 +805,82 @@ const deleteProperty = async (req, res) => {
 //@route PUT /api/properties/:id/status body: {status: "pending"/"success"/"fail", rejectedReason:...  }
 const approveProperty = async (req, res) => {
   try {
-    const bodySchema = Joi.object({
-      status: Joi.string().valid("pending", "success", "fail"),
-      rejectedReason: Joi.when("status", {
-        is: "fail",
-        then: Joi.string().required(),
-        otherwise: Joi.string().allow(null),
-      }),
-    });
-    const { error } = bodySchema.validate(req.body);
-    if (error) {
-      return res.status(200).send({ error: error.details[0].message });
-    }
+    if (req.admin?.roles.includes("property_approval")) {
+      const bodySchema = Joi.object({
+        status: Joi.string().valid("pending", "success", "fail"),
+        rejectedReason: Joi.when("status", {
+          is: "fail",
+          then: Joi.string().required(),
+          otherwise: Joi.string().allow(null),
+        }),
+      });
+      const { error } = bodySchema.validate(req.body);
+      if (error) {
+        return res.status(200).send({ error: error.details[0].message });
+      }
 
-    const { status, rejectedReason } = req.body;
-    const property = await Property.findOne({ _id: req.params.id }).populate(
-      "docusignId"
-    );
-    if (!property) {
-      res.status(200).send({ error: "Property not found" });
-    }
-    const user = await User.findById(property.createdBy);
+      const { status, rejectedReason } = req.body;
+      const property = await Property.findOne({ _id: req.params.id }).populate(
+        "docusignId"
+      );
+      if (!property) {
+        res.status(200).send({ error: "Property not found" });
+      }
+      const user = await User.findById(property.createdBy);
 
-    if (status === "success") {
-      if (property.docusignId.status !== "signing_complete") {
-        return res.status(200).send({ error: "Docusign is not completed" });
+      if (status === "success") {
+        if (property.docusignId.status !== "signing_complete") {
+          return res.status(200).send({ error: "Docusign is not completed" });
+        }
+        for (let image of property.images) {
+          if (image.isVerified !== "success")
+            return res
+              .status(200)
+              .send({ error: `Image ${image.name}is not verified` });
+        }
+        for (let video of property.videos) {
+          if (video.isVerified !== "success")
+            return res
+              .status(200)
+              .send({ error: `Video ${video.name}is not verified` });
+        }
+        for (let document of property.documents) {
+          if (document.isVerified !== "success")
+            return res
+              .status(200)
+              .send({ error: `Document ${document.name}is not verified` });
+        }
+        // sendEmail({
+        //   email: user.email,
+        //   subject: "Auction10X- Property Application Approved",
+        //   text: `Congratulation, your application to sell property is approved`,
+        // });
       }
-      for (let image of property.images) {
-        if (image.isVerified !== "success")
+      if (status === "fail") {
+        if (!rejectedReason) {
           return res
             .status(200)
-            .send({ error: `Image ${image.name}is not verified` });
+            .send({ error: "Please specify reason for reject" });
+        }
+        property.rejectedReason = rejectedReason;
+        // sendEmail({
+        //   email: user.email,
+        //   subject: "Auction10X- Property Application Rejected",
+        //   text: `Your application to sell property is rejected. Reason: ${rejectedReason}`,
+        // });
       }
-      for (let video of property.videos) {
-        if (video.isVerified !== "success")
-          return res
-            .status(200)
-            .send({ error: `Video ${video.name}is not verified` });
-      }
-      for (let document of property.documents) {
-        if (document.isVerified !== "success")
-          return res
-            .status(200)
-            .send({ error: `Document ${document.name}is not verified` });
-      }
-      // sendEmail({
-      //   email: user.email,
-      //   subject: "Auction10X- Property Application Approved",
-      //   text: `Congratulation, your application to sell property is approved`,
-      // });
+      property.isApproved = status;
+      const savedProperty = await property.save();
+      const result = {
+        _id: savedProperty._id,
+        createdBy: savedProperty.createdBy,
+        type: savedProperty.type,
+        isApproved: savedProperty.isApproved,
+        rejectedReason: savedProperty.rejectedReason,
+      };
+      return res.status(200).send(result);
     }
-    if (status === "fail") {
-      if (!rejectedReason) {
-        return res
-          .status(200)
-          .send({ error: "Please specify reason for reject" });
-      }
-      property.rejectedReason = rejectedReason;
-      // sendEmail({
-      //   email: user.email,
-      //   subject: "Auction10X- Property Application Rejected",
-      //   text: `Your application to sell property is rejected. Reason: ${rejectedReason}`,
-      // });
-    }
-    property.isApproved = status;
-    const savedProperty = await property.save();
-    const result = {
-      _id: savedProperty._id,
-      createdBy: savedProperty.createdBy,
-      type: savedProperty.type,
-      isApproved: savedProperty.isApproved,
-      rejectedReason: savedProperty.rejectedReason,
-    };
-    res.status(200).send(result);
+    res.status(200).send({ error: "Not allowed to approve this property" });
   } catch (error) {
     res.status(500).send(error.message);
   }
@@ -890,6 +901,9 @@ const verifyDocument = async (req, res) => {
   const { propertyId, documentId } = req.params;
 
   try {
+    if (!req.admin || !req.admin.roles.includes("property_document_approval")) {
+      return res.status(200).send({ error: "Not allowed to verify document" });
+    }
     const property = await Property.findById(propertyId);
     if (!property) {
       return res.status(404).send("Property not found");
@@ -929,6 +943,12 @@ const verifyVideo = async (req, res) => {
   const { propertyId, videoId } = req.params;
 
   try {
+    if (
+      !req.admin ||
+      !req.admin.roles.includes("property_img_video_approval")
+    ) {
+      return res.status(200).send({ error: "Not allowed to verify video" });
+    }
     const property = await Property.findById(propertyId);
     if (!property) {
       return res.status(404).send("Property not found");
@@ -967,6 +987,12 @@ const verifyImage = async (req, res) => {
   const { propertyId, imageId } = req.params;
 
   try {
+    if (
+      !req.admin ||
+      !req.admin.roles.includes("property_img_video_approval")
+    ) {
+      return res.status(200).send({ error: "Not allowed to verify image" });
+    }
     const property = await Property.findById(propertyId);
     if (!property) {
       return res.status(404).send("Property not found");

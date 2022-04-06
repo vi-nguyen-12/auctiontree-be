@@ -9,7 +9,7 @@ const {
   placeBidding,
   getUpcomingAuctions,
   getOngoingAuctions,
-  getRealEstateAuctionsStatusBuyer,
+  getAuctionStatusOfABuyer,
   getAuctionResult,
   deleteAuction,
 } = require("../controller/auctionController");
@@ -19,7 +19,7 @@ router.get("/upcoming/:type", getUpcomingAuctions);
 router.get("/ongoing/:type", getOngoingAuctions);
 router.get("/upcoming", getUpcomingAuctions);
 router.get("/ongoing", getOngoingAuctions);
-router.get("/status", auth, getRealEstateAuctionsStatusBuyer);
+router.get("/status", auth, getAuctionStatusOfABuyer);
 router.get("/result/:id", getAuctionResult);
 
 router.post("/", auth, validateAuction, createAuction);

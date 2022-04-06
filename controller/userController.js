@@ -341,60 +341,77 @@ const resetForgotPassword = async (req, res) => {
 //@route PUT /api/users/:id body {firstName, lastName, email, phone, userName, country, city, old_password, new_password}
 const editProfile = async (req, res) => {
   try {
-    const { id } = req.params;
-    const {
-      firstName,
-      lastName,
-      email,
-      phone,
-      userName,
-      country,
-      city,
-      profileImage,
-      social_links,
-      old_password,
-      new_password,
-    } = req.body;
-    if (req.user.id !== id) {
-      return res.status(200).send({ error: "User not found" });
-    }
-    const user = await User.findOne({ _id: req.user.id });
+    if (req.user?.id === req.params.id) {
+      const {
+        firstName,
+        lastName,
+        email,
+        phone,
+        userName,
+        country,
+        city,
+        profileImage,
+        social_links,
+        old_password,
+        new_password,
+      } = req.body;
 
-    // should if change email and userName, check if they are already exists
-    user.firstName = firstName || user.firstName;
-    user.lastName = lastName || user.lastName;
-    user.email = email || user.email;
-    user.phone = phone || user.phone;
-    user.userName = userName || user.userName;
-    user.country = country || user.country;
-    user.city = city || user.city;
-    user.profileImage = profileImage;
-    user.social_links = social_links || user.social_links;
-    if (old_password) {
-      const match = await bcrypt.compare(old_password, user.password);
-      if (!match) {
-        return res
-          .status(200)
-          .send({ error: "Wrong password! Cannot update profile" });
+      const user = await User.findById(req.user.id);
+      if (!user) {
+        return res.status(200).send({ error: "User not found" });
       }
-      const salt = await bcrypt.genSaltSync(10);
-      const hashedPassword = await bcrypt.hash(new_password, salt);
-      user.password = hashedPassword;
+
+      // check if email/ userName already exists
+      if (email) {
+        const emailExists = await User.findOne({ email });
+        if (emailExists?._id.toString() !== user._id.toString()) {
+          return res.status(200).send({ error: "Email already exists" });
+        }
+      }
+      if (userName) {
+        const userNameExists = await User.findOne({ userName });
+        if (userNameExists?._id.toString() !== user._id.toString()) {
+          return res.status(200).send({ error: "UserName already exists" });
+        }
+      }
+      user.firstName = firstName || user.firstName;
+      user.lastName = lastName || user.lastName;
+      user.email = email || user.email;
+      user.phone = phone || user.phone;
+      user.userName = userName || user.userName;
+      user.country = country || user.country;
+      user.city = city || user.city;
+      user.profileImage = profileImage;
+      user.social_links = social_links || user.social_links;
+
+      // if change password
+      if (old_password) {
+        const match = await bcrypt.compare(old_password, user.password);
+        if (!match) {
+          return res
+            .status(200)
+            .send({ error: "Wrong password! Cannot update profile" });
+        }
+        const salt = await bcrypt.genSaltSync(10);
+        const hashedPassword = await bcrypt.hash(new_password, salt);
+        user.password = hashedPassword;
+      }
+      const savedUser = await user.save();
+      const result = {
+        _id: savedUser._id,
+        firstName: savedUser.firstName,
+        lastName: savedUser.lastName,
+        email: savedUser.email,
+        phone: savedUser.phone,
+        userName: savedUser.userName,
+        country: savedUser.country,
+        city: savedUser.city,
+        profileImage: savedUser.profileImage,
+        social_links: savedUser.social_links,
+      };
+      return res.status(200).send(result);
     }
-    const savedUser = await user.save();
-    const result = {
-      _id: savedUser._id,
-      firstName: savedUser.firstName,
-      lastName: savedUser.lastName,
-      email: savedUser.email,
-      phone: savedUser.phone,
-      userName: savedUser.userName,
-      country: savedUser.country,
-      city: savedUser.city,
-      profileImage: savedUser.profileImage,
-      social_links: savedUser.social_links,
-    };
-    res.status(200).send(result);
+    res.status(200).send({ error: "Not allowed to edit profile" });
   } catch (err) {
     res.status(500).send(err.message);
   }
@@ -456,17 +473,19 @@ const deleteUserAccount = async (req, res) => {
 //@route GET /api/users/:id/likes
 const getLikedAuctions = async (req, res) => {
   try {
-    const user = await User.findOne({ _id: req.params.id })
-      .select("likedAuctions")
-      .populate({
-        path: "likedAuctions",
-        populate: {
-          path: "property",
-          select: "type details images",
-        },
-      });
-
-    res.status(200).send(user.likedAuctions);
+    if (req.user?.id === req.params.id) {
+      const user = await User.findById(req.params.id)
+        .select("likedAuctions")
+        .populate({
+          path: "likedAuctions",
+          populate: {
+            path: "property",
+            select: "type details images",
+          },
+        });
+      return res.status(200).send(user.likedAuctions);
+    }
+    res.status(200).send({ error: "Not allowed to get liked auctions" });
   } catch (err) {
     res.status(500).send(err.message);
   }
@@ -475,20 +494,24 @@ const getLikedAuctions = async (req, res) => {
 //@route PUT /api/users/:id/likes/:auctionId
 const setLikedAuction = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(200).send({ error: "User not found" });
+    if (req.user?.id === req.params.id) {
+      const user = await User.findById(req.params.id);
+      if (!user) return res.status(200).send({ error: "User not found" });
 
-    const auctionId = await Auction.findById(req.params.auctionId);
-    if (!auctionId) return res.status(200).send({ error: "Auction not found" });
+      const auctionId = await Auction.findById(req.params.auctionId);
+      if (!auctionId)
+        return res.status(200).send({ error: "Auction not found" });
 
-    let auctionExistsInLiked = user.likedAuctions.includes(auctionId);
-    if (!auctionExistsInLiked) {
-      user.likedAuctions.push(auctionId);
-      await user.save();
+      let auctionExistsInLiked = user.likedAuctions.includes(auctionId);
+      if (!auctionExistsInLiked) {
+        user.likedAuctions.push(auctionId);
+        await user.save();
+      }
+      return res
+        .status(200)
+        .send({ message: "Successfully added auction to liked list" });
     }
-    return res
-      .status(200)
-      .send({ message: "Successfully added auction to liked list" });
+    res.status(200).send({ error: "Not allowed to set liked auction" });
   } catch (err) {
     res.status(500).send(err.message);
   }
@@ -499,10 +522,13 @@ const setLikedAuction = async (req, res) => {
 const setUnlikedAuction = async (req, res) => {
   try {
     const { id: _id, auctionId } = req.params;
-    await User.updateOne({ _id }, { $pull: { likedAuctions: auctionId } });
-    return res
-      .status(200)
-      .send({ message: "Successfully remove auction from liked list" });
+    if (req.user?.id === _id) {
+      await User.updateOne({ _id }, { $pull: { likedAuctions: auctionId } });
+      return res
+        .status(200)
+        .send({ message: "Successfully remove auction from liked list" });
+    }
+    res.status(200).send({ error: "Not allowed to set unliked auction" });
   } catch (err) {
     res.status(500).send(err.message);
   }

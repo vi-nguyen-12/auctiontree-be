@@ -9,14 +9,14 @@ const {
   verifyDocument,
   getBuyers,
   approveAnswer,
+  deleteBuyer,
 } = require("../controller/buyerController");
 
 router.post("/", auth, checkKyc, validateBuyer, createBuyer);
 router.put("/:id", auth, editBuyer);
-
-//this should be only for admin
-router.put("/:buyerId/documents/:documentId/status", verifyDocument);
-router.put("/:buyerId/answers/:questionId/approved", approveAnswer);
-router.put("/:id/status", approveBuyer);
-router.get("/", getBuyers);
+router.put("/:buyerId/documents/:documentId/status", auth, verifyDocument);
+router.put("/:buyerId/answers/:questionId/approved", auth, approveAnswer);
+router.put("/:id/status", auth, approveBuyer);
+router.get("/", auth, getBuyers);
+router.delete("/:id", auth, deleteBuyer);
 module.exports = router;
