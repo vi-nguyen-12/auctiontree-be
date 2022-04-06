@@ -310,105 +310,6 @@ const getOngoingAuctions = async (req, res) => {
   }
 };
 
-//@desc  Get upcoming auctions for a specific type
-//@route GET /api/auctions/real-estate/upcoming
-//@route GET /api/auctions/car/upcoming
-//@route GET /api/auctions/yacht/upcoming
-//@route GET /api/auctions/jet/upcoming
-const getUpcomingAuctionsOfSpecificType = async (req, res) => {
-  try {
-    const type = req.originalUrl.split("/")[3];
-    const now = new Date();
-    const allAuctions = await Auction.find({
-      auctionStartDate: { $gte: now },
-    })
-      .populate("property")
-      .sort({ auctionStartDate: 1 });
-
-    const data = allAuctions
-      .filter((auction) => {
-        return auction.property.type === type;
-      })
-      .map((auction) => {
-        return {
-          _id: auction._id,
-          registerStartDate: auction.registerStartDate,
-          registerEndDate: auction.registerEndDate,
-          auctionStartDate: auction.auctionStartDate,
-          auctionEndDate: auction.auctionEndDate,
-          startingBid: auction.startingBid,
-          incrementAmount: auction.incrementAmount,
-          property: {
-            _id: auction.property._id,
-            type: auction.property.type,
-            details: auction.property.details,
-            images: auction.property.images,
-            videos: auction.property.videos,
-            documents: auction.property.documents,
-          },
-        };
-      });
-    res.status(200).send(data);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-};
-
-//@desc  Get ongoing auctions for a specific type
-//@route GET /api/auctions/real-estate/ongoing
-//@route GET /api/auctions/car/ongoing
-//@route GET /api/auctions/yacht/ongoing
-//@route GET /api/auctions/jet/ongoing
-const getOngoingAuctionsOfSpecificType = async (req, res) => {
-  try {
-    const type = req.originalUrl.split("/")[3];
-    const now = new Date();
-    const allAuctions = await Auction.find({
-      auctionStartDate: { $lte: now },
-      auctionEndDate: { $gte: now },
-    }).sort({ auctionStartDate: 1 });
-
-    for (let auction of allAuctions) {
-      const property = await Property.findOne({ _id: auction.property });
-      const { numberOfBids, highestBid, highestBidders } =
-        await getBidsInformation(auction.bids, auction.startingBid);
-      auction.property = property;
-      auction.numberOfBids = numberOfBids;
-      auction.highestBid = highestBid;
-      auction.highestBidders = highestBidders;
-    }
-    const data = allAuctions
-      .filter((auction) => {
-        return auction.property.type === type;
-      })
-      .map((auction) => {
-        return {
-          _id: auction._id,
-          registerStartDate: auction.registerStartDate,
-          registerEndDate: auction.registerEndDate,
-          auctionStartDate: auction.auctionStartDate,
-          auctionEndDate: auction.auctionEndDate,
-          startingBid: auction.startingBid,
-          incrementAmount: auction.incrementAmount,
-          numberOfBids: auction.numberOfBids,
-          highestBid: auction.highestBid,
-          highestBidders: auction.highestBidders,
-          property: {
-            _id: auction.property._id,
-            type: auction.property.type,
-            details: auction.property.details,
-            images: auction.property.images,
-            videos: auction.property.videos,
-            documents: auction.property.documents,
-          },
-        };
-      });
-    res.status(200).send(data);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-};
-
 //@desc  Get status of auctions  which buyer register to buy
 //@route GET /api/auctions/real-estate/status?buyer=true
 const getRealEstateAuctionsStatusBuyer = async (req, res) => {
@@ -659,8 +560,6 @@ module.exports = {
   placeBidding,
   getUpcomingAuctions,
   getOngoingAuctions,
-  getUpcomingAuctionsOfSpecificType,
-  getOngoingAuctionsOfSpecificType,
   getRealEstateAuctionsStatusBuyer,
   getAuctionResult,
   editAuction,
