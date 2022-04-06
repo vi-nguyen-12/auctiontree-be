@@ -3,7 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 //@desc  Create a new admin
-//@route POST /api/admins
+//@route POST /api/admins body={fullName,email,phone, password,location,role, department,image, designation,description}
 const createAdmin = async (req, res) => {
   try {
     const {
@@ -12,7 +12,9 @@ const createAdmin = async (req, res) => {
       phone,
       password,
       location,
-      role,
+      IPAddress,
+      title,
+      roles,
       department,
       image,
       designation,
@@ -38,7 +40,9 @@ const createAdmin = async (req, res) => {
       phone,
       password: hashedPassword,
       location,
-      role,
+      IPAddress,
+      title,
+      roles,
       department,
       image,
       designation,
@@ -50,7 +54,8 @@ const createAdmin = async (req, res) => {
       email: newAdmin.email,
       phone: newAdmin.phone,
       location: newAdmin.location,
-      role: newAdmin.role,
+      title: newAdmin.title,
+      roles: newAdmin.roles,
       department: newAdmin.department,
       image: newAdmin.image,
       designation: newAdmin.designation,

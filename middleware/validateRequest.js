@@ -86,6 +86,26 @@ const validateBuyer = (req, res, next) => {
             .required(),
           url: Joi.string().required(),
           name: Joi.string().required(),
+          validity: Joi.date().iso().optional(),
+          isSelf: Joi.boolean().required(),
+          funderName: Joi.when("isSelf", {
+            is: Joi.boolean().valid(false),
+            then: Joi.string().required(),
+            otherwise: Joi.forbidden(),
+          }),
+          providerName: Joi.when("isSelf", {
+            is: Joi.boolean().valid(false),
+            then: Joi.string().required(),
+            otherwise: Joi.forbidden(),
+          }),
+          declaration: Joi.when("isSelf", {
+            is: Joi.boolean().valid(false),
+            then: Joi.object({
+              time: Joi.date().iso().required(),
+              IPAddress: Joi.string().required(),
+            }),
+            otherwise: Joi.forbidden(),
+          }),
         })
       )
       .required(),
@@ -250,92 +270,100 @@ const propertyObjectSchema = {
   },
   step4: {
     "real-estate": {
-      documents: Joi.array().items(
-        Joi.object({
+      documents: Joi.array()
+        .items(
+          Joi.object({
+            officialName: Joi.string()
+              .valid(
+                "title_report",
+                "insurance_copy",
+                "financial_document",
+                "purchase_agreement",
+                "third-party_report",
+                "demographics",
+                "market_and_valuations",
+                "listing_agreement",
+                "others"
+              )
+              .required(),
+            url: Joi.string().required(),
+            name: Joi.string().required(),
+          })
+        )
+        .required(),
+      step: Joi.number().required().valid(4),
+    },
+    car: {
+      documents: Joi.array()
+        .items({
           officialName: Joi.string()
             .valid(
-              "title_report",
-              "insurance_copy",
-              "financial_document",
-              "purchase_agreement",
-              "third-party_report",
-              "demographics",
-              "market_and_valuations",
+              "ownership_document",
+              "registration_document",
+              "title_certificate",
+              "inspection_report",
+              "engine_details",
+              "insurance_document",
+              "loan_document",
+              "valuation_report",
               "listing_agreement",
               "others"
             )
             .required(),
-          url: Joi.string().required(),
           name: Joi.string().required(),
+          url: Joi.string().required(),
         })
-      ),
-      step: Joi.number().required().valid(4),
-    },
-    car: {
-      documents: Joi.array().items({
-        officialName: Joi.string()
-          .valid(
-            "ownership_document",
-            "registration_document",
-            "title_certificate",
-            "inspection_report",
-            "engine_details",
-            "insurance_document",
-            "loan_document",
-            "valuation_report",
-            "listing_agreement",
-            "others"
-          )
-          .required(),
-        name: Joi.string().required(),
-        url: Joi.string().required(),
-      }),
+        .required(),
       step: Joi.number().required().valid(4),
     },
     yacht: {
-      documents: Joi.array().items({
-        officialName: Joi.string()
-          .valid(
-            "vessel_registration",
-            "vessel_maintenance_report",
-            "vessel_engine_type",
-            "vessel_performance_report",
-            "vessel_deck_details",
-            "vessel_insurance",
-            "vessel_marine_surveyor_report",
-            "vessel_valuation_report",
-            "listing_agreement",
-            "others"
-          )
-          .required(),
-        name: Joi.string().required(),
-        url: Joi.string().required(),
-      }),
+      documents: Joi.array()
+        .items({
+          officialName: Joi.string()
+            .valid(
+              "vessel_registration",
+              "vessel_maintenance_report",
+              "vessel_engine_type",
+              "vessel_performance_report",
+              "vessel_deck_details",
+              "vessel_insurance",
+              "vessel_marine_surveyor_report",
+              "vessel_valuation_report",
+              "listing_agreement",
+              "others"
+            )
+            .required(),
+          name: Joi.string().required(),
+          url: Joi.string().required(),
+        })
+        .required(),
       step: Joi.number().required().valid(4),
     },
     jet: {
-      documents: Joi.array().items({
-        officialName: Joi.string()
-          .valid(
-            "ownership_document",
-            "registration_document",
-            "title_certificate",
-            "detail_specification",
-            "insurance_document",
-            "loan_document",
-            "jet_detail_history",
-            "fitness_report",
-            "electric_work_details",
-            "engine_details",
-            "inspection_report",
-            "valuation_report",
-            "listing_agreement",
-            "others"
-          )
-          .required(),
-        name: Joi.string().required(),
-        url: Joi.string().required(),
-      }),
+      documents: Joi.array()
+        .items({
+          officialName: Joi.string()
+            .valid(
+              "ownership_document",
+              "registration_document",
+              "title_certificate",
+              "detail_specification",
+              "insurance_document",
+              "loan_document",
+              "jet_detail_history",
+              "fitness_report",
+              "electric_work_details",
+              "engine_details",
+              "inspection_report",
+              "valuation_report",
+              "listing_agreement",
+              "others"
+            )
+            .required(),
+          name: Joi.string().required(),
+          url: Joi.string().required(),
+        })
+        .required(),
       step: Joi.number().required().valid(4),
     },
   },
