@@ -230,7 +230,7 @@ const propertyObjectSchema = {
       property_address: Joi.string().required(),
       reservedAmount: Joi.number().required(),
       discussedAmount: Joi.number().required(),
-      step: Joi.number().required().valid(5),
+      step: Joi.number().required().valid(2),
     },
     jet: {
       registration_mark: Joi.string().required(),
@@ -247,7 +247,7 @@ const propertyObjectSchema = {
       property_address: Joi.string().required(),
       reservedAmount: Joi.number().required(),
       discussedAmount: Joi.number().required(),
-      step: Joi.number().required().valid(5),
+      step: Joi.number().required().valid(2),
     },
   },
   step3: {
