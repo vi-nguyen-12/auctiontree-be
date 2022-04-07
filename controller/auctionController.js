@@ -181,6 +181,25 @@ const deleteAuction = async (req, res) => {
   }
 };
 
+//@desc  Get all auctions
+//@route GET /api/auctions
+const getAllAuctions = async (req, res) => {
+  try {
+    if (req.admin?.roles.includes("auction_read")) {
+      const auctions = await Auction.find().populate({
+        path: "property",
+        select:
+          "type createdBy details.owner_name details.property_address images.url",
+        populate: { path: "createdBy", select: "userName" },
+      });
+      return res.status(200).send(auctions);
+    }
+    res.status(200).send({ error: "Not allowed to view auctions" });
+  } catch (err) {
+    res.status(500).send(err);
+  }
+};
+
 //@desc  Get information of auction
 //@route GET /api/auctions/:id
 //@route GET /api/auction/propertyId/:propertyId
@@ -586,4 +605,5 @@ module.exports = {
   getAuctionResult,
   editAuction,
   deleteAuction,
+  getAllAuctions,
 };
