@@ -388,7 +388,7 @@ const editRealestate = async (req, res) => {
     let bodySchema = {};
     let isEditStep2;
     const objectSchema = {
-      step1: propertyObjectSchema,
+      step1: propertyObjectSchema.step1,
       step2: propertyObjectSchema.step2["real-estate"],
       step3: propertyObjectSchema.step3,
       step4: propertyObjectSchema.step4["real-estate"],
@@ -475,6 +475,15 @@ const editRealestate = async (req, res) => {
         { year: new Date().getFullYear(), total_value },
       ];
     }
+    //if edit step 4, keep listing_agreement from step 1 ((if it exists));
+    if (step === 4) {
+      const listingAgreement = property.documents.filter(
+        (item) => item.officialName === "listing_agreement"
+      );
+      documents = [...documents, ...listingAgreement];
+      console.log(documents);
+    }
+
     property.type = type || property.type;
     property.details = details || property.details;
     property.reservedAmount = reservedAmount || property.reservedAmount;
@@ -661,6 +670,16 @@ const editOthers = async (req, res) => {
         property.details.property_address = property_address;
       }
     }
+
+    //if edit step 4, keep listing_agreement from step 1 ((if it exists));
+    if (step === 4) {
+      const listingAgreement = property.documents.filter(
+        (item) => item.officialName === "listing_agreement"
+      );
+      documents = [...documents, ...listingAgreement];
+      console.log(documents);
+    }
+
     property.type = type || property.type;
     property.details = details || property.details;
     property.reservedAmount = reservedAmount || property.reservedAmount;
@@ -670,6 +689,7 @@ const editOthers = async (req, res) => {
     property.documents = documents || property.documents;
     property.docusignId = docusignId || property.docusignId;
     property.step = step >= property.step ? step : property.step;
+
     const savedProperty = await property.save();
 
     const { email } = await User.findOne({ _id: req.user.id }, "email");
