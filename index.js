@@ -16,6 +16,7 @@ const questionRoute = require("./routes/questionRoutes");
 const docusignRoute = require("./routes/docusignRoutes");
 const awsRoute = require("./routes/awsRoutes");
 const testRoute = require("./routes/test");
+const adminRoute = require("./routes/adminRoutes");
 const cookieparser = require("cookie-parser");
 const cors = require("cors");
 
@@ -25,6 +26,7 @@ app.use(function (req, res, next) {
   }
   return next();
 });
+
 // app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
 
 const allowedDomains = [
@@ -33,8 +35,6 @@ const allowedDomains = [
   process.env.DEV_CLIENT_ADMIN_URL,
   process.env.PROD_CLIENT_ADMIN_URL,
   "https://demo.docusign.net/restapi",
-  // "https://master.duhqplujt8olk.amplifyapp.com",
-  // "https://auction10x.herokuapp.com",
 ];
 
 const corsOptions = {
@@ -88,6 +88,7 @@ app.use("/admin/api/questions", questionRoute);
 app.use("/api/docusign", docusignRoute);
 app.use("/api/test", testRoute);
 app.use("/api/aws", awsRoute);
+app.use("/api/admins", adminRoute);
 
 // if (process.env.NODE_ENV === "production") {
 //   app.use();
