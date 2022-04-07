@@ -10,77 +10,80 @@ const { sendEmail, getBidsInformation } = require("../helper");
 
 const createAuction = async (req, res) => {
   try {
-    if (!req.admin || !req.admin.roles.includes("auction_create")) {
-      return res.status(200).send({ error: "Not allowed to create auction" });
-    }
-    const {
-      propertyId,
-      registerStartDate: registerStartDateISOString,
-      registerEndDate: registerEndDateISOString,
-      auctionStartDate: auctionStartDateISOString,
-      auctionEndDate: auctionEndDateISOString,
-      startingBid,
-      incrementAmount,
-    } = req.body;
-    const isPropertyInAuction = await Auction.findOne({ property: propertyId });
-    if (isPropertyInAuction) {
-      return res
-        .status(200)
-        .send({ error: "This property is already created for auction" });
-    }
-
-    const registerStartDate = new Date(registerStartDateISOString);
-    const registerEndDate = new Date(registerEndDateISOString);
-    const auctionStartDate = new Date(auctionStartDateISOString);
-    const auctionEndDate = new Date(auctionEndDateISOString);
-    const property = await Property.findOne({
-      _id: propertyId,
-    }).populate("createdBy docusignId");
-
-    if (!property) {
-      return res.status(200).send({ error: "Property not found" });
-    }
-    if (property.isApproved !== "success") {
-      return res.status(200).send({ error: "Property is not approved" });
-    }
-
-    if (registerStartDate.getTime() >= registerEndDate.getTime()) {
-      return res.status(200).send({
-        error:
-          "Register end time is earlier than or equal to register start time",
+    if (req.admin?.roles.includes("auction_create")) {
+      const {
+        propertyId,
+        registerStartDate: registerStartDateISOString,
+        registerEndDate: registerEndDateISOString,
+        auctionStartDate: auctionStartDateISOString,
+        auctionEndDate: auctionEndDateISOString,
+        startingBid,
+        incrementAmount,
+      } = req.body;
+      const isPropertyInAuction = await Auction.findOne({
+        property: propertyId,
       });
-    }
+      if (isPropertyInAuction) {
+        return res
+          .status(200)
+          .send({ error: "This property is already created for auction" });
+      }
 
-    if (registerEndDate.getTime() >= auctionEndDate.getTime()) {
-      return res.status(200).send({
-        error: "Auction end time is earlier than or equal to register end time",
+      const registerStartDate = new Date(registerStartDateISOString);
+      const registerEndDate = new Date(registerEndDateISOString);
+      const auctionStartDate = new Date(auctionStartDateISOString);
+      const auctionEndDate = new Date(auctionEndDateISOString);
+      const property = await Property.findOne({
+        _id: propertyId,
+      }).populate("createdBy docusignId");
+
+      if (!property) {
+        return res.status(200).send({ error: "Property not found" });
+      }
+      if (property.isApproved !== "success") {
+        return res.status(200).send({ error: "Property is not approved" });
+      }
+
+      if (registerStartDate.getTime() >= registerEndDate.getTime()) {
+        return res.status(200).send({
+          error:
+            "Register end time is earlier than or equal to register start time",
+        });
+      }
+
+      if (registerEndDate.getTime() >= auctionEndDate.getTime()) {
+        return res.status(200).send({
+          error:
+            "Auction end time is earlier than or equal to register end time",
+        });
+      }
+
+      if (auctionStartDate.getTime() >= auctionEndDate.getTime()) {
+        return res.status(200).send({
+          error:
+            "Auction end time is earlier than or equal to auction start time",
+        });
+      }
+      const newAuction = new Auction({
+        property: property._id,
+        registerStartDate,
+        registerEndDate,
+        auctionStartDate,
+        auctionEndDate,
+        startingBid,
+        incrementAmount,
       });
-    }
+      const savedAuction = await newAuction.save();
 
-    if (auctionStartDate.getTime() >= auctionEndDate.getTime()) {
-      return res.status(200).send({
-        error:
-          "Auction end time is earlier than or equal to auction start time",
-      });
+      let email = property.createdBy.email;
+      let subject = "Auction10X - Create an auction for your property";
+      let text = `We create an auction for your property with starting register date ${registerStartDate} and auction start date ${auctionStartDate}.
+      Starting bid is ${startingBid} and increment amount is ${incrementAmount}
+       `;
+      sendEmail({ email, subject, text });
+      return res.status(200).send(savedAuction);
     }
-    const newAuction = new Auction({
-      property: property._id,
-      registerStartDate,
-      registerEndDate,
-      auctionStartDate,
-      auctionEndDate,
-      startingBid,
-      incrementAmount,
-    });
-    const savedAuction = await newAuction.save();
-
-    let email = property.createdBy.email;
-    let subject = "Auction10X - Create an auction for your property";
-    let text = `We create an auction for your property with starting register date ${registerStartDate} and auction start date ${auctionStartDate}.
-    Starting bid is ${startingBid} and increment amount is ${incrementAmount}
-     `;
-    sendEmail({ email, subject, text });
-    res.status(200).send(savedAuction);
+    res.status(200).send({ error: "Not allowed to create auction" });
   } catch (err) {
     res.status(500).send(err);
   }
@@ -168,15 +171,32 @@ const editAuction = async (req, res) => {
 //@route DELETE api/auctions/:id
 const deleteAuction = async (req, res) => {
   try {
-    if (!req.admin || !req.admin.roles.includes("auction_delete")) {
-      return res.status(200).send({ error: "Not allowed to delete auction" });
+    if (req.admin && req.admin.roles.includes("auction_delete")) {
+      await Auction.deleteOne({ _id: req.params.id });
+      return res.status(204).send({ message: "Auction deleted successfully" });
     }
-    const auction = await Auction.findById(req.params.id);
-    if (!auction) return res.status(200).send({ error: "Auction not found!" });
-    await Auction.deleteOne({ _id: auction._id });
-    res.status(204).send({ message: "Auction deleted successfully" });
+    return res.status(200).send({ error: "Not allowed to delete auction" });
   } catch (err) {
     res.status(500).send(err.message);
+  }
+};
+
+//@desc  Get all auctions
+//@route GET /api/auctions
+const getAllAuctions = async (req, res) => {
+  try {
+    if (req.admin?.roles.includes("auction_read")) {
+      const auctions = await Auction.find().populate({
+        path: "property",
+        select:
+          "type createdBy details.owner_name details.property_address images.url",
+        populate: { path: "createdBy", select: "userName" },
+      });
+      return res.status(200).send(auctions);
+    }
+    res.status(200).send({ error: "Not allowed to view auctions" });
+  } catch (err) {
+    res.status(500).send(err);
   }
 };
 
@@ -195,41 +215,62 @@ const getAuction = async (req, res) => {
       filter["property"] = req.params.propertyId;
     }
 
-    if (!req.admin) {
-      auction = await Auction.findOne(filter).populate({
-        path: "property",
-        select:
-          "-createdBy -discussedAmount -isApproved -step -docusignId -createdAt -updatedAt",
-      });
-      if (!auction)
-        return res.status(200).send({ error: "Auction not found!" });
+    auction = await Auction.findOne(filter).populate({
+      path: "property",
+      select: "-step -isApproved",
+    });
+    if (!auction) return res.status(200).send({ error: "Auction not found!" });
+    const { numberOfBids, highestBid, highestBidders } = getBidsInformation(
+      auction.bids,
+      auction.startingBid
+    );
+    let isReservedMet =
+      highestBid >= auction.property.reservedAmount ? true : false;
+    auction = {
+      ...auction.toObject(),
+      numberOfBids,
+      highestBid,
+      highestBidders,
+      isReservedMet,
+    };
 
-      const { numberOfBids, highestBid, highestBidders } =
-        await getBidsInformation(auction.bids, auction.startingBid);
-      //should check if isReservedMet
-      let isReservedMet =
-        highestBid >= auction.property.reservedAmount ? true : false;
-      result = {
-        ...auction.toObject(),
-        numberOfBids,
-        highestBid,
-        highestBidders,
-        isReservedMet,
-      };
-      delete result.bids;
-      delete result.property.reservedAmount;
-      return res.status(200).send(result);
+    //Authenticate: only admin and owner of property
+    if (
+      req.admin?.roles.includes("auction_read") ||
+      (req.user &&
+        req.user.id.toString() === auction.property.createdBy.toString())
+    ) {
+      return res.status(200).send(auction);
     }
 
-    if (req.admin?.roles.includes("auction_read")) {
-      auction = await Auction.findOne(filter).populate({
-        path: "property",
-        select: "-step",
-      });
-      res.status(200).send(auction);
-    } else {
-      return res.status(200).send({ error: "Not allowed to view auction" });
+    //Authenticate: registered buyer can see list top 5, not whole list of bids
+    delete auction.bids;
+    delete auction.property.reservedAmount;
+    delete auction.property.discussedAmount;
+    delete auction.property.docusignId;
+    delete auction.property.createdAt;
+    delete auction.property.updateAt;
+    const registedBuyer = await Buyer.find({ auctionId: auction._id }).select(
+      "userId"
+    );
+    let isRegisteredToBuy = false;
+    let userId = req.user?.id;
+    if (userId) {
+      for (let item of registedBuyer) {
+        if (item.userId.toString() === userId) {
+          isRegisteredToBuy = true;
+          break;
+        }
+      }
     }
+    if (isRegisteredToBuy) {
+      return res.status(200).send(auction);
+    }
+
+    //Authenticate: normal user cannot see highesBidders and auction is met reserved amount or not
+    delete auction.highestBidders;
+    delete auction.isReservedMet;
+    return res.status(200).send(auction);
   } catch (error) {
     res.status(500).send(error.message);
   }
@@ -311,8 +352,8 @@ const getOngoingAuctions = async (req, res) => {
 };
 
 //@desc  Get status of auctions  which buyer register to buy
-//@route GET /api/auctions/real-estate/status?buyer=true
-const getRealEstateAuctionsStatusBuyer = async (req, res) => {
+//@route GET /api/auctions/status?buyer=true
+const getAuctionStatusOfABuyer = async (req, res) => {
   const { buyer } = req.query;
   if (!buyer) {
     return res
@@ -560,8 +601,9 @@ module.exports = {
   placeBidding,
   getUpcomingAuctions,
   getOngoingAuctions,
-  getRealEstateAuctionsStatusBuyer,
+  getAuctionStatusOfABuyer,
   getAuctionResult,
   editAuction,
   deleteAuction,
+  getAllAuctions,
 };

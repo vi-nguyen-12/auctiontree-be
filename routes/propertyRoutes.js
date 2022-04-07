@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { auth } = require("../middleware/verifyToken");
+const { auth, authNotStrict } = require("../middleware/verifyToken");
 const {} = require("../middleware/validateRequest");
 const {
   search,
@@ -19,16 +19,15 @@ const {
 router.get("/real-estates/search", search);
 
 //this should be only for user is admin
-router.put("/:propertyId/documents/:documentId/status", verifyDocument);
-router.put("/:propertyId/images/:imageId/status", verifyImage);
-router.put("/:propertyId/videos/:videoId/status", verifyVideo);
-router.put("/:id/status", approveProperty);
+router.put("/:propertyId/documents/:documentId/status", auth, verifyDocument);
+router.put("/:propertyId/images/:imageId/status", auth, verifyImage);
+router.put("/:propertyId/videos/:videoId/status", auth, verifyVideo);
+router.put("/:id/status", auth, approveProperty);
 
 //for all users
-router.get("/:id", getProperty);
-router.get("/", getProperties);
+router.get("/:id", auth, getProperty);
+router.get("/", auth, getProperties);
 
-//for logged in users
 router.post("/real-estate", auth, createRealestate);
 router.post("/", auth, createOthers);
 router.put("/real-estate/:id", auth, editRealestate);
