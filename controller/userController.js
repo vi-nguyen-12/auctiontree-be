@@ -144,7 +144,7 @@ const sendConfirmEmail = async (req, res) => {
 };
 
 ////@desc  Check JWT
-//@route POST /api/users/verifyJWT data:{authToken}
+//@route POST /api/users/checkJWT data:{authToken}
 const checkJWT = async (req, res) => {
   try {
     const token = req.body.authToken;
