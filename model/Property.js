@@ -108,6 +108,7 @@ const propertySchema = new Schema(
       enum: ["pending", "success", "fail"],
       default: "pending",
     },
+    // listingFee: {amount: Number, currency: {type:String, enum:["USD", "EUR"]}, received: Boolean},
     rejectedReason: String,
     step: Number,
   },

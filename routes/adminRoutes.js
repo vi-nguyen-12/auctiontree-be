@@ -9,6 +9,7 @@ const {
   getAllAdmin,
   getAdmin,
   login,
+  checkJWT,
 } = require("../controller/adminController");
 
 // need to check if the user is admin
@@ -18,5 +19,6 @@ router.delete("/:id", auth, deleteAdmin);
 router.get("/", auth, getAllAdmin);
 router.get("/:id", auth, getAdmin);
 router.post("/login", login);
+router.post("/checkJWT", checkJWT);
 
 module.exports = router;

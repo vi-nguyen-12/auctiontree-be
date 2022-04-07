@@ -94,7 +94,7 @@ const createAuction = async (req, res) => {
 
 const editAuction = async (req, res) => {
   try {
-    if (!req.admins || !req.admins.roles.includes("auction_edit")) {
+    if (!req.admin || !req.admin.roles.includes("auction_edit")) {
       return res.status(200).send({ error: "Not allowed to edit auction" });
     }
     const auction = await Auction.findById(req.params.id).populate("property");
