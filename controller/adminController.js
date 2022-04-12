@@ -15,7 +15,6 @@ const createAdmin = async (req, res) => {
         location,
         IPAddress,
         title,
-        roles,
         department,
         image,
         designation,
@@ -43,7 +42,6 @@ const createAdmin = async (req, res) => {
         location,
         IPAddress,
         title,
-        roles,
         department,
         image,
         designation,
@@ -56,7 +54,6 @@ const createAdmin = async (req, res) => {
         phone: newAdmin.phone,
         location: newAdmin.location,
         title: newAdmin.title,
-        roles: newAdmin.roles,
         department: newAdmin.department,
         image: newAdmin.image,
         designation: newAdmin.designation,
@@ -123,7 +120,7 @@ const checkJWT = async (req, res) => {
 };
 
 //@desc  Edit an admin
-//@route POST /api/admins/:id body={fullName,email,phone, location,role, department,image, designation,description}
+//@route PUT /api/admins/:id body={fullName,email,phone, location,roles, department,image, designation,description}
 const editAdmin = async (req, res) => {
   try {
     if (req.admin?.roles.includes("admin_edit")) {
