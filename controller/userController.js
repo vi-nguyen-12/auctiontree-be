@@ -491,7 +491,7 @@ const getLikedAuctions = async (req, res) => {
   }
 };
 //@desc  Set a liked auction
-//@route PUT /api/users/:id/likes/:auctionId
+//@route PUT /api/users/:id/:auctionId/liked
 const setLikedAuction = async (req, res) => {
   try {
     if (req.user?.id === req.params.id) {
@@ -518,7 +518,7 @@ const setLikedAuction = async (req, res) => {
 };
 
 //@desc  Set an unliked auction
-//@route DELETE /api/users/:id/likes/:auctionId
+//@route PUT /api/users/:id/:auctionId/unliked
 const setUnlikedAuction = async (req, res) => {
   try {
     const { id: _id, auctionId } = req.params;
