@@ -376,7 +376,7 @@ const editRealestate = async (req, res) => {
 
     //Authentication
     if (
-      (req.user && req.user.id.toSring() !== property.createdBy.toString()) ||
+      (req.user && req.user.id.toString() !== property.createdBy.toString()) ||
       (req.admin && !req.admin.roles.includes("property_edit"))
     ) {
       return res
