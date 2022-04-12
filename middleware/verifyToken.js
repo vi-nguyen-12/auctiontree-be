@@ -4,7 +4,7 @@ const Admin = require("../model/Admin");
 // user has to login as user or admin
 const auth = async (req, res, next) => {
   const authHeader = req.header("Authorization");
-  if (!authHeader) return res.status(401).send("Access Denied");
+  if (!authHeader) return res.status(200).send({ error: "Access Denied" });
   try {
     const token = authHeader.split(" ")[1];
     const verified = jwt.verify(token, process.env.TOKEN_KEY);
@@ -18,7 +18,7 @@ const auth = async (req, res, next) => {
 
     next();
   } catch (err) {
-    res.status(400).send("Invalid Token");
+    res.status(200).send({ error: "Invalid Token" });
   }
 };
 

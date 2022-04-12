@@ -267,9 +267,9 @@ const createOthers = async (req, res) => {
             engine_type,
             engine_manufacture_name,
             engine_deck_type,
-            detain,
             running_cost,
             no_of_crew_required,
+            others,
             property_address,
           } = req.body;
           details.vessel_registration_number = vessel_registration_number;
@@ -279,9 +279,9 @@ const createOthers = async (req, res) => {
           details.engine_type = engine_type;
           details.engine_manufacture_name = engine_manufacture_name;
           details.engine_deck_type = engine_deck_type;
-          details.detain = detain;
           details.running_cost = running_cost;
           details.no_of_crew_required = no_of_crew_required;
+          details.others = others;
           details.property_address = property_address;
         }
         if (type === "jet") {
@@ -376,7 +376,7 @@ const editRealestate = async (req, res) => {
 
     //Authentication
     if (
-      (req.user && req.user.id.toSring() !== property.createdBy.toString()) ||
+      (req.user && req.user.id.toString() !== property.createdBy.toString()) ||
       (req.admin && !req.admin.roles.includes("property_edit"))
     ) {
       return res
@@ -621,9 +621,9 @@ const editOthers = async (req, res) => {
           engine_type,
           engine_manufacture_name,
           engine_deck_type,
-          detain,
           running_cost,
           no_of_crew_required,
+          others,
           property_address,
         } = req.body;
         property.details.vessel_registration_number =
@@ -634,9 +634,9 @@ const editOthers = async (req, res) => {
         property.details.engine_type = engine_type;
         property.details.engine_manufacture_name = engine_manufacture_name;
         property.details.engine_deck_type = engine_deck_type;
-        property.details.detain = detain;
         property.details.running_cost = running_cost;
         property.details.no_of_crew_required = no_of_crew_required;
+        property.details.others = others;
         property.details.property_address = property_address;
       }
       if (type === "jet") {
