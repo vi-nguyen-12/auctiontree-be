@@ -131,6 +131,7 @@ adminSchema.pre("save", function (next) {
   }
   if (this.role === "escrow_agent") {
     this.department = "escrow";
+    next();
   }
   next(new Error("Invalid role for this department"));
 });
