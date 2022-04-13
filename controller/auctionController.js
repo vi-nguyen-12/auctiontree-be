@@ -250,19 +250,13 @@ const getAuction = async (req, res) => {
     delete auction.property.docusignId;
     delete auction.property.createdAt;
     delete auction.property.updateAt;
-    const registedBuyer = await Buyer.find({ auctionId: auction._id }).select(
-      "userId"
-    );
-    let isRegisteredToBuy = false;
+
     let userId = req.user?.id;
-    if (userId) {
-      for (let item of registedBuyer) {
-        if (item.userId.toString() === userId) {
-          isRegisteredToBuy = true;
-          break;
-        }
-      }
-    }
+    let isRegisteredToBuy = await Buyer.findOne({
+      auctionId: auction._id,
+      userId,
+    });
+
     if (isRegisteredToBuy) {
       return res.status(200).send(auction);
     }
