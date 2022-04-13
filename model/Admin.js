@@ -129,7 +129,7 @@ adminSchema.pre("save", function (next) {
     this.department = "technical";
     next();
   }
-  if (this.role === "escrow_agent") {
+  if (this.title === "escrow_agent") {
     this.department = "escrow";
     next();
   }
