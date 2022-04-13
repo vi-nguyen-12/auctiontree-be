@@ -129,10 +129,11 @@ adminSchema.pre("save", function (next) {
     this.department = "technical";
     next();
   }
-  if (this.role === "escrow_agent") {
+  if (this.title === "escrow_agent") {
     this.department = "escrow";
+    next();
   }
-  next(new Error("Invalid role for this department"));
+  next(new Error(`${this.title} is not in ${this.department}`));
 });
 
 module.exports = mongoose.model("Admin", adminSchema);
