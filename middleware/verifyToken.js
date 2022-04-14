@@ -25,23 +25,24 @@ const auth = async (req, res, next) => {
 //user don't need to login
 const authNotStrict = async (req, res, next) => {
   const authHeader = req.header("Authorization");
-  if (!authHeader) {
+  try {
+    if (!authHeader) {
+      next();
+    } else {
+      const token = authHeader.split(" ")[1];
+      const verified = jwt.verify(token, process.env.TOKEN_KEY);
+      if (verified.userId) {
+        req.user = { id: verified.userId }; //{id:...}
+        next();
+      }
+      if (verified.adminId) {
+        const admin = await Admin.findById(verified.adminId);
+        req.admin = { id: admin._id, roles: admin.roles };
+        next();
+      }
+    }
+  } catch (err) {
     next();
-  } else {
-    const token = authHeader.split(" ")[1];
-    const verified = jwt.verify(token, process.env.TOKEN_KEY);
-    if (!verified) {
-      next();
-    }
-    if (verified.userId) {
-      req.user = { id: verified.userId }; //{id:...}
-      next();
-    }
-    if (verified.adminId) {
-      const admin = await Admin.findById(verified.adminId);
-      req.admin = { id: admin._id, roles: admin.roles };
-      next();
-    }
   }
 };
 
