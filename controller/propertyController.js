@@ -149,11 +149,11 @@ const createRealestate = async (req, res) => {
     const savedProperty = await newProperty.save();
 
     const { email } = await User.findOne({ _id: req.user.id }, "email");
-    // sendEmail({
-    //   email,
-    //   subject: "Auction 10X-Listing real-estate status",
-    //   text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
-    // }
+    sendEmail({
+      email,
+      subject: "Auction 10X-Listing real-estate status",
+      text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
+    });
 
     res.status(200).send(savedProperty);
   } catch (error) {
@@ -328,11 +328,11 @@ const createOthers = async (req, res) => {
       });
       const savedProperty = await newProperty.save();
       const { email } = await User.findOne({ _id: req.user.id }, "email");
-      // sendEmail({
-      //   email,
-      //   subject: `Auction 10X-Listing  ${type} status`,
-      //   text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
-      // });
+      sendEmail({
+        email,
+        subject: `Auction 10X-Listing  ${type} status`,
+        text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
+      });
       res.status(200).send(savedProperty);
     } catch (error) {
       res.status(500).send(error.message);
@@ -496,11 +496,11 @@ const editRealestate = async (req, res) => {
     const savedProperty = await property.save();
 
     const { email } = await User.findOne({ _id: req.user.id }, "email");
-    // sendEmail({
-    //   email,
-    //   subject: "Auction 10X- Updating property",
-    //   text: "Thank you for updating your property. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
-    // });
+    sendEmail({
+      email,
+      subject: "Auction 10X- Updating property",
+      text: "Thank you for updating your property. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
+    });
     res.status(200).send(savedProperty);
   } catch (error) {
     res.status(500).send(error.message);
@@ -693,11 +693,11 @@ const editOthers = async (req, res) => {
     const savedProperty = await property.save();
 
     const { email } = await User.findOne({ _id: req.user.id }, "email");
-    // sendEmail({
-    //   email,
-    //   subject: "Auction 10X- Updating property",
-    //   text: "Thank you for updating your property. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
-    // });
+    sendEmail({
+      email,
+      subject: "Auction 10X- Updating property",
+      text: "Thank you for updating your property. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
+    });
     res.status(200).send(savedProperty);
   } catch (error) {
     res.status(500).send(error.message);
@@ -870,11 +870,11 @@ const approveProperty = async (req, res) => {
               .status(200)
               .send({ error: `Document ${document.name}is not verified` });
         }
-        // sendEmail({
-        //   email: user.email,
-        //   subject: "Auction10X- Property Application Approved",
-        //   text: `Congratulation, your application to sell property is approved`,
-        // });
+        sendEmail({
+          email: user.email,
+          subject: "Auction10X- Property Application Approved",
+          text: `Congratulation, your application to sell property is approved`,
+        });
       }
       if (status === "fail") {
         if (!rejectedReason) {
@@ -883,11 +883,11 @@ const approveProperty = async (req, res) => {
             .send({ error: "Please specify reason for reject" });
         }
         property.rejectedReason = rejectedReason;
-        // sendEmail({
-        //   email: user.email,
-        //   subject: "Auction10X- Property Application Rejected",
-        //   text: `Your application to sell property is rejected. Reason: ${rejectedReason}`,
-        // });
+        sendEmail({
+          email: user.email,
+          subject: "Auction10X- Property Application Rejected",
+          text: `Your application to sell property is rejected. Reason: ${rejectedReason}`,
+        });
       }
       property.isApproved = status;
       const savedProperty = await property.save();
