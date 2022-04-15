@@ -572,6 +572,11 @@ const editOthers = async (req, res) => {
     const { error } = bodySchema.validate(req.body);
     if (error) return res.status(200).send({ error: error.details[0].message });
 
+    //cannot change type of property
+    if (type && type !== property.type) {
+      return res.status(200).send({ error: "Cannot change type of property" });
+    }
+
     // if edit anything in step 2 need to be proccessed reservedAmount and add information in details field.
     if (isEditStep2) {
       if (discussedAmount > reservedAmount) {
