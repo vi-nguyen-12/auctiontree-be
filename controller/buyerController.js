@@ -13,7 +13,10 @@ const createBuyer = async (req, res) => {
   try {
     const user = await User.findOne({ _id: req.user.id });
     const { auctionId, documents, docusignId, TC, answers } = req.body;
-    const auction = await Auction.findOne({ _id: auctionId });
+    const auction = await Auction.findOne({ _id: auctionId }).populate(
+      "property"
+    );
+
     const docusign = await Docusign.findOne({ _id: docusignId });
 
     if (!auction) {
@@ -21,6 +24,10 @@ const createBuyer = async (req, res) => {
     }
     if (!docusign) {
       return res.status(200).send({ error: "Docusign not found" });
+    }
+
+    if (user._id.toString() === auction.property.createdBy.toString()) {
+      return res.status(200).send({ error: "Cannot bid on your own property" });
     }
 
     const isRegisteredAuction = await Buyer.findOne({
