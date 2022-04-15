@@ -475,11 +475,21 @@ const editRealestate = async (req, res) => {
         { year: new Date().getFullYear(), total_value },
       ];
     }
-    //if edit step 4, keep listing_agreement from step 1 ((if it exists));
+    //if edit step 4, keep listing_agreement from step 1 ((if it exists)), if document is already verified, keep its status;
     if (step === 4) {
       const listingAgreement = property.documents.filter(
         (item) => item.officialName === "listing_agreement"
       );
+      documents = documents.map((item) => {
+        if (item._id) {
+          for (doc of property.documents) {
+            if (doc._id.toString() === item._id.toString()) {
+              return doc;
+            }
+          }
+        }
+        return { ...item, isVerified: "pending" };
+      });
       documents = [...documents, ...listingAgreement];
       console.log(documents);
     }
@@ -493,6 +503,7 @@ const editRealestate = async (req, res) => {
     property.documents = documents || property.documents;
     property.docusignId = docusignId || property.docusignId;
     property.step = step >= property.step ? step : property.step;
+    property.isApproved = "pending";
     const savedProperty = await property.save();
 
     const { email } = await User.findOne({ _id: req.user.id }, "email");
@@ -677,12 +688,22 @@ const editOthers = async (req, res) => {
     }
 
     //if edit step 4, keep listing_agreement from step 1 ((if it exists));
+    //check if a document is already verified -> keep it as it is
     if (step === 4) {
       const listingAgreement = property.documents.filter(
         (item) => item.officialName === "listing_agreement"
       );
+      documents = documents.map((item) => {
+        if (item._id) {
+          for (doc of property.documents) {
+            if (doc._id.toString() === item._id.toString()) {
+              return doc;
+            }
+          }
+        }
+        return { ...item, isVerified: "pending" };
+      });
       documents = [...documents, ...listingAgreement];
-      console.log(documents);
     }
 
     property.type = type || property.type;
@@ -694,6 +715,7 @@ const editOthers = async (req, res) => {
     property.documents = documents || property.documents;
     property.docusignId = docusignId || property.docusignId;
     property.step = step >= property.step ? step : property.step;
+    property.isApproved = "pending";
 
     const savedProperty = await property.save();
 
