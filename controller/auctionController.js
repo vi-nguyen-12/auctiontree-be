@@ -234,12 +234,19 @@ const getAuction = async (req, res) => {
       isReservedMet,
     };
 
-    //Authenticate: only admin and owner of property
+    //Authenticate: admin: view everything
+    // Authenticate: owner of property: view everything and add 1 field: "isOwner": true
+    if (req.admin?.roles.includes("auction_read")) {
+      return res.status(200).send(auction);
+    }
     if (
-      req.admin?.roles.includes("auction_read") ||
-      (req.user &&
-        req.user.id.toString() === auction.property.createdBy.toString())
+      req.user &&
+      req.user.id.toString() === auction.property.createdBy.toString()
     ) {
+      auction = {
+        ...auction,
+        isOwner: true,
+      };
       return res.status(200).send(auction);
     }
 
@@ -252,19 +259,21 @@ const getAuction = async (req, res) => {
     delete auction.property.updateAt;
 
     let userId = req.user?.id;
-    let isRegisteredToBuyAndApproved = await Buyer.findOne({
+    let isRegisteredToBuy = await Buyer.findOne({
       auctionId: auction._id,
       userId,
-      isApproved: "success",
     });
-
-    if (isRegisteredToBuyAndApproved) {
+    if (isRegisteredToBuy?.isApproved === "success") {
       return res.status(200).send(auction);
     }
-
-    //Authenticate: normal user cannot see highesBidders and auction is met reserved amount or not
+    //Authenticate: registered buyer not approved cannot see highestBidders and if reserved is met
+    //Authenticate: normal user : the same and add 1 field: "isNotRegisteredToBuy": true
     delete auction.highestBidders;
     delete auction.isReservedMet;
+    if (isRegisteredToBuy) {
+      return res.status(200).send(auction);
+    }
+    auction.isNotRegisteredToBuy = true;
     return res.status(200).send(auction);
   } catch (error) {
     res.status(500).send(error.message);

@@ -28,7 +28,7 @@ router.put("/:id/status", auth, approveProperty);
 router.get("/:id", auth, getProperty);
 router.get("/", auth, getProperties);
 
-router.post("/real-estate", auth, createRealestate);
+router.post("/real-estate", auth, createRealestate); //should check if user is doing KYC or not
 router.post("/", auth, createOthers);
 router.put("/real-estate/:id", auth, editRealestate);
 router.put("/:id", auth, editOthers);
