@@ -189,7 +189,7 @@ const getAllAdmin = async (req, res) => {
     return res.status(500).send(err.message);
   }
 };
-//@desc  Get all admin
+//@desc  Get an admin
 //@route GET /api/admins/:id
 const getAdmin = async (req, res) => {
   try {

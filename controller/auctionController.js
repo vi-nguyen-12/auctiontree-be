@@ -243,7 +243,7 @@ const getAuction = async (req, res) => {
       return res.status(200).send(auction);
     }
 
-    //Authenticate: registered buyer can see list top 5, not whole list of bids
+    //Authenticate: registered buyer & be approved can see list top 5, not whole list of bids
     delete auction.bids;
     delete auction.property.reservedAmount;
     delete auction.property.discussedAmount;
@@ -252,12 +252,13 @@ const getAuction = async (req, res) => {
     delete auction.property.updateAt;
 
     let userId = req.user?.id;
-    let isRegisteredToBuy = await Buyer.findOne({
+    let isRegisteredToBuyAndApproved = await Buyer.findOne({
       auctionId: auction._id,
       userId,
+      isApproved: "success",
     });
 
-    if (isRegisteredToBuy) {
+    if (isRegisteredToBuyAndApproved) {
       return res.status(200).send(auction);
     }
 
