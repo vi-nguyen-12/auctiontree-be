@@ -149,11 +149,11 @@ const createRealestate = async (req, res) => {
     const savedProperty = await newProperty.save();
 
     const { email } = await User.findOne({ _id: req.user.id }, "email");
-    // sendEmail({
-    //   email,
-    //   subject: "Auction 10X-Listing real-estate status",
-    //   text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
-    // }
+    sendEmail({
+      email,
+      subject: "Auction 10X-Listing real-estate status",
+      text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
+    });
 
     res.status(200).send(savedProperty);
   } catch (error) {
@@ -328,11 +328,11 @@ const createOthers = async (req, res) => {
       });
       const savedProperty = await newProperty.save();
       const { email } = await User.findOne({ _id: req.user.id }, "email");
-      // sendEmail({
-      //   email,
-      //   subject: `Auction 10X-Listing  ${type} status`,
-      //   text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
-      // });
+      sendEmail({
+        email,
+        subject: `Auction 10X-Listing  ${type} status`,
+        text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
+      });
       res.status(200).send(savedProperty);
     } catch (error) {
       res.status(500).send(error.message);
@@ -475,11 +475,21 @@ const editRealestate = async (req, res) => {
         { year: new Date().getFullYear(), total_value },
       ];
     }
-    //if edit step 4, keep listing_agreement from step 1 ((if it exists));
+    //if edit step 4, keep listing_agreement from step 1 ((if it exists)), if document is already verified, keep its status;
     if (step === 4) {
       const listingAgreement = property.documents.filter(
         (item) => item.officialName === "listing_agreement"
       );
+      documents = documents.map((item) => {
+        if (item._id) {
+          for (doc of property.documents) {
+            if (doc._id.toString() === item._id.toString()) {
+              return doc;
+            }
+          }
+        }
+        return { ...item, isVerified: "pending" };
+      });
       documents = [...documents, ...listingAgreement];
       console.log(documents);
     }
@@ -493,14 +503,15 @@ const editRealestate = async (req, res) => {
     property.documents = documents || property.documents;
     property.docusignId = docusignId || property.docusignId;
     property.step = step >= property.step ? step : property.step;
+    property.isApproved = "pending";
     const savedProperty = await property.save();
 
     const { email } = await User.findOne({ _id: req.user.id }, "email");
-    // sendEmail({
-    //   email,
-    //   subject: "Auction 10X- Updating property",
-    //   text: "Thank you for updating your property. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
-    // });
+    sendEmail({
+      email,
+      subject: "Auction 10X- Updating property",
+      text: "Thank you for updating your property. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
+    });
     res.status(200).send(savedProperty);
   } catch (error) {
     res.status(500).send(error.message);
@@ -571,6 +582,11 @@ const editOthers = async (req, res) => {
     }
     const { error } = bodySchema.validate(req.body);
     if (error) return res.status(200).send({ error: error.details[0].message });
+
+    //cannot change type of property
+    if (type && type !== property.type) {
+      return res.status(200).send({ error: "Cannot change type of property" });
+    }
 
     // if edit anything in step 2 need to be proccessed reservedAmount and add information in details field.
     if (isEditStep2) {
@@ -672,12 +688,22 @@ const editOthers = async (req, res) => {
     }
 
     //if edit step 4, keep listing_agreement from step 1 ((if it exists));
+    //check if a document is already verified -> keep it as it is
     if (step === 4) {
       const listingAgreement = property.documents.filter(
         (item) => item.officialName === "listing_agreement"
       );
+      documents = documents.map((item) => {
+        if (item._id) {
+          for (doc of property.documents) {
+            if (doc._id.toString() === item._id.toString()) {
+              return doc;
+            }
+          }
+        }
+        return { ...item, isVerified: "pending" };
+      });
       documents = [...documents, ...listingAgreement];
-      console.log(documents);
     }
 
     property.type = type || property.type;
@@ -689,15 +715,16 @@ const editOthers = async (req, res) => {
     property.documents = documents || property.documents;
     property.docusignId = docusignId || property.docusignId;
     property.step = step >= property.step ? step : property.step;
+    property.isApproved = "pending";
 
     const savedProperty = await property.save();
 
     const { email } = await User.findOne({ _id: req.user.id }, "email");
-    // sendEmail({
-    //   email,
-    //   subject: "Auction 10X- Updating property",
-    //   text: "Thank you for updating your property. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
-    // });
+    sendEmail({
+      email,
+      subject: "Auction 10X- Updating property",
+      text: "Thank you for updating your property. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
+    });
     res.status(200).send(savedProperty);
   } catch (error) {
     res.status(500).send(error.message);
@@ -870,11 +897,11 @@ const approveProperty = async (req, res) => {
               .status(200)
               .send({ error: `Document ${document.name}is not verified` });
         }
-        // sendEmail({
-        //   email: user.email,
-        //   subject: "Auction10X- Property Application Approved",
-        //   text: `Congratulation, your application to sell property is approved`,
-        // });
+        sendEmail({
+          email: user.email,
+          subject: "Auction10X- Property Application Approved",
+          text: `Congratulation, your application to sell property is approved`,
+        });
       }
       if (status === "fail") {
         if (!rejectedReason) {
@@ -883,11 +910,11 @@ const approveProperty = async (req, res) => {
             .send({ error: "Please specify reason for reject" });
         }
         property.rejectedReason = rejectedReason;
-        // sendEmail({
-        //   email: user.email,
-        //   subject: "Auction10X- Property Application Rejected",
-        //   text: `Your application to sell property is rejected. Reason: ${rejectedReason}`,
-        // });
+        sendEmail({
+          email: user.email,
+          subject: "Auction10X- Property Application Rejected",
+          text: `Your application to sell property is rejected. Reason: ${rejectedReason}`,
+        });
       }
       property.isApproved = status;
       const savedProperty = await property.save();
