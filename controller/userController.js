@@ -711,8 +711,11 @@ const getListingsOfSeller = async (req, res) => {
     if (status) {
       filter["isApproved"] = status;
     }
+    if (completed === "true") {
+      filter["step"] = 5;
+    }
     if (completed === "false") {
-      filter["step"] = { $in: ["1", "2", "3", "4"] };
+      filter["step"] = { $in: [1, 2, 3, 4] };
     }
     let listings = await Property.find(filter);
 
