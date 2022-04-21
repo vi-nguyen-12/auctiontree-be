@@ -10,7 +10,7 @@ const sendEmail = ({ email, subject, text }) => {
     text,
   };
   sgMail
-    .send(msg)
+    .send(msg, true)
     .then(() => {
       console.log("Email sent");
     })
@@ -37,4 +37,5 @@ const getBidsInformation = (bids, startingBid) => {
   // );
   return { numberOfBids, highestBid, highestBidders };
 };
+
 module.exports = { sendEmail, getBidsInformation };

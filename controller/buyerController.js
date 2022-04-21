@@ -94,7 +94,7 @@ const createBuyer = async (req, res) => {
 const editBuyer = async (req, res) => {
   try {
     let { documents } = req.body;
-    const buyer = await Buyer.findById(req.params.id);
+    const buyer = await Buyer.findById(req.params.id).populate("userId");
     if (!buyer) {
       return res.status(200).send({ error: "Buyer not found" });
     }
@@ -123,6 +123,12 @@ const editBuyer = async (req, res) => {
       _id: savedBuyer._id,
       documents: savedBuyer.documents,
     };
+    sendEmail({
+      email: buyer.userId.email,
+      subject: "Auction 10X- Request to change funding",
+      text: `Your request for changing funding has been sent to the admin`,
+    });
+
     res.status(200).send(result);
   } catch (err) {
     res.status(500).send(err.message);
