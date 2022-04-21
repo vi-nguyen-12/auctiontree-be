@@ -131,6 +131,7 @@ const validateAuction = (req, res, next) => {
     registerEndDate: Joi.date().iso().required(),
     auctionStartDate: Joi.date().iso().required(),
     auctionEndDate: Joi.date().iso().required(),
+    isFeatured: Joi.boolean().optional(),
   });
   const { error } = auctionSchema.validate(req.body);
   if (error) {

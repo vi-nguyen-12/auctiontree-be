@@ -19,6 +19,7 @@ const createAuction = async (req, res) => {
         auctionEndDate: auctionEndDateISOString,
         startingBid,
         incrementAmount,
+        isFeatured,
       } = req.body;
       const isPropertyInAuction = await Auction.findOne({
         property: propertyId,
@@ -72,6 +73,7 @@ const createAuction = async (req, res) => {
         auctionEndDate,
         startingBid,
         incrementAmount,
+        isFeatured,
       });
       const savedAuction = await newAuction.save();
 
@@ -106,6 +108,7 @@ const editAuction = async (req, res) => {
       auctionEndDate: auctionEndDateISOString,
       startingBid,
       incrementAmount,
+      isFeatured,
     } = req.body;
     const bodySchema = Joi.object({
       registerStartDate: Joi.date().iso().optional(),
@@ -114,6 +117,7 @@ const editAuction = async (req, res) => {
       auctionEndDate: Joi.date().iso().optional(),
       startingBid: Joi.number().min(0).optional(),
       incrementAmount: Joi.number().min(0).optional(),
+      isFeatured: Joi.boolean().optional(),
     });
     const { error } = bodySchema.validate(req.body);
     if (error) {
@@ -159,6 +163,7 @@ const editAuction = async (req, res) => {
     auction.auctionEndDate = auctionEndDate;
     auction.startingBid = startingBid || auction.startingBid;
     auction.incrementAmount = incrementAmount || auction.incrementAmount;
+    auction.isFeatured = isFeatured || auction.isFeatured;
     const updatedAuction = await auction.save();
     res.status(200).send(updatedAuction);
   } catch (err) {
@@ -181,19 +186,42 @@ const deleteAuction = async (req, res) => {
 };
 
 //@desc  Get all auctions
-//@route GET /api/auctions
+//@route GET /api/auctions?isFeatured=...
 const getAllAuctions = async (req, res) => {
   try {
+    const querySchema = Joi.object({
+      registerStartDate: Joi.date().iso().optional(),
+      registerEndDate: Joi.date().iso().optional(),
+      auctionStartDate: Joi.date().iso().optional(),
+      auctionEndDate: Joi.date().iso().optional(),
+      startingBid: Joi.number().min(0).optional(),
+      incrementAmount: Joi.number().min(0).optional(),
+      isFeatured: Joi.boolean().optional(),
+    });
+    const { error } = querySchema.validate(req.query);
+    if (error) {
+      return res.status(200).send({ error: error.details[0].message });
+    }
+    let auctions;
+    let filter = {};
+    if (req.query.isFeatured === "true") {
+      filter.isFeatured = true;
+    }
+    if (req.query.isFeatured === "false") {
+      filter.isFeatured = false;
+    }
     if (req.admin?.roles.includes("auction_read")) {
-      const auctions = await Auction.find().populate({
+      auctions = await Auction.find(filter).populate({
         path: "property",
         select:
           "type createdBy details.owner_name details.property_address images.url",
         populate: { path: "createdBy", select: "userName" },
       });
-      return res.status(200).send(auctions);
     }
-    res.status(200).send({ error: "Not allowed to view auctions" });
+    auctions = await Auction.find(filter)
+      .populate("property", "type details images")
+      .select("-startingBid -incrementAmount -winner -bids");
+    return res.status(200).send(auctions);
   } catch (err) {
     res.status(500).send(err);
   }
