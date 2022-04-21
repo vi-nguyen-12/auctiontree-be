@@ -658,9 +658,36 @@ const getWinAuctionsOfBuyer = async (req, res) => {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(200).send("User not found");
 
-    const result = await Auction.find({
-      "winner.userId": user._id,
-    }).populate({ path: "property", select: "type details images" });
+    const result = await Auction.aggregate([
+      {
+        $match: { "winner.userId": user._id },
+      },
+      {
+        $lookup: {
+          from: "properties",
+          localField: "property",
+          foreignField: "_id",
+          as: "property",
+          pipeline: [
+            {
+              $project: {
+                _id: "$_id",
+                type: "$type",
+                details: "$details",
+                images: "$images",
+              },
+            },
+          ],
+        },
+      },
+      {
+        $project: {
+          _id: "$_id",
+          property: "$property",
+          amount: "$winner.amount",
+        },
+      },
+    ]);
 
     res.status(200).send(result);
   } catch (error) {
