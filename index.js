@@ -17,6 +17,11 @@ const docusignRoute = require("./routes/docusignRoutes");
 const awsRoute = require("./routes/awsRoutes");
 const testRoute = require("./routes/test");
 const adminRoute = require("./routes/adminRoutes");
+const {
+  remindUpcomingAuction,
+  remindPendingProperties,
+  deletePendingProperties,
+} = require("./cron-jobs");
 const cookieparser = require("cookie-parser");
 const cors = require("cors");
 
@@ -44,9 +49,13 @@ const corsOptions = {
     callback(new Error("Not allowed by CORS"));
   },
 };
-
 app.use(cors(corsOptions));
 app.set("trust proxy", 1);
+
+// set cron job
+remindUpcomingAuction();
+remindPendingProperties();
+deletePendingProperties();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -79,6 +88,7 @@ app.use(function (req, res, next) {
   );
   next();
 });
+
 app.use("/api/users", userRoutes);
 app.use("/api/properties", propertyRoutes);
 app.use("/api/kyc", kycRoute);

@@ -159,7 +159,6 @@ const editAuction = async (req, res) => {
     auction.auctionEndDate = auctionEndDate;
     auction.startingBid = startingBid || auction.startingBid;
     auction.incrementAmount = incrementAmount || auction.incrementAmount;
-    console.log(auction);
     const updatedAuction = await auction.save();
     res.status(200).send(updatedAuction);
   } catch (err) {
@@ -517,7 +516,7 @@ const placeBidding = async (req, res) => {
 };
 
 //@desc Get result of auction
-//@route GET /api/auctions/result/:id
+//@route GET /api/auctions/:id/result
 const getAuctionResult = async (req, res) => {
   try {
     const auction = await Auction.findOne({ _id: req.params.id });

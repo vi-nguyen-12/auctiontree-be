@@ -491,7 +491,6 @@ const editRealestate = async (req, res) => {
         return { ...item, isVerified: "pending" };
       });
       documents = [...documents, ...listingAgreement];
-      console.log(documents);
     }
 
     property.type = type || property.type;

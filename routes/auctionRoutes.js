@@ -21,10 +21,10 @@ router.get("/ongoing/:type", getOngoingAuctions);
 router.get("/upcoming", getUpcomingAuctions);
 router.get("/ongoing", getOngoingAuctions);
 router.get("/status", auth, getAuctionStatusOfABuyer);
-router.get("/result/:id", getAuctionResult);
 
 router.post("/", auth, validateAuction, createAuction);
 router.get("/propertyId/:propertyId", authNotStrict, getAuction);
+router.get("/:id/result", getAuctionResult);
 router.get("/:id", authNotStrict, getAuction);
 router.get("/", auth, getAllAuctions);
 router.put("/:id", auth, editAuction);
