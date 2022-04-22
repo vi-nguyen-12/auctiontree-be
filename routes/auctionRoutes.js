@@ -26,7 +26,7 @@ router.post("/", auth, validateAuction, createAuction);
 router.get("/propertyId/:propertyId", authNotStrict, getAuction);
 router.get("/:id/result", getAuctionResult);
 router.get("/:id", authNotStrict, getAuction);
-router.get("/", auth, getAllAuctions);
+router.get("/", authNotStrict, getAllAuctions);
 router.put("/:id", auth, editAuction);
 router.delete("/:id", auth, deleteAuction);
 module.exports = router;
