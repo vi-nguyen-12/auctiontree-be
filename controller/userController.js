@@ -538,14 +538,27 @@ const setUnlikedAuction = async (req, res) => {
 //@route GET /api/users/:id/buyer/auctions/bid
 const getBidAuctionsOfBuyer = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(200).send("User not found");
+    let id = req.params.id;
+    if (
+      (req.admin?.id && req.roles.includes("buyer_read")) ||
+      (req.user?.id && req.user.id === id)
+    ) {
+      let bidAuctions = await Auction.find({ "bids.userId": id })
+        .populate("property", "type details images")
+        .select("-startingBid -incrementAmount -winner");
+      bidAuctions = bidAuctions.map((auction) => {
+        let [highestBid] = auction.bids.slice(-1);
+        let bids = auction.bids.filter(
+          (bid) => bid.userId.toString() === id.toString()
+        );
 
-    const bidAuctions = await Auction.find({
-      "bids.userId": user._id,
-    }).populate({ path: "property", select: "type details images" });
+        auction = { ...auction.toObject(), bids, highestBid };
+        return auction;
+      });
+      return res.status(200).send(bidAuctions);
+    }
 
-    res.status(200).send(bidAuctions);
+    return res.status(200).send({ error: "Not allowed to get bid auctions" });
   } catch (error) {
     res.status(500).send(error.message);
   }

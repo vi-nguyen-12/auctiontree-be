@@ -37,7 +37,7 @@ router.post("/password", resetForgotPassword);
 router.put("/:id/:auctionId/liked", auth, setLikedAuction);
 router.put("/:id/:auctionId/unliked", auth, setUnlikedAuction);
 router.get("/:id/likes", auth, getLikedAuctions);
-router.get("/:id/buyer/auctions/bid", getBidAuctionsOfBuyer);
+router.get("/:id/buyer/auctions/bid", auth, getBidAuctionsOfBuyer); //should authenticate user
 router.get("/:id/buyer/auctions", getAuctionsOfBuyer);
 router.get("/:id/buyer/winAuctions", getWinAuctionsOfBuyer);
 router.get("/buyer/auctions", getAuctionsOfAllBuyersGroupedByUser);

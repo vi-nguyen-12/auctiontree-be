@@ -800,7 +800,7 @@ const getProperties = async (req, res) => {
       }
       return res.status(200).send(properties);
     }
-    res.status(200).send("Not allowed to view properties");
+    res.status(200).send({ error: "Not allowed to view properties" });
   } catch (err) {
     res.status(500).send(err.message);
   }

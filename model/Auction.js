@@ -44,6 +44,7 @@ const auctionSchema = new Schema(
       userId: { type: Schema.Types.ObjectId, ref: "User" },
       amount: Number,
     },
+    isFeatured: { type: Boolean, default: false, required: true },
   },
   { timestamp: true }
 );
