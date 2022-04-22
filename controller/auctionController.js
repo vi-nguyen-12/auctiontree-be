@@ -547,7 +547,10 @@ const placeBidding = async (req, res) => {
 //@route GET /api/auctions/:id/result
 const getAuctionResult = async (req, res) => {
   try {
-    const auction = await Auction.findOne({ _id: req.params.id });
+    const auction = await Auction.findOne({ _id: req.params.id }).populate({
+      path: "property",
+      populate: { path: "createdBy" },
+    });
     if (!auction) {
       return res.status(200).send({ error: "Auction not found!" });
     }
@@ -586,9 +589,15 @@ const getAuctionResult = async (req, res) => {
       const savedAuction = await auction.save();
       const user = await User.findById(savedAuction.winner.userId);
       //send email
-      let email = user.email;
-      let subject = "Auction10X- Congratulation for winning an auction";
-      let text = `Congratulation for winning auction for property with id number ${property._id}`;
+      let email, subject, text;
+      email = user.email;
+      subject = "Auction3- Congratulation for winning an auction";
+      text = `Congratulation for winning auction for property with id number ${property._id}`;
+      sendEmail({ email, subject, text });
+
+      email = auction.property.createdBy.email;
+      subject = "Auction3 - Your property has been successfully sold";
+      text = `Your property with id number ${property._id} has been sold to ${user.userName} with price ${highestBidder.amount}`;
       sendEmail({ email, subject, text });
 
       return res.status(200).send({
@@ -621,6 +630,7 @@ const getAuctionResult = async (req, res) => {
       reservedAmount: property.reservedAmount,
       message: "Reserved not met",
     });
+    res.status(200).send(auction);
   } catch (err) {
     res.status(500).send(err.message);
   }
