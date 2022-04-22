@@ -46,4 +46,22 @@ const authNotStrict = async (req, res, next) => {
   }
 };
 
-module.exports = { auth, authNotStrict };
+// auth for only user
+const authUser = (req, res) => {
+  const authHeader = req.header("Authorization");
+  if (!authHeader) return res.status(200).send({ error: "Access Denied" });
+  try {
+    const token = authHeader.split(" ")[1];
+    const verified = jwt.verify(token, process.env.TOKEN_KEY);
+    if (verified.userId) {
+      req.user = { id: verified.userId }; //{id:...}
+      next();
+    } else {
+      return res.status(200).send({ error: "Access Denied" });
+    }
+  } catch (err) {
+    res.status(200).send({ error: "Invalid Token" });
+  }
+};
+
+module.exports = { auth, authNotStrict, authUser };
