@@ -1,6 +1,8 @@
 const Admin = require("../model/Admin");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const Joi = require("joi");
+const { sendEmail } = require("../helper");
 
 //@desc  Create a new admin
 //@route POST /api/admins body={fullName,email,phone, password,location,role, department,image, designation,description}
@@ -10,6 +12,7 @@ const createAdmin = async (req, res) => {
       const {
         fullName,
         email,
+        personalEmail,
         phone,
         password,
         location,
@@ -37,6 +40,7 @@ const createAdmin = async (req, res) => {
       const newAdmin = await Admin.create({
         fullName,
         email,
+        personalEmail,
         phone,
         password: hashedPassword,
         location,
@@ -47,10 +51,16 @@ const createAdmin = async (req, res) => {
         designation,
         description,
       });
+      sendEmail({
+        email: newAdmin.personalEmail,
+        subject: "Welcome to the team",
+        text: `Please log in with this email ${newAdmin.email} and password ${newAdmin.password} to access your account and change your password as soon as possible. Thank you`,
+      });
       return res.status(200).send({
         _id: newAdmin._id,
         fullName: newAdmin.fullName,
         email: newAdmin.email,
+        personalEmail: newAdmin.personalEmail,
         phone: newAdmin.phone,
         location: newAdmin.location,
         title: newAdmin.title,
@@ -120,12 +130,84 @@ const checkJWT = async (req, res) => {
 };
 
 //@desc  Edit an admin
-//@route PUT /api/admins/:id body={fullName,email,phone, location,roles, department,image, designation,description}
+//@route PUT /api/admins/:id body={fullName, personalEmail, email, phone, location,title, roles, department,image, designation,description}
 const editAdmin = async (req, res) => {
   try {
-    if (req.admin?.roles.includes("admin_edit")) {
-      const {
+    //owner of this account
+    if (req.admin?.id === req.params.id) {
+      let {
         fullName,
+        phone,
+        personalEmail,
+        location,
+        image,
+        oldPassword,
+        newPassword,
+      } = req.body;
+      const querySchema = Joi.object({
+        fullName: Joi.string().optional(),
+        phone: Joi.string()
+          .length(10)
+          .pattern(/^[0-9]+$/)
+          .optional(),
+        personalEmail: Joi.string().email({
+          minDomainSegments: 2,
+          tlds: { allow: ["com", "net"] },
+        }),
+        location: Joi.string().optional(),
+        image: Joi.string().optional(),
+        oldPassword: Joi.string().optional(),
+        newPassword: Joi.when("oldPassword", {
+          is: Joi.exist(),
+          then: Joi.string().required(),
+          otherwise: Joi.string().allow(null),
+        }),
+      });
+      const { error } = querySchema.validate(req.body);
+      if (error)
+        return res.status(200).send({ error: error.details[0].message });
+
+      const admin = await Admin.findOne({ _id: req.admin.id });
+
+      if (oldPassword) {
+        const match = await bcrypt.compare(oldPassword, newPassword);
+        if (!match) {
+          return res
+            .status(200)
+            .send({ error: "Wrong password! Cannot update profile" });
+        }
+        const salt = await bcrypt.genSaltSync(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+        admin.password = hashedPassword;
+      }
+      admin.fullName = fullName || admin.fullName;
+      admin.phone = phone || admin.phone;
+      admin.personalEmail = personalEmail || admin.personalEmail;
+      admin.location = location || admin.location;
+      admin.image = image || admin.image;
+
+      const savedAdmin = await admin.save();
+      const result = {
+        _id: savedAdmin._id,
+        fullName: savedAdmin.fullName,
+        email: savedAdmin.email,
+        personalEmail: savedAdmin.personalEmail,
+        phone: savedAdmin.phone,
+        location: savedAdmin.location,
+        title: savedAdmin.title,
+        department: savedAdmin.department,
+        image: savedAdmin.image,
+        designation: savedAdmin.designation,
+        description: savedAdmin.description,
+      };
+      return res.status(200).send(result);
+    }
+
+    // admin
+    if (req.admin?.roles.includes("admin_edit")) {
+      let {
+        fullName,
+        personalEmail,
         email,
         phone,
         location,
@@ -137,11 +219,12 @@ const editAdmin = async (req, res) => {
         designation,
         description,
       } = req.body;
-      const admin = await Admin.findOne({ _id: req.params.id });
+      let admin = await Admin.findOne({ _id: req.params.id });
       if (!admin) {
         return res.status(200).send({ error: "Admin not found" });
       }
       admin.fullName = fullName || admin.fullName;
+      admin.personalEmail = personalEmail || admin.personalEmail;
       admin.email = email || admin.email;
       admin.phone = phone || admin.phone;
       admin.location = location || admin.location;
