@@ -796,7 +796,6 @@ const getListingsOfSeller = async (req, res) => {
           delete item.auctionDetails.registerEndDate;
           delete item.auctionDetails.numberOfBids;
           delete item.auctionDetails.highestBid;
-          delete item.auctionDetails.highestBidders;
           return item;
         });
       return res.status(200).send(listings);
