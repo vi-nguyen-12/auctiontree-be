@@ -130,7 +130,7 @@ propertySchema.pre("save", function (next) {
           "financial_document",
           "purchase_agreement",
           "third-party_report",
-          "demographics",
+          // "demographics",
           "market_and_valuations",
         ];
         break;

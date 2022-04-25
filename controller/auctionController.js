@@ -547,11 +547,22 @@ const placeBidding = async (req, res) => {
 //@route GET /api/auctions/:id/result
 const getAuctionResult = async (req, res) => {
   try {
-    const auction = await Auction.findOne({ _id: req.params.id });
+    let email, subject, text;
+    const auction = await Auction.findOne({ _id: req.params.id })
+      .populate({
+        path: "property",
+        populate: {
+          path: "createdBy",
+          select: "_id firstName lastName email userName",
+        },
+        select: "_id type createdBy details reservedAmount discussedAmount",
+      })
+      .select("_id auctionStartDate auctionEndDate bids winner");
     if (!auction) {
       return res.status(200).send({ error: "Auction not found!" });
     }
 
+    // auction has been set a winner
     if (auction.winner.userId) {
       let user = await User.findOne({ _id: auction.winner.userId });
       return res.status(200).send({
@@ -560,6 +571,7 @@ const getAuctionResult = async (req, res) => {
       });
     }
 
+    // Auction has not ended yet
     if (auction.auctionEndDate.getTime() > new Date().getTime()) {
       return res.status(200).send({
         _id: auction._id,
@@ -568,17 +580,8 @@ const getAuctionResult = async (req, res) => {
       });
     }
 
-    if (auction.bids.length === 0) {
-      return res.status(200).send({
-        _id: auction._id,
-        winner: null,
-        message: "No one bids at this auction",
-      });
-    }
-    const property = await Property.findOne({ _id: auction.property });
     let highestBidder = auction.bids.slice(-1)[0];
-
-    if (highestBidder.amount >= property.reservedAmount) {
+    if (highestBidder.amount >= auction.property.reservedAmount) {
       auction.winner = {
         userId: highestBidder.userId,
         amount: highestBidder.amount,
@@ -586,9 +589,14 @@ const getAuctionResult = async (req, res) => {
       const savedAuction = await auction.save();
       const user = await User.findById(savedAuction.winner.userId);
       //send email
-      let email = user.email;
-      let subject = "Auction10X- Congratulation for winning an auction";
-      let text = `Congratulation for winning auction for property with id number ${property._id}`;
+      email = user.email;
+      subject = "Auction3- Congratulation for winning an auction";
+      text = `Congratulation for winning auction for property with id number ${property._id}`;
+      sendEmail({ email, subject, text });
+
+      email = auction.property.createdBy.email;
+      subject = "Auction3 - Your property has been successfully sold";
+      text = `Your property with id number ${property._id} has been sold to ${user.userName} with price ${highestBidder.amount}`;
       sendEmail({ email, subject, text });
 
       return res.status(200).send({
@@ -600,6 +608,22 @@ const getAuctionResult = async (req, res) => {
       });
     }
 
+    // There is no winner at this auction
+    if (
+      highestBidder === null ||
+      highestBidder.amount < auction.property.discussedAmount
+    ) {
+      email = auction.property.createBy.email;
+      subject = `Auction3- Auction for your property with number ${auction.property._id} ended`;
+      text = `Hi ${auction.property.createBy.firstName} ${auction.property.createBy.lastName} Your property with number ${auction.property._id} has not been sold because no one has bid more than discussed amount`;
+      return res.status(200).send({
+        _id: auction._id,
+        winner: null,
+        message: "No winner at this auction",
+      });
+    }
+
+    //should check this one more time
     //send email to bidders between disscussedAmount and reservedAmount
     let discussedBidders = auction.bids.filter(
       (item) => item.amount >= property.discussedAmount
@@ -608,7 +632,7 @@ const getAuctionResult = async (req, res) => {
       for (let item of discussedBidders) {
         const user = await User.findById(item.userId);
         let email = user.email;
-        let subject = "Auction10X- Discuss auction price";
+        let subject = "Auction3- Discuss auction price";
         let text = `Thank you for bidding for real-estate with id number ${property._id}. Your bid is ${item.amount} is not met reserved amount. However, our seller is willing to discuss more about the price.`;
 
         sendEmail({ email, subject, text });
@@ -621,6 +645,7 @@ const getAuctionResult = async (req, res) => {
       reservedAmount: property.reservedAmount,
       message: "Reserved not met",
     });
+    res.status(200).send(auction);
   } catch (err) {
     res.status(500).send(err.message);
   }
