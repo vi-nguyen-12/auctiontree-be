@@ -738,12 +738,13 @@ const getListingsOfSeller = async (req, res) => {
       status: Joi.string().valid("pending", "success", "fail").optional(),
       inAuction: Joi.string().valid("true", "false").optional(),
       completed: Joi.string().valid("true", "false").optional(),
+      sold: Joi.string().valid("true", "false").optional(),
     });
     const { error } = querySchema.validate(req.query);
     if (error) return res.status(200).send({ error: error.details[0].message });
 
     const user = await User.findById(req.params.id);
-    const { status, inAuction, completed } = req.query;
+    const { status, inAuction, completed, sold } = req.query;
     if (!user) return res.status(200).send("User not found");
 
     let filter = { createdBy: user._id };
@@ -756,7 +757,9 @@ const getListingsOfSeller = async (req, res) => {
     if (completed === "false") {
       filter["step"] = { $in: [1, 2, 3, 4] };
     }
-    let listings = await Property.find(filter);
+    let listings = await Property.find(filter).select(
+      "_id type details images isApproved "
+    );
 
     listings = await Promise.all(
       listings.map(async (item) => {
@@ -776,11 +779,28 @@ const getListingsOfSeller = async (req, res) => {
             numberOfBids,
             highestBid,
             highestBidders,
+            winner: result.winner,
           };
         }
         return item;
       })
     );
+    if (sold === "true") {
+      listings = listings
+        .filter((item) => item.auctionDetails?.winner)
+        .map((item) => {
+          delete item.isApproved;
+          delete item.auctionDetails.startingBid;
+          delete item.auctionDetails.incrementAmount;
+          delete item.auctionDetails.registerStartDate;
+          delete item.auctionDetails.registerEndDate;
+          delete item.auctionDetails.numberOfBids;
+          delete item.auctionDetails.highestBid;
+          delete item.auctionDetails.highestBidders;
+          return item;
+        });
+      return res.status(200).send(listings);
+    }
     if (inAuction === "true") {
       listings = listings.filter((item) => item.auctionDetails);
     }
