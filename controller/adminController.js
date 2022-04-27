@@ -4,6 +4,10 @@ const jwt = require("jsonwebtoken");
 const Joi = require("joi");
 const { sendEmail, generateRandomString } = require("../helper");
 
+const client_url =
+  process.env.NODE_ENV === "production"
+    ? process.env.PROD_CLIENT_ADMIN_URL
+    : process.env.DEV_CLIENT_ADMIN_URL;
 //@desc  Create a new admin
 //@route POST /api/admins body={fullName,email,phone,location,role, department,image, designation,description}
 const createAdmin = async (req, res) => {
@@ -25,6 +29,7 @@ const createAdmin = async (req, res) => {
 
       const isEmailExist = await Admin.findOne({ email });
       const isPhoneExist = await Admin.findOne({ phone });
+      const isPersonalEmailExist = await Admin.findOne({ personalEmail });
       if (isEmailExist) {
         return res.status(200).send({
           error: "Email already exist",
@@ -32,6 +37,9 @@ const createAdmin = async (req, res) => {
       }
       if (isPhoneExist) {
         return res.status(200).send({ error: "Phone number already exist" });
+      }
+      if (isPersonalEmailExist) {
+        return res.status(200).send({ error: "Personal email already exist" });
       }
 
       const password = generateRandomString(10);
@@ -273,6 +281,7 @@ const getAllAdmin = async (req, res) => {
     return res.status(500).send(err.message);
   }
 };
+
 //@desc  Get an admin
 //@route GET /api/admins/:id
 const getAdmin = async (req, res) => {
@@ -294,6 +303,57 @@ const getAdmin = async (req, res) => {
   }
 };
 
+//@desc  Forgot password
+//@route POST /api/admins/password body: {email/personalEmail}
+//@route POST /api/admins/password body {token, password}
+const forgotPassword = async (req, res) => {
+  try {
+    const { email, token, password } = req.body;
+    if (email) {
+      const admin = await Admin.findOne({
+        $or: [{ email, personalEmail: email }],
+      });
+      if (!admin) {
+        return res
+          .status(200)
+          .send({ error: "Information for this email is not found" });
+      }
+      const token = jwt.sign({ userId: admin._id }, process.env.TOKEN_KEY, {
+        expiresIn: "5m",
+      });
+      admin.temp_token = token;
+      await admin.save();
+
+      sendEmail({
+        email: admin.personalEmail,
+        subject: "Auction3X- Reset Password",
+        text: `Please click in this link to reset your password:${client_url}/reset-password?token=${token}`,
+      });
+      return res.status(200).send({ message: "Reset link sent successfully" });
+    }
+    if (token && password) {
+      const admin = await Admin.findOne({ temp_token: token });
+      if (!admin) {
+        return res.status(200).send({ error: "Invalid or expired token" });
+      }
+      const verified = jwt.verify(token, process.env.TOKEN_KEY);
+      if (!verified) {
+        return res.status(200).send({ error: "Invalid or expired token" });
+      }
+      if (verified.userId.toString() !== admin._id.toString()) {
+        return res.status(200).send({ error: "Invalid or expired token" });
+      }
+      const salt = await bcrypt.genSaltSync(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+      admin.password = hashedPassword;
+      admin.temp_token = undefined;
+      await admin.save();
+      return res.status(200).send({ message: "Reset password successfully" });
+    }
+  } catch (err) {
+    return res.status(500).send(err.message);
+  }
+};
 module.exports = {
   createAdmin,
   editAdmin,
@@ -302,4 +362,5 @@ module.exports = {
   getAdmin,
   login,
   checkJWT,
+  forgotPassword,
 };
