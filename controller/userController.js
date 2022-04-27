@@ -281,7 +281,6 @@ const getUserByPropertyId = async (req, res) => {
 //@desc  Reset forgot password
 //@route POST /api/users/password data:{email}
 //@route POST /api/users/password data:{token, password}
-//@route POST /api/users/password data:{old,new}
 
 const resetForgotPassword = async (req, res) => {
   try {
@@ -758,7 +757,7 @@ const getListingsOfSeller = async (req, res) => {
       filter["step"] = { $in: [1, 2, 3, 4] };
     }
     let listings = await Property.find(filter).select(
-      "_id type details images isApproved "
+      "_id type details images isApproved step"
     );
 
     listings = await Promise.all(
