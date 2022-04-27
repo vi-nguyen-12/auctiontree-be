@@ -2,10 +2,10 @@ const Admin = require("../model/Admin");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Joi = require("joi");
-const { sendEmail } = require("../helper");
+const { sendEmail, generateRandomString } = require("../helper");
 
 //@desc  Create a new admin
-//@route POST /api/admins body={fullName,email,phone, password,location,role, department,image, designation,description}
+//@route POST /api/admins body={fullName,email,phone,location,role, department,image, designation,description}
 const createAdmin = async (req, res) => {
   try {
     if (req.admin || req.admin.roles.includes("admin_create")) {
@@ -14,7 +14,6 @@ const createAdmin = async (req, res) => {
         email,
         personalEmail,
         phone,
-        password,
         location,
         IPAddress,
         title,
@@ -34,6 +33,8 @@ const createAdmin = async (req, res) => {
       if (isPhoneExist) {
         return res.status(200).send({ error: "Phone number already exist" });
       }
+
+      const password = generateRandomString(10);
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
 

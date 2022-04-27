@@ -38,4 +38,15 @@ const getBidsInformation = (bids, startingBid) => {
   return { numberOfBids, highestBid, highestBidders };
 };
 
-module.exports = { sendEmail, getBidsInformation };
+const generateRandomString = (length) => {
+  let randomString = "";
+  let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let charsLength = chars.length;
+  for (let i = 0; i < length; i++) {
+    let randomNumber = Math.floor(Math.random() * charsLength);
+    randomString += chars[randomNumber];
+  }
+  return randomString;
+};
+
+module.exports = { sendEmail, getBidsInformation, generateRandomString };
