@@ -10,9 +10,11 @@ const {
   getAdmin,
   login,
   checkJWT,
+  forgotPassword,
 } = require("../controller/adminController");
 
 // need to check if the user is admin
+router.post("/password", forgotPassword);
 router.post("/", auth, createAdmin);
 router.put("/:id", auth, editAdmin);
 router.delete("/:id", auth, deleteAdmin);
