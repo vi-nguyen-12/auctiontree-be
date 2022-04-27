@@ -757,7 +757,7 @@ const getListingsOfSeller = async (req, res) => {
       filter["step"] = { $in: [1, 2, 3, 4] };
     }
     let listings = await Property.find(filter).select(
-      "_id type details images isApproved step"
+      "_id type details images isApproved step updatedAt"
     );
 
     listings = await Promise.all(
