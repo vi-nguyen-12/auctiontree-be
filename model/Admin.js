@@ -83,6 +83,7 @@ const adminSchema = new mongoose.Schema({
   image: { type: String },
   designation: { type: String },
   description: { type: String },
+  temp_token: { type: String },
 });
 
 adminSchema.pre("save", function (next) {
