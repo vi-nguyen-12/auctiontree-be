@@ -413,7 +413,7 @@ const embededConsole = async (args) => {
   return { redirectUrl: url };
 };
 
-//question: buyer docusign: sign with us (Auction10X) or sign with seller
+//question: buyer docusign: sign with us (Auction3) or sign with seller
 //assume with us: show on FE ->user sign -> save that documents where? -> show in the future.
 //https://stackoverflow.com/questions/57358821/display-particular-signed-contract-in-docusign
 //assume with seller: we send to buyer for sign -> we send that contract to seller to sign

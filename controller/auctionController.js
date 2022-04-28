@@ -78,7 +78,7 @@ const createAuction = async (req, res) => {
       const savedAuction = await newAuction.save();
 
       let email = property.createdBy.email;
-      let subject = "Auction10X - Create an auction for your property";
+      let subject = "Auction3 - Create an auction for your property";
       let text = `We create an auction for your property with starting register date ${registerStartDate} and auction start date ${auctionStartDate}.
       Starting bid is ${startingBid} and increment amount is ${incrementAmount}
        `;
@@ -501,7 +501,7 @@ const placeBidding = async (req, res) => {
     }
     //send email;
     let email = user.email;
-    let subject = "Auction10X- Bidding completed successfully";
+    let subject = "Auction3- Bidding completed successfully";
     let text = `Hi ${user.firstName} ${user.lastName} Thank you for your bid. Your price is highest with ${biddingPrice} at ${biddingTime}`;
     sendEmail({ email, subject, text });
 
