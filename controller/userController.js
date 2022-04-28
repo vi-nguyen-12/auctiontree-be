@@ -786,7 +786,7 @@ const getListingsOfSeller = async (req, res) => {
     );
     if (sold === "true") {
       listings = listings
-        .filter((item) => item.auctionDetails?.winner)
+        .filter((item) => item.auctionDetails?.winner?.userId)
         .map((item) => {
           delete item.isApproved;
           delete item.auctionDetails.startingBid;
