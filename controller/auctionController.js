@@ -186,7 +186,7 @@ const deleteAuction = async (req, res) => {
 };
 
 //@desc  Get all auctions
-//@route GET /api/auctions?isFeatured=...
+//@route GET /api/auctions?isFeatured=... & sold
 const getAllAuctions = async (req, res) => {
   try {
     const querySchema = Joi.object({
@@ -197,11 +197,14 @@ const getAllAuctions = async (req, res) => {
       startingBid: Joi.number().min(0).optional(),
       incrementAmount: Joi.number().min(0).optional(),
       isFeatured: Joi.boolean().optional(),
+      isSold: Joi.boolean().optional(),
     });
+
     const { error } = querySchema.validate(req.query);
     if (error) {
       return res.status(200).send({ error: error.details[0].message });
     }
+
     let auctions;
     let filter = {};
     if (req.query.isFeatured === "true") {
@@ -210,6 +213,7 @@ const getAllAuctions = async (req, res) => {
     if (req.query.isFeatured === "false") {
       filter.isFeatured = false;
     }
+
     if (req.admin?.roles.includes("auction_read")) {
       auctions = await Auction.find(filter).populate({
         path: "property",
@@ -217,6 +221,29 @@ const getAllAuctions = async (req, res) => {
           "type createdBy details.owner_name details.property_address images.url",
         populate: { path: "createdBy", select: "userName" },
       });
+      console.log(req.query.isSold);
+      if (req.query.isSold === "true") {
+        auctions = auctions.filter((auction) => {
+          return auction.winner.userId;
+        });
+        auctions = await Promise.all(
+          auctions.map(async (auction) => {
+            const user = await User.findById(auction.winner.userId);
+            return {
+              ...auction.toObject(),
+              winner: {
+                userId: user._id,
+                amount: auction.winner.amount,
+                time: auction.winner.time,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+              },
+            };
+          })
+        );
+      }
+      return res.status(200).send(auctions);
     }
     auctions = await Auction.find(filter)
       .populate("property", "type details images")
