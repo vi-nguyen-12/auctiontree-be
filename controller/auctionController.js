@@ -186,7 +186,7 @@ const deleteAuction = async (req, res) => {
 };
 
 //@desc  Get all auctions
-//@route GET /api/auctions?isFeatured=... & sold
+//@route GET /api/auctions?isFeatured=... & isSold=
 const getAllAuctions = async (req, res) => {
   try {
     const querySchema = Joi.object({
