@@ -9,7 +9,6 @@ const validateUser = (req, res, next) => {
       .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
       .required(),
     phone: Joi.string()
-      .length(10)
       .pattern(/^[0-9]+$/)
       .required(),
     password: Joi.string().required(),
@@ -33,9 +32,7 @@ const validateUpdateUser = (req, res, next) => {
       minDomainSegments: 2,
       tlds: { allow: ["com", "net"] },
     }),
-    phone: Joi.string()
-      .length(10)
-      .pattern(/^[0-9]+$/),
+    phone: Joi.string().pattern(/^[0-9]+$/),
     userName: Joi.string(),
     country: Joi.string(),
     city: Joi.string(),
@@ -156,7 +153,6 @@ const propertyObjectSchema = {
         .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
         .required(),
       phone: Joi.string()
-        .length(10)
         .pattern(/^[0-9]+$/)
         .required(),
     }).required(),

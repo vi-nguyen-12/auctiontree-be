@@ -151,7 +151,7 @@ const createRealestate = async (req, res) => {
     const { email } = await User.findOne({ _id: req.user.id }, "email");
     sendEmail({
       email,
-      subject: "Auction 10X-Listing real-estate status",
+      subject: "Auction3-Listing real-estate status",
       text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
     });
 
@@ -330,7 +330,7 @@ const createOthers = async (req, res) => {
       const { email } = await User.findOne({ _id: req.user.id }, "email");
       sendEmail({
         email,
-        subject: `Auction 10X-Listing  ${type} status`,
+        subject: `Auction3-Listing  ${type} status`,
         text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
       });
       res.status(200).send(savedProperty);
@@ -508,7 +508,7 @@ const editRealestate = async (req, res) => {
     const { email } = await User.findOne({ _id: req.user.id }, "email");
     sendEmail({
       email,
-      subject: "Auction 10X- Updating property",
+      subject: "Auction3- Updating property",
       text: "Thank you for updating your property. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
     });
     res.status(200).send(savedProperty);
@@ -721,7 +721,7 @@ const editOthers = async (req, res) => {
     const { email } = await User.findOne({ _id: req.user.id }, "email");
     sendEmail({
       email,
-      subject: "Auction 10X- Updating property",
+      subject: "Auction3- Updating property",
       text: "Thank you for updating your property. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
     });
     res.status(200).send(savedProperty);
@@ -898,7 +898,7 @@ const approveProperty = async (req, res) => {
         }
         sendEmail({
           email: user.email,
-          subject: "Auction10X- Property Application Approved",
+          subject: "Auction3- Property Application Approved",
           text: `Congratulation, your application to sell property is approved`,
         });
       }
@@ -911,7 +911,7 @@ const approveProperty = async (req, res) => {
         property.rejectedReason = rejectedReason;
         sendEmail({
           email: user.email,
-          subject: "Auction10X- Property Application Rejected",
+          subject: "Auction3- Property Application Rejected",
           text: `Your application to sell property is rejected. Reason: ${rejectedReason}`,
         });
       }

@@ -42,7 +42,6 @@ const createBuyer = async (req, res) => {
 
     const questions = await Question.find({});
     for (let item of questions) {
-      console.log(answers.find((i) => i.questionId === item._id.toString()));
       if (answers.find((i) => i.questionId === item._id.toString()) === null) {
         return res.status(200).send({
           error: `Answer of question "${item.questionText}" is required`,
@@ -80,7 +79,7 @@ const createBuyer = async (req, res) => {
     };
     sendEmail({
       email: user.email,
-      subject: "Auction 10X- Register to bid",
+      subject: "Auction3- Register to bid",
       text: `Thank you for registering to bid for a ${property.type}. Your bidder ID is ${savedBuyer._id}. Your registration will be reviewed`,
     });
     res.status(200).send(result);
@@ -125,7 +124,7 @@ const editBuyer = async (req, res) => {
     };
     sendEmail({
       email: buyer.userId.email,
-      subject: "Auction 10X- Request to change funding",
+      subject: "Auction3- Request to change funding",
       text: `Your request for changing funding has been sent to the admin`,
     });
 
@@ -179,7 +178,7 @@ const approveBuyer = async (req, res) => {
         await user.save();
         sendEmail({
           email: buyer.userId.email,
-          subject: "Auction10X- Buyer Application Approved",
+          subject: "Auction3- Buyer Application Approved",
           text: `Congratulation, your application application is approved with $${approvedFund} in your wallet. This amount is available for your bidding.`,
         });
       }
@@ -191,7 +190,7 @@ const approveBuyer = async (req, res) => {
         }
         sendEmail({
           email: buyer.userId.email,
-          subject: "Auction10X- Buyer Application Rejected",
+          subject: "Auction3- Buyer Application Rejected",
           text: `Your application application is rejected. The reason is $${rejectedReason}`,
         });
         buyer.rejectedReason = rejectedReason;
@@ -303,14 +302,49 @@ const approveAnswer = async (req, res) => {
 //@route GET /api/buyers?status=...
 const getBuyers = async (req, res) => {
   try {
-    if (req.admin?.includes("buyer_read")) {
+    console.log(req.admin);
+    if (req.admin?.roles.includes("buyer_read")) {
       const { status } = req.query;
       let query = {};
       if (status) {
         query.isApproved = status;
       }
-      const buyers = await Buyer.find(query);
-      res.status(200).send(buyers);
+      const buyers = await Buyer.aggregate([
+        { $match: query },
+        {
+          $lookup: {
+            from: "auctions",
+            localField: "auctionId",
+            foreignField: "_id",
+            as: "auction",
+            pipeline: [
+              {
+                $lookup: {
+                  from: "properties",
+                  localField: "property",
+                  foreignField: "_id",
+                  as: "property",
+                  pipeline: [{ $project: { _id: "$_id", images: "$images" } }],
+                },
+              },
+              { $unwind: { path: "$property" } },
+              { $project: { _id: "$_id", property: "$property" } },
+            ],
+          },
+        },
+        { $unwind: { path: "$auction" } },
+        {
+          $addFields: {
+            property: {
+              _id: "$auction.property._id",
+              images: "$auction.property.images",
+            },
+          },
+        },
+        { $unset: "auction" },
+      ]);
+
+      return res.status(200).send(buyers);
     }
     res.status(200).send({ error: "Not allowed to get buyers" });
   } catch (err) {

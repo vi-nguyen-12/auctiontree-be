@@ -1,14 +1,14 @@
 {
-  "name": "auction10x-backend",
+  "name": "auction3-backend",
   "version": "1.0.0",
-  "description": "auction10x-backend",
+  "description": "auction3-backend",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
     "test": "mocha"
   },
-  "author": "10X",
+  "author": "3",
   "license": "ISC",
   "dependencies": {
     "@joi/date": "^2.1.0",

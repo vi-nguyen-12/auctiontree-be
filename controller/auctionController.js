@@ -78,7 +78,7 @@ const createAuction = async (req, res) => {
       const savedAuction = await newAuction.save();
 
       let email = property.createdBy.email;
-      let subject = "Auction10X - Create an auction for your property";
+      let subject = "Auction3 - Create an auction for your property";
       let text = `We create an auction for your property with starting register date ${registerStartDate} and auction start date ${auctionStartDate}.
       Starting bid is ${startingBid} and increment amount is ${incrementAmount}
        `;
@@ -186,7 +186,7 @@ const deleteAuction = async (req, res) => {
 };
 
 //@desc  Get all auctions
-//@route GET /api/auctions?isFeatured=...
+//@route GET /api/auctions?isFeatured=... & isSold=
 const getAllAuctions = async (req, res) => {
   try {
     const querySchema = Joi.object({
@@ -197,11 +197,14 @@ const getAllAuctions = async (req, res) => {
       startingBid: Joi.number().min(0).optional(),
       incrementAmount: Joi.number().min(0).optional(),
       isFeatured: Joi.boolean().optional(),
+      isSold: Joi.boolean().optional(),
     });
+
     const { error } = querySchema.validate(req.query);
     if (error) {
       return res.status(200).send({ error: error.details[0].message });
     }
+
     let auctions;
     let filter = {};
     if (req.query.isFeatured === "true") {
@@ -210,6 +213,7 @@ const getAllAuctions = async (req, res) => {
     if (req.query.isFeatured === "false") {
       filter.isFeatured = false;
     }
+
     if (req.admin?.roles.includes("auction_read")) {
       auctions = await Auction.find(filter).populate({
         path: "property",
@@ -217,6 +221,29 @@ const getAllAuctions = async (req, res) => {
           "type createdBy details.owner_name details.property_address images.url",
         populate: { path: "createdBy", select: "userName" },
       });
+
+      if (req.query.isSold === "true") {
+        auctions = auctions.filter((auction) => {
+          return auction.winner.userId;
+        });
+        auctions = await Promise.all(
+          auctions.map(async (auction) => {
+            const user = await User.findById(auction.winner.userId);
+            return {
+              ...auction.toObject(),
+              winner: {
+                userId: user._id,
+                amount: auction.winner.amount,
+                time: auction.winner.time,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+              },
+            };
+          })
+        );
+      }
+      return res.status(200).send(auctions);
     }
     auctions = await Auction.find(filter)
       .populate("property", "type details images")
@@ -501,7 +528,7 @@ const placeBidding = async (req, res) => {
     }
     //send email;
     let email = user.email;
-    let subject = "Auction10X- Bidding completed successfully";
+    let subject = "Auction3- Bidding completed successfully";
     let text = `Hi ${user.firstName} ${user.lastName} Thank you for your bid. Your price is highest with ${biddingPrice} at ${biddingTime}`;
     sendEmail({ email, subject, text });
 

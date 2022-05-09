@@ -53,7 +53,7 @@ const registerUser = async (req, res) => {
     const savedUser = await user.save();
     sendEmail({
       email: user.email,
-      subject: "Auction 10X- Confirm email",
+      subject: "Auction3- Confirm email",
       text: `Please click here to confirm your email: ${client_url}/confirm_email&?token=${token}`,
     });
     res.status(200).send({
@@ -91,8 +91,8 @@ const verify = async (req, res) => {
 
     sendEmail({
       email: user.email,
-      subject: "Auction 10X Successful Registration",
-      text: `Hi ${user.firstName} ${user.lastName}, We are delighted to have you join us. Welcome to AUCTION10X. Your email has been successfully verified. Thanks. The Auction10X Team`,
+      subject: "Auction3- Successful Registration",
+      text: `Hi ${user.firstName} ${user.lastName}, We are delighted to have you join us. Welcome to AUCTION3. Your email has been successfully verified. Thanks. The Auction3 Team`,
     });
 
     return res.status(200).send({
@@ -131,7 +131,7 @@ const sendConfirmEmail = async (req, res) => {
     const savedUser = await user.save();
     sendEmail({
       email: user.email,
-      subject: "Auction 10X- Confirm email",
+      subject: "Auction3- Confirm email",
       text: `Please click here to confirm your email: ${client_url}/confirm_email?token=${token}`,
     });
     res.status(200).send({
@@ -300,7 +300,7 @@ const resetForgotPassword = async (req, res) => {
       await user.save();
       sendEmail({
         email,
-        subject: "Auction10X- Reset password",
+        subject: "Auction3- Reset password",
         text: `Please click here to reset password: ${client_url}/reset_password?token=${token}`,
       });
       return res.status(200).send({ message: "Reset link sent successfully" });
