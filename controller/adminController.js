@@ -304,17 +304,15 @@ const getAdmin = async (req, res) => {
 };
 
 //@desc  Forgot password
-//@route POST /api/admins/password body: {email/personalEmail}
+//@route POST /api/admins/password body: {personalEmail}
 //@route POST /api/admins/password body {token, password}
 const forgotPassword = async (req, res) => {
   try {
-    const { email, personalEmail, token, password } = req.body;
-    console.log(personalEmail)
-    if (email || personalEmail) {
+    const { personalEmail, token, password } = req.body;
+    if (personalEmail) {
       const admin = await Admin.findOne({
         $or: [{ email }, { personalEmail }],
       });
-      console.log(admin)
       if (!admin) {
         return res
           .status(200)

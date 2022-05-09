@@ -157,7 +157,7 @@ const propertyObjectSchema = {
         .required(),
       phone: Joi.string()
         .length(10)
-        .pattern(/^[0-9]+$/)
+        .pattern(/^\+[1-9]{1}[0-9]{3,14}$/)
         .required(),
     }).required(),
     documents: Joi.when("details", {
