@@ -302,7 +302,8 @@ const approveAnswer = async (req, res) => {
 //@route GET /api/buyers?status=...
 const getBuyers = async (req, res) => {
   try {
-    if (req.admin?.includes("buyer_read")) {
+    console.log(req.admin);
+    if (req.admin?.roles.includes("buyer_read")) {
       const { status } = req.query;
       let query = {};
       if (status) {
@@ -315,26 +316,35 @@ const getBuyers = async (req, res) => {
             from: "auctions",
             localField: "auctionId",
             foreignField: "_id",
+            as: "auction",
             pipeline: [
               {
                 $lookup: {
                   from: "properties",
                   localField: "property",
                   foreignField: "_id",
+                  as: "property",
+                  pipeline: [{ $project: { _id: "$_id", images: "$images" } }],
                 },
               },
-              { $project: { propertyId: "$_id", images: "$images" } },
+              { $unwind: { path: "$property" } },
+              { $project: { _id: "$_id", property: "$property" } },
             ],
           },
         },
         { $unwind: { path: "$auction" } },
+        {
+          $addFields: {
+            property: {
+              _id: "$auction.property._id",
+              images: "$auction.property.images",
+            },
+          },
+        },
+        { $unset: "auction" },
       ]);
-      // const buyers = await Buyer.find(query).populate({
-      //   path: "auctionId",
-      //   select: "property",
-      //   populate: { path: "property", select: "images" },
-      // });
-      res.status(200).send(buyers);
+
+      return res.status(200).send(buyers);
     }
     res.status(200).send({ error: "Not allowed to get buyers" });
   } catch (err) {
