@@ -583,6 +583,38 @@ const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
                 approvedFund: "$approvedFund",
               },
             },
+
+            {
+              $lookup: {
+                from: "auctions",
+                localField: "_id",
+                foreignField: "_id",
+                as: "auction",
+                pipeline: [
+                  {
+                    $lookup: {
+                      from: "properties",
+                      localField: "property",
+                      foreignField: "_id",
+                      as: "property",
+                      pipeline: [
+                        {
+                          $project: {
+                            _id: "$_id",
+                            type: "$type",
+                            images: "$images",
+                          },
+                        },
+                      ],
+                    },
+                  },
+                  { $unwind: "$property" },
+                ],
+              },
+            },
+            { $addFields: { property: "$auction.property" } },
+            { $unwind: "$property" },
+            { $unset: "auction" },
           ],
           as: "auctions",
         },
