@@ -42,7 +42,6 @@ const createBuyer = async (req, res) => {
 
     const questions = await Question.find({});
     for (let item of questions) {
-      console.log(answers.find((i) => i.questionId === item._id.toString()));
       if (answers.find((i) => i.questionId === item._id.toString()) === null) {
         return res.status(200).send({
           error: `Answer of question "${item.questionText}" is required`,
@@ -309,7 +308,32 @@ const getBuyers = async (req, res) => {
       if (status) {
         query.isApproved = status;
       }
-      const buyers = await Buyer.find(query);
+      const buyers = await Buyer.aggregate([
+        { $match: query },
+        {
+          $lookup: {
+            from: "auctions",
+            localField: "auctionId",
+            foreignField: "_id",
+            pipeline: [
+              {
+                $lookup: {
+                  from: "properties",
+                  localField: "property",
+                  foreignField: "_id",
+                },
+              },
+              { $project: { propertyId: "$_id", images: "$images" } },
+            ],
+          },
+        },
+        { $unwind: { path: "$auction" } },
+      ]);
+      // const buyers = await Buyer.find(query).populate({
+      //   path: "auctionId",
+      //   select: "property",
+      //   populate: { path: "property", select: "images" },
+      // });
       res.status(200).send(buyers);
     }
     res.status(200).send({ error: "Not allowed to get buyers" });

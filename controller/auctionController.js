@@ -221,7 +221,7 @@ const getAllAuctions = async (req, res) => {
           "type createdBy details.owner_name details.property_address images.url",
         populate: { path: "createdBy", select: "userName" },
       });
-      console.log(req.query.isSold);
+
       if (req.query.isSold === "true") {
         auctions = auctions.filter((auction) => {
           return auction.winner.userId;

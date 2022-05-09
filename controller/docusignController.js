@@ -257,7 +257,6 @@ const callback = async (req, res) => {
   try {
     const { envelopeId } = req.params;
     const { state, event } = req.query;
-    console.log(envelopeId, state, event);
     const envelope = await Docusign.findOne({ envelopeId });
     envelope.status = event;
     await envelope.save();
