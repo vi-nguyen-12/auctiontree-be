@@ -17,6 +17,8 @@ const docusignRoute = require("./routes/docusignRoutes");
 const awsRoute = require("./routes/awsRoutes");
 const testRoute = require("./routes/test");
 const adminRoute = require("./routes/adminRoutes");
+const faqRoute = require("./routes/faqRoutes");
+const documentRoute = require("./routes/documentRoutes");
 const {
   remindUpcomingAuction,
   remindPendingProperties,
@@ -99,6 +101,8 @@ app.use("/api/docusign", docusignRoute);
 app.use("/api/test", testRoute);
 app.use("/api/aws", awsRoute);
 app.use("/api/admins", adminRoute);
+app.use("/api/faqs", faqRoute);
+app.use("/api/documents", documentRoute);
 
 // if (process.env.NODE_ENV === "production") {
 //   app.use();
