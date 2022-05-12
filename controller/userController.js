@@ -20,7 +20,10 @@ const client_url =
 const registerUser = async (req, res) => {
   try {
     const userExist = await User.findOne({
-      $or: [{ email: req.body.email }, { userName: req.body.userName }],
+      $or: [
+        { email: req.body.email.toLowerCase() },
+        { userName: req.body.userName.toLowerCase() },
+      ],
     });
     if (userExist) {
       return res
@@ -41,10 +44,10 @@ const registerUser = async (req, res) => {
     const user = new User({
       firstName: req.body.firstName,
       lastName: req.body.lastName,
-      email: req.body.email,
+      email: req.body.email.toLowerCase(),
       phone: req.body.phone,
       password: hashedPassword,
-      userName: req.body.userName,
+      userName: req.body.userName.toLowerCase(),
       country: req.body.country,
       city: req.body.city,
       secret,
@@ -120,7 +123,7 @@ const verify = async (req, res) => {
 const sendConfirmEmail = async (req, res) => {
   try {
     const { email } = req.body;
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) return res.status(200).send({ error: "Email not found" });
     const token = speakeasy.totp({
       secret: user.secret.base32,
@@ -166,7 +169,10 @@ const checkJWT = async (req, res) => {
 const login = async (req, res) => {
   try {
     const user = await User.findOne({
-      $or: [{ email: req.body.userName }, { userName: req.body.userName }],
+      $or: [
+        { email: req.body.userName.toLowerCase() },
+        { userName: req.body.userName.toLowerCase() },
+      ],
     });
 
     if (!user) {
@@ -286,7 +292,7 @@ const resetForgotPassword = async (req, res) => {
   try {
     const { email, token, password } = req.body;
     if (email) {
-      const user = await User.findOne({ email });
+      const user = await User.findOne({ email: email.toLowerCase() });
       if (!user)
         return res
           .status(200)
@@ -362,22 +368,24 @@ const editProfile = async (req, res) => {
 
       // check if email/ userName already exists
       if (email) {
-        const emailExists = await User.findOne({ email });
+        const emailExists = await User.findOne({ email: email.toLowerCase() });
         if (emailExists?._id.toString() !== user._id.toString()) {
           return res.status(200).send({ error: "Email already exists" });
         }
       }
       if (userName) {
-        const userNameExists = await User.findOne({ userName });
+        const userNameExists = await User.findOne({
+          userName: userName.toLowerCase(),
+        });
         if (userNameExists?._id.toString() !== user._id.toString()) {
           return res.status(200).send({ error: "UserName already exists" });
         }
       }
       user.firstName = firstName || user.firstName;
       user.lastName = lastName || user.lastName;
-      user.email = email || user.email;
+      user.email = email.toLowerCase() || user.email;
       user.phone = phone || user.phone;
-      user.userName = userName || user.userName;
+      user.userName = userName.toLowerCase() || user.userName;
       user.country = country || user.country;
       user.city = city || user.city;
       user.profileImage = profileImage;
