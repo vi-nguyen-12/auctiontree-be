@@ -20,6 +20,7 @@ const adminRoute = require("./routes/adminRoutes");
 const faqRoute = require("./routes/faqRoutes");
 const documentRoute = require("./routes/documentRoutes");
 const subscriptionRoute = require("./routes/subscriptionRoutes");
+const contactRoute = require("./routes/contactRoutes");
 const {
   remindUpcomingAuction,
   remindPendingProperties,
@@ -107,6 +108,7 @@ app.use("/api/admins", adminRoute);
 app.use("/api/faqs", faqRoute);
 app.use("/api/documents", documentRoute);
 app.use("/api/subscriptions", subscriptionRoute);
+app.use("/api/contacts", contactRoute);
 
 // if (process.env.NODE_ENV === "production") {
 //   app.use();
