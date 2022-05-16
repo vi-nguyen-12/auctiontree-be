@@ -198,11 +198,28 @@ const remindUpcomingAuction = async () => {
       }
     }
   } catch (err) {
-    console.log(err);
+    console.log(err.message);
+  }
+};
+
+// send subscription email everyday/per 2 days about new auctions or just upcoming auctions ???
+const sendSubscriptionEmail = async () => {
+  try {
+    const emails = await Subscription.find();
+    for (let email of emails) {
+      // sendEmail({
+      //   email,
+      //   subject: "Auction3X - Latest news",
+      //   text: "List of upcoming auctions",
+      // });
+    }
+  } catch (err) {
+    console.log(err.message);
   }
 };
 module.exports = {
   remindUpcomingAuction,
   remindPendingProperties,
   deletePendingProperties,
+  sendSubscriptionEmail,
 };

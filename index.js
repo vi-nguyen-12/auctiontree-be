@@ -17,10 +17,14 @@ const docusignRoute = require("./routes/docusignRoutes");
 const awsRoute = require("./routes/awsRoutes");
 const testRoute = require("./routes/test");
 const adminRoute = require("./routes/adminRoutes");
+const faqRoute = require("./routes/faqRoutes");
+const documentRoute = require("./routes/documentRoutes");
+const subscriptionRoute = require("./routes/subscriptionRoutes");
 const {
   remindUpcomingAuction,
   remindPendingProperties,
   deletePendingProperties,
+  sendSubscriptionEmail,
 } = require("./cron-jobs");
 const cookieparser = require("cookie-parser");
 const cors = require("cors");
@@ -56,6 +60,7 @@ app.set("trust proxy", 1);
 remindUpcomingAuction();
 remindPendingProperties();
 deletePendingProperties();
+sendSubscriptionEmail();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -99,6 +104,9 @@ app.use("/api/docusign", docusignRoute);
 app.use("/api/test", testRoute);
 app.use("/api/aws", awsRoute);
 app.use("/api/admins", adminRoute);
+app.use("/api/faqs", faqRoute);
+app.use("/api/documents", documentRoute);
+app.use("/api/subscriptions", subscriptionRoute);
 
 // if (process.env.NODE_ENV === "production") {
 //   app.use();
