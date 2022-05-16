@@ -10,6 +10,7 @@ const documentSchema = new mongoose.Schema({
         "selling_agreement",
         "TC_buying",
         "TC_selling",
+        "TC_user",
       ],
       message: "{VALUE} is not a valid official name",
     },
