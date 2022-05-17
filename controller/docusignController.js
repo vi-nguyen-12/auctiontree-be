@@ -3,9 +3,11 @@ const path = require("path");
 const User = require("../model/User");
 const Docusign = require("../model/Docusign");
 const Property = require("../model/Property");
+const Document = require("../model/Document");
 const axios = require("axios");
 const jwt = require("jsonwebtoken");
 const docusign = require("docusign-esign");
+const AWS = require("aws-sdk");
 
 const server_url =
   process.env.NODE_ENV === "production"
@@ -69,17 +71,39 @@ const returnUrlArgs = {
 //request a signature by email,
 //function: makeEnvelope & sendEnvelope
 
-const makeEnvelope = (args) => {
-  let doc1DocxBytes = fs.readFileSync(
-    path.resolve(__dirname, `../public/${args.docName}.docx`)
-  );
+const makeEnvelope = async (args) => {
+  let docName = args.docName;
 
   let env = new docusign.EnvelopeDefinition();
-  env.emailSubject = "Please sign seller agreement";
+  let title = docName.split("_").join(" ");
+  env.emailSubject = `Please sign ${title}`;
 
-  let doc1b64 = Buffer.from(doc1DocxBytes).toString("base64");
+  const document = await Document.findOne({ officialName: docName }).select(
+    "url"
+  );
+  if (!document) {
+    return res.status(200).send({ error: `Document ${title} not found ` });
+  }
+  const s3 = new AWS.S3();
+  const keyName = document.url.split("/")[3];
+  console.log(document);
+  console.log(keyName);
+  const getObject = async (bucket, objectKey) => {
+    try {
+      const params = {
+        Bucket: bucket,
+        Key: objectKey,
+      };
+      const data = await s3.getObject(params).promise();
+      return data.Body.toString("base64");
+    } catch (e) {
+      throw new Error(e);
+    }
+  };
+  let docb64 = await getObject(process.env.AWS_BUCKET_NAME, keyName);
+
   let doc1 = new docusign.Document.constructFromObject({
-    documentBase64: doc1b64,
+    documentBase64: docb64,
     name: args.docName,
     fileExtension: "docx",
     documentId: "1",
@@ -203,7 +227,7 @@ const getSellerAgreementUIViews = async (req, res) => {
       },
       docName,
     };
-    let envelope = makeEnvelope(envelopeArgs);
+    let envelope = await makeEnvelope(envelopeArgs);
     envelopeResult = await envelopesApi.createEnvelope(apiArgs.accountId, {
       envelopeDefinition: envelope,
     });

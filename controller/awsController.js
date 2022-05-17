@@ -2,6 +2,7 @@ const AWS = require("aws-sdk");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
 const uuid = require("uuid/v4");
+const mime = require("mime-types");
 
 //@desc  upload images, videos and documents to AWS S3
 const config = {
