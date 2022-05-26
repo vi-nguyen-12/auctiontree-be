@@ -11,6 +11,7 @@ const documentSchema = new mongoose.Schema({
         "TC_buying",
         "TC_selling",
         "TC_user",
+        "privacy_policy",
       ],
       message: "{VALUE} is not a valid official name",
     },

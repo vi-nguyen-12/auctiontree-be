@@ -121,10 +121,11 @@ const login = async (req, res) => {
 //@desc  Check JWT
 //@route POST /api/admins/checkJWT  body={authToken}
 const checkJWT = async (req, res) => {
+  console.log("test");
   try {
     const token = req.body.authToken;
     const verified = jwt.verify(token, process.env.TOKEN_KEY);
-
+    console.log(verified);
     if (verified) {
       const admin = await Admin.findOne({ _id: verified.adminId }).select(
         "fullName title department"

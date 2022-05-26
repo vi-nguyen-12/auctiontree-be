@@ -5,6 +5,14 @@ const Document = require("../model/Document");
 const createDocument = async (req, res) => {
   try {
     const { name, officialName, url } = req.body;
+    const docType = url.split(".").pop();
+    if (
+      (officialName === "buying_agreement" ||
+        officialName === "selling_agreement") &&
+      docType !== "docx"
+    ) {
+      return res.status(200).send({ error: "Only docx files are allowed" });
+    }
     const isDocumentExist = await Document.findOne({ officialName });
     if (isDocumentExist) {
       return res
@@ -25,11 +33,20 @@ const createDocument = async (req, res) => {
 const editDocument = async (req, res) => {
   try {
     const { name, officialName, url } = req.body;
+    const docType = url.split(".").pop();
+    if (
+      (officialName === "buying_agreement" ||
+        officialName === "selling_agreement") &&
+      docType !== "docx"
+    ) {
+      return res.status(200).send({ error: "Only docx files are allowed" });
+    }
     const newDocument = await Document.findByIdAndUpdate(
       req.params.id,
       { name, officialName, url },
       { new: true }
     );
+    console.log(newDocument);
     res.status(200).send(newDocument);
   } catch (err) {
     res.status(500).send(err.message);

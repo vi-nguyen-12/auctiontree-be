@@ -247,7 +247,7 @@ const getAllAuctions = async (req, res) => {
     }
     auctions = await Auction.find(filter)
       .populate("property", "type details images")
-      .select("-startingBid -incrementAmount -winner -bids");
+      .select("-incrementAmount -winner -bids");
     return res.status(200).send(auctions);
   } catch (err) {
     res.status(500).send(err);
@@ -453,7 +453,7 @@ const getAuctionStatusOfABuyer = async (req, res) => {
   }
 };
 
-//@desc  Buyer do bidding
+//@desc  Buyer do bidding  //should money back to bidder's wallet
 //@route PUT /api/auctions/bidding/:id   body:{biddingTime, biddingPrice }
 const placeBidding = async (req, res) => {
   const bodySchema = Joi.object({
