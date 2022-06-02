@@ -209,7 +209,7 @@ const login = async (req, res) => {
         country: user.country,
         city: user.city,
         isActive: user.isActive,
-        KYC: user.isKYC,
+        KYC: user.KYC,
         wallet: user.wallet,
         token,
       },
