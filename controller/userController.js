@@ -44,12 +44,13 @@ const registerUser = async (req, res) => {
     const user = new User({
       firstName: req.body.firstName,
       lastName: req.body.lastName,
-      email: req.body.email.toLowerCase(),
+      email: req.body.email,
       phone: req.body.phone,
       password: hashedPassword,
-      userName: req.body.userName.toLowerCase(),
+      userName: req.body.userName,
       country: req.body.country,
       city: req.body.city,
+      agent: req.body.agent,
       secret,
       temp_token: token,
     });
