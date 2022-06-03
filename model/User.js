@@ -2,15 +2,50 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const userSchema = new mongoose.Schema({
-  firstName: { type: String, required: [true, "First name is required"] },
-  lastName: { type: String, required: [true, "Last name is required"] },
-  email: { type: String, required: [true, "Email is required"] },
+  firstName: {
+    type: String,
+    trim: true,
+    required: [true, "First name is required"],
+  },
+  lastName: {
+    type: String,
+    trim: true,
+    required: [true, "Last name is required"],
+  },
+  email: {
+    type: String,
+    trim: true,
+    lowercase: true,
+    required: [true, "Email is required"],
+  },
   phone: { type: String, required: [true, "Phone is required"] },
   password: { type: String, required: [true, "Password is required"] },
-  userName: { type: String, required: [true, "User name is required"] },
-  country: { type: String },
-  city: { type: String },
+  userName: {
+    type: String,
+    trim: true,
+    lowercase: true,
+    required: [true, "User name is required"],
+  },
+  country: { type: String, trim: true },
+  city: { type: String, trim: true },
   date: { type: Date, default: Date.now },
+  agent: {
+    licenseNumber: { type: String, trim: true },
+    licenseDocument: {
+      name: {
+        type: String,
+        required: function () {
+          return this.licenseNumber?.length > 0;
+        },
+      },
+      url: {
+        type: String,
+        required: function () {
+          return this.licenseNumber?.length > 0;
+        },
+      },
+    },
+  },
   secret: { type: Object },
   profileImage: String,
   isActive: { type: Boolean, required: true, default: false },

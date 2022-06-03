@@ -15,6 +15,17 @@ const validateUser = (req, res, next) => {
     userName: Joi.string().required(),
     country: Joi.string(),
     city: Joi.string(),
+    agent: Joi.object({
+      licenseNumber: Joi.string(),
+      licenseDocument: Joi.when("licenseNumber", {
+        is: Joi.any().valid(null, ""),
+        then: Joi.valid(null, "").optional(),
+        otherwise: Joi.object({
+          name: Joi.string().required(),
+          url: Joi.string().required(),
+        }).required(),
+      }),
+    }),
     profileImage: Joi.string(),
   });
   const { error } = userSchema.validate(req.body);
