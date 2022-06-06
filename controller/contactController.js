@@ -10,7 +10,7 @@ const sendEmailToAdmin = async (req, res) => {
     const bodySchema = Joi.object({
       firstName: Joi.string().required(),
       lastName: Joi.string().required(),
-      location: Joi.string().required(),
+      // location: Joi.string().required(),
       email: Joi.string()
         .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
         .required(),
@@ -31,7 +31,7 @@ const sendEmailToAdmin = async (req, res) => {
     sendEmail({
       email: generalAdmin.email,
       subject: "Auction 3X- New message",
-      text: `Received a new message from ${firstName} ${lastName} from ${location} with email ${email} and phone ${phone} with the following message: ${message}`,
+      text: `Received a new message from ${firstName} ${lastName} with email ${email} and phone ${phone} with the following message: ${message}`,
     });
     res.status(200).send({ message: "Email sent to admin successfully" });
   } catch (err) {
