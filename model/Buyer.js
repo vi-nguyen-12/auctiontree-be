@@ -16,8 +16,18 @@ const buyerSchema = new Schema(
           ref: "Question",
         },
         answer: { type: String, required: true, enum: ["yes", "no"] },
-        explanation: String,
-        files: [{ name: String, url: String }],
+        explanation: {
+          type: String,
+          required: function () {
+            return this.answer === "yes";
+          },
+        },
+        files: {
+          type: [{ name: String, url: String }],
+          required: function () {
+            return this.answer === "yes";
+          },
+        },
         isApproved: {
           type: Boolean,
           default: function () {

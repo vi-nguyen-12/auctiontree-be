@@ -79,6 +79,18 @@ const validateBuyer = (req, res, next) => {
           then: Joi.string().required(),
           otherwise: Joi.string().allow(null, ""),
         }),
+        files: Joi.when("answer", {
+          is: Joi.string().valid("yes"),
+          then: Joi.array()
+            .required()
+            .items(
+              Joi.object({
+                name: Joi.string().required(),
+                url: Joi.string().required(),
+              })
+            ),
+          otherwise: Joi.string().allow(null, ""),
+        }),
       })
     ),
     documents: Joi.array()
@@ -192,7 +204,7 @@ const propertyObjectSchema = {
       street_address: Joi.string().required(),
       city: Joi.string().required(),
       state: Joi.string().required(),
-      zip_code: Joi.string().regex(/^\d+$/).length(5).required(),
+      zip_code: Joi.string().regex(/^\d+$/).required(),
       country: Joi.string().required(),
       owner_name: Joi.string().required(),
       rooms_count: Joi.number().required(),
@@ -224,7 +236,7 @@ const propertyObjectSchema = {
         formatted_street_address: Joi.string().required(),
         city: Joi.string().required(),
         state: Joi.string().required(),
-        zip_code: Joi.string().required(),
+        zip_code: Joi.string().regex(/^\d+$/).required(),
         country: Joi.string().required(),
       }).required(),
       reservedAmount: Joi.number().required(),
@@ -247,7 +259,7 @@ const propertyObjectSchema = {
         formatted_street_address: Joi.string().required(),
         city: Joi.string().required(),
         state: Joi.string().required(),
-        zip_code: Joi.string().required(),
+        zip_code: Joi.string().regex(/^\d+$/).required(),
         country: Joi.string().required(),
       }).required(),
       reservedAmount: Joi.number().required(),
@@ -271,7 +283,7 @@ const propertyObjectSchema = {
         formatted_street_address: Joi.string().required(),
         city: Joi.string().required(),
         state: Joi.string().required(),
-        zip_code: Joi.string().required(),
+        zip_code: Joi.string().regex(/^\d+$/).required(),
         country: Joi.string().required(),
       }).required(),
       reservedAmount: Joi.number().required(),
