@@ -153,7 +153,6 @@ const checkJWT = async (req, res) => {
   try {
     const token = req.body.authToken;
     const verified = jwt.verify(token, process.env.TOKEN_KEY);
-
     if (verified) {
       const user = await User.findOne({ _id: verified.userId });
       return res.status(200).send({ message: "User Logged In", user });

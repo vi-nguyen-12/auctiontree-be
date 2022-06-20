@@ -126,50 +126,50 @@ propertySchema.pre("save", function (next) {
       case "real-estate":
         requiredDocuments = [
           "title_report",
-          "insurance_copy",
-          "financial_document",
+          // "insurance_copy",
+          // "financial_document",
           "purchase_agreement",
-          "third-party_report",
+          // "third-party_report",
           // "demographics",
-          "market_and_valuations",
+          // "market_and_valuations",
         ];
         break;
       case "car":
         requiredDocuments = [
           "ownership_document",
-          "registration_document",
+          // "registration_document",
           "title_certificate",
           "inspection_report",
-          "engine_details",
-          "insurance_document",
-          "valuation_report",
+          // "engine_details",
+          // "insurance_document",
+          // "valuation_report",
         ];
         break;
       case "yacht":
         requiredDocuments = [
           "vessel_registration",
           "vessel_maintenance_report",
-          "vessel_engine_type",
-          "vessel_performance_report",
-          "vessel_deck_details",
-          "vessel_insurance",
-          "vessel_marine_surveyor_report",
-          "vessel_valuation_report",
+          // "vessel_engine_type",
+          // "vessel_performance_report",
+          // "vessel_deck_details",
+          // "vessel_insurance",
+          // "vessel_marine_surveyor_report",
+          // "vessel_valuation_report",
         ];
         break;
       case "jet":
         requiredDocuments = [
-          "ownership_document",
+          // "ownership_document",
           "registration_document",
-          "title_certificate",
+          // "title_certificate",
           "detail_specification",
-          "insurance_document",
+          // "insurance_document",
           "jet_detail_history",
           "fitness_report",
-          "electric_work_details",
+          // "electric_work_details",
           "engine_details",
           "inspection_report",
-          "valuation_report",
+          // "valuation_report",
         ];
         break;
     }
