@@ -136,8 +136,8 @@ propertySchema.pre("save", function (next) {
         break;
       case "car":
         requiredDocuments = [
-          "ownership_document",
-          // "registration_document",
+          // "ownership_document",
+          "registration_document",
           "title_certificate",
           "inspection_report",
           // "engine_details",
