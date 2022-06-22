@@ -36,13 +36,17 @@ const createRealestate = async (req, res) => {
       state,
       zip_code,
       country,
+      real_estate_type,
+      year_built,
       owner_name,
-      rooms_count,
       beds_count,
       baths_count,
       standardized_land_use_type,
       total_value,
       area_sq_ft,
+      lot_size,
+      type_of_garage,
+      number_of_stories,
       reservedAmount,
       discussedAmount,
       images,
@@ -75,14 +79,11 @@ const createRealestate = async (req, res) => {
     if (error) return res.status(200).send({ error: error.details[0].message });
 
     //Check if seller is a broker, require listing_agreement
+    console.log(req.body);
     if (details.broker_name) {
-      let isHavingListingAgreement = false;
-      for (let item of documents) {
-        if (item.officialName === "listing_agreement") {
-          isHavingListingAgreement = true;
-        }
-      }
-      if (!isHavingListingAgreement) {
+      console.log(details.broker_documents);
+      console.log(documents);
+      if (details.broker_documents.length < 1) {
         return res.status(200).send({ error: "Listing Agreement is required" });
       }
     }
@@ -124,9 +125,13 @@ const createRealestate = async (req, res) => {
         details.structure = {};
         details.owner = {};
       }
+      details.real_estate_type = real_estate_type;
+      details.year_built = year_built;
       details.parcel.standardized_land_use_type = standardized_land_use_type;
       details.parcel.area_sq_ft = area_sq_ft;
-      details.structure.rooms_count = rooms_count;
+      details.parcel.lot_size = lot_size;
+      details.type_of_garage = type_of_garage;
+      details.number_of_stories = number_of_stories;
       details.structure.beds_count = beds_count;
       details.structure.baths = baths_count;
       details.owner.name = owner_name;
@@ -204,13 +209,7 @@ const createOthers = async (req, res) => {
 
       //Check if seller is a broker, require listing_agreement
       if (details.broker_name) {
-        let isHavingListingAgreement = false;
-        for (let item of documents) {
-          if (item.officialName === "listing_agreement") {
-            isHavingListingAgreement = true;
-          }
-        }
-        if (!isHavingListingAgreement) {
+        if (details.broker_documents.length < 1) {
           return res
             .status(200)
             .send({ error: "Listing Agreement is required" });
@@ -353,13 +352,17 @@ const editRealestate = async (req, res) => {
       state,
       zip_code,
       country,
+      real_estate_type,
+      year_built,
       owner_name,
-      rooms_count,
       beds_count,
       baths_count,
       standardized_land_use_type,
       total_value,
       area_sq_ft,
+      lot_size,
+      type_of_garage,
+      number_of_stories,
       reservedAmount,
       discussedAmount,
       images,
@@ -445,53 +448,61 @@ const editRealestate = async (req, res) => {
         })["address"];
         details = { ...property.details, ...response };
       } else {
-        property.details.property_address = property.details.property_address
-          ? property.details.property_address
-          : {};
-        property.details.property_address.formatted_street_address =
-          street_address;
-        property.details.property_address.city = city;
-        property.details.property_address.state = state;
-        property.details.property_address.zip_code = zip_code;
+        property.details.property_address = {
+          formatted_street_address: street_address,
+          city,
+          state,
+          zip_code,
+          country,
+        };
+        property.details.real_estate_type = real_estate_type;
+        property.details.year_built = year_built;
+        property.details.parcel = {
+          standardized_land_use_type,
+          area_sq_ft,
+          lot_size,
+        };
+
+        property.details.structure = {
+          beds_count,
+          baths_count,
+        };
+
+        property.details.owner = { name: owner_name };
+        property.details.market_assessments = [
+          { year: new Date().getFullYear(), total_value },
+        ];
+        property.details.type_of_garage = type_of_garage;
+        property.details.number_of_stories = number_of_stories;
+
+        property.markModified("details.property_address");
+        property.markModified("details.real_estate_type");
+        property.markModified("details.year_built");
+        property.markModified("details.parcel");
+        property.markModified("details.structure");
+        property.markModified("details.owner");
+        property.markModified("details.market_assessments");
+        property.markModified("details.type_of_garage");
+        property.markModified("details.number_of_stories");
       }
-      property.details.property_address.country = country;
-      property.details.parcel = property.details.parcel
-        ? property.details.parcel
-        : {};
-      property.details.parcel.standardized_land_use_type =
-        standardized_land_use_type;
-      property.details.parcel.area_sq_ft = area_sq_ft;
-      property.details.structure = property.details.structure
-        ? property.details.structure
-        : {};
-      property.details.structure.rooms_count = rooms_count;
-      property.details.structure.beds_count = beds_count;
-      property.details.structure.baths = baths_count;
-      property.details.owner = property.details.owner
-        ? property.details.owner
-        : {};
-      property.details.owner.name = owner_name;
-      property.details.market_assessments = [
-        { year: new Date().getFullYear(), total_value },
-      ];
     }
     //if edit step 4, keep listing_agreement from step 1 ((if it exists)), if document is already verified, keep its status;
-    if (step === 4) {
-      const listingAgreement = property.documents.filter(
-        (item) => item.officialName === "listing_agreement"
-      );
-      documents = documents.map((item) => {
-        if (item._id) {
-          for (doc of property.documents) {
-            if (doc._id.toString() === item._id.toString()) {
-              return doc;
-            }
-          }
-        }
-        return { ...item, isVerified: "pending" };
-      });
-      documents = [...documents, ...listingAgreement];
-    }
+    // if (step === 4) {
+    //   const listingAgreement = property.documents.filter(
+    //     (item) => item.officialName === "listing_agreement"
+    //   );
+    //   documents = documents.map((item) => {
+    //     if (item._id) {
+    //       for (doc of property.documents) {
+    //         if (doc._id.toString() === item._id.toString()) {
+    //           return doc;
+    //         }
+    //       }
+    //     }
+    //     return { ...item, isVerified: "pending" };
+    //   });
+    //   documents = [...documents, ...listingAgreement];
+    // }
 
     property.type = type || property.type;
     property.details = details || property.details;
@@ -506,11 +517,11 @@ const editRealestate = async (req, res) => {
     const savedProperty = await property.save();
 
     const { email } = await User.findOne({ _id: req.user.id }, "email");
-    sendEmail({
-      email,
-      subject: "Auction3- Updating property",
-      text: "Thank you for updating your property. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
-    });
+    // sendEmail({
+    //   email,
+    //   subject: "Auction3- Updating property",
+    //   text: "Thank you for updating your property. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
+    // });
     res.status(200).send(savedProperty);
   } catch (error) {
     res.status(500).send(error.message);
@@ -552,6 +563,7 @@ const editOthers = async (req, res) => {
     // Validate body
     let bodySchema = {};
     let isEditStep2;
+
     let objectSchema = {
       step1: propertyObjectSchema.step1,
       step2: propertyObjectSchema.step2[`${property.type}`],
@@ -626,6 +638,20 @@ const editOthers = async (req, res) => {
         property.details.condition = condition;
         property.details.price = price;
         property.details.property_address = property_address;
+        property.markModified("details.make");
+        property.markModified("details.model");
+        property.markModified("details.year");
+        property.markModified("details.mileage");
+        property.markModified("details.transmission");
+        property.markModified("details.car_type");
+        property.markModified("details.power");
+        property.markModified("details.color");
+        property.markModified("details.VIN");
+        property.markModified("details.engine");
+        property.markModified("details.fuel_type");
+        property.markModified("details.condition");
+        property.markModified("details.price");
+        property.markModified("details.property_address");
       }
       if (property.type === "yacht") {
         let {
@@ -653,8 +679,19 @@ const editOthers = async (req, res) => {
         property.details.no_of_crew_required = no_of_crew_required;
         property.details.others = others;
         property.details.property_address = property_address;
+        property.markModified("details.vessel_registration_number");
+        property.markModified("details.vessel_manufacturing_date");
+        property.markModified("details.manufacture_mark");
+        property.markModified("details.manufacturer_name");
+        property.markModified("details.engine_type");
+        property.markModified("details.engine_manufacture_name");
+        property.markModified("details.engine_deck_type");
+        property.markModified("details.running_cost");
+        property.markModified("details.no_of_crew_required");
+        property.markModified("details.property_address");
       }
-      if (type === "jet") {
+      if (property.type === "jet") {
+        console.log("vo day");
         let {
           registration_mark,
           aircraft_builder_name,
@@ -683,27 +720,39 @@ const editOthers = async (req, res) => {
         property.details.number_of_aircraft = number_of_aircraft;
         property.details.imported_aircraft = imported_aircraft;
         property.details.property_address = property_address;
+        property.markModified("details.registration_mark");
+        property.markModified("details.aircraft_builder_name");
+        property.markModified("details.aircraft_model_designation");
+        property.markModified("details.aircraft_serial_no");
+        property.markModified("details.engine_builder_name");
+        property.markModified("details.engine_model_designation");
+        property.markModified("details.number_of_engines");
+        property.markModified("details.propeller_builder_name");
+        property.markModified("details.propeller_model_designation");
+        property.markModified("details.number_of_aircraft");
+        property.markModified("details.imported_aircraft");
+        property.markModified("details.property_address");
       }
     }
 
     //if edit step 4, keep listing_agreement from step 1 ((if it exists));
     //check if a document is already verified -> keep it as it is
-    if (step === 4) {
-      const listingAgreement = property.documents.filter(
-        (item) => item.officialName === "listing_agreement"
-      );
-      documents = documents.map((item) => {
-        if (item._id) {
-          for (doc of property.documents) {
-            if (doc._id.toString() === item._id.toString()) {
-              return doc;
-            }
-          }
-        }
-        return { ...item, isVerified: "pending" };
-      });
-      documents = [...documents, ...listingAgreement];
-    }
+    // if (step === 4) {
+    //   const listingAgreement = property.documents.filter(
+    //     (item) => item.officialName === "listing_agreement"
+    //   );
+    //   documents = documents.map((item) => {
+    //     if (item._id) {
+    //       for (doc of property.documents) {
+    //         if (doc._id.toString() === item._id.toString()) {
+    //           return doc;
+    //         }
+    //       }
+    //     }
+    //     return { ...item, isVerified: "pending" };
+    //   });
+    //   documents = [...documents, ...listingAgreement];
+    // }
 
     property.type = type || property.type;
     property.details = details || property.details;

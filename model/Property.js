@@ -173,9 +173,9 @@ propertySchema.pre("save", function (next) {
         ];
         break;
     }
-    if (this.details.broker_name) {
-      requiredDocuments.push("listing_agreement");
-    }
+    // if (this.details.broker_name) {
+    //   requiredDocuments.push("listing_agreement");
+    // }
     for (item of requiredDocuments) {
       if (!this.documents.find((i) => i.officialName === item)) {
         next(new Error(`Document ${item} is required`));

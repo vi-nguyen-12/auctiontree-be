@@ -179,7 +179,7 @@ const sendEnvelope = async (req, res) => {
 };
 
 // @desc: Request a signature through your app
-// @route: GET api/docusign/signature/sellerAgreement/uiviews?envelopeId=123
+// @route: GET api/docusign/signature/:docName/uiviews?envelopeId=123
 const makeRecipientViewRequest = (args) => {
   let viewRequest = new docusign.RecipientViewRequest();
   viewRequest.returnUrl = args.dsReturnUrl + "?state=signing_complete";
