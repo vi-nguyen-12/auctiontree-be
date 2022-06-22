@@ -178,25 +178,19 @@ const propertyObjectSchema = {
       phone: Joi.string()
         .pattern(/^[0-9]+$/)
         .required(),
-    }).required(),
-    documents: Joi.when("details", {
-      is: Joi.object({
-        owner_name: Joi.exist(),
-        broker_name: Joi.exist(),
-        broker_id: Joi.exist(),
-        address: Joi.exist(),
-        email: Joi.exist(),
-        phone: Joi.exist(),
+      broker_documents: Joi.when("broker_name", {
+        is: Joi.exist(),
+        then: Joi.array()
+          .items({
+            officialName: Joi.string().valid("listing_agreement"),
+            name: Joi.string().required(),
+            url: Joi.string().required(),
+          })
+          .required(),
+        otherwise: Joi.array().optional(),
       }),
-      then: Joi.array()
-        .items({
-          officialName: Joi.string().valid("listing_agreement"),
-          name: Joi.string().required(),
-          url: Joi.string().required(),
-        })
-        .required(),
-      otherwise: Joi.array().optional(),
-    }),
+    }).required(),
+
     step: Joi.number().required().valid(1),
   },
   step2: {
@@ -206,13 +200,17 @@ const propertyObjectSchema = {
       state: Joi.string().required(),
       zip_code: Joi.string().regex(/^\d+$/).required(),
       country: Joi.string().required(),
+      real_estate_type: Joi.string().required(),
+      year_built: Joi.number().required(),
       owner_name: Joi.string().required(),
-      rooms_count: Joi.number().required(),
       beds_count: Joi.number().required(),
       baths_count: Joi.number().required(),
       standardized_land_use_type: Joi.string().required(),
       total_value: Joi.number().required(),
       area_sq_ft: Joi.number().required(),
+      lot_size: Joi.number().required(),
+      type_of_garage: Joi.string().required(),
+      number_of_stories: Joi.number().required(),
       reservedAmount: Joi.number().required(),
       discussedAmount: Joi.number().required(),
       step: Joi.number().required().valid(2),
@@ -221,6 +219,7 @@ const propertyObjectSchema = {
       make: Joi.string().required(),
       model: Joi.string().required(),
       year: Joi.date().format("YYYY").required(),
+      gearbox: Joi.string().required(),
       mileage: Joi.number().required(),
       transmission: Joi.string().required(),
       car_type: Joi.string().required(),
@@ -230,7 +229,8 @@ const propertyObjectSchema = {
       engine: Joi.string().required(),
       fuel_type: Joi.string().required(),
       condition: Joi.string().required(),
-      price: Joi.number().required(),
+      market_price: Joi.number().required(),
+      condition: Joi.string().required(),
       // property_address: Joi.string().required(),
       property_address: Joi.object({
         formatted_street_address: Joi.string().required(),
@@ -295,8 +295,10 @@ const propertyObjectSchema = {
     images: Joi.array()
       .items(
         Joi.object({
+          _id: Joi.string().optional(),
           name: Joi.string().required(),
           url: Joi.string().required(),
+          isVerified: Joi.string().optional(),
         })
       )
       .min(1)
