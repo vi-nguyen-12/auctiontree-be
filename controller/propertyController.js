@@ -231,7 +231,7 @@ const createOthers = async (req, res) => {
             model,
             year,
             mileage,
-            transmission,
+
             car_type,
             power,
             color,
@@ -246,7 +246,7 @@ const createOthers = async (req, res) => {
           details.model = model;
           details.year = year;
           details.mileage = mileage;
-          details.transmission = transmission;
+
           details.car_type = car_type;
           details.power = power;
           details.color = color;
@@ -294,7 +294,7 @@ const createOthers = async (req, res) => {
             number_of_engines,
             propeller_builder_name,
             propeller_model_designation,
-            number_of_aircraft,
+
             imported_aircraft,
             property_address,
           } = req.body;
@@ -307,7 +307,7 @@ const createOthers = async (req, res) => {
           details.number_of_engines = number_of_engines;
           details.propeller_builder_name = propeller_builder_name;
           details.propeller_model_designation = propeller_model_designation;
-          details.number_of_aircraft = number_of_aircraft;
+
           details.imported_aircraft = imported_aircraft;
           details.property_address = property_address;
         }
@@ -505,7 +505,9 @@ const editRealestate = async (req, res) => {
     // }
 
     property.type = type || property.type;
-    property.details = details || property.details;
+    property.details = property.details
+      ? { ...property.details, ...details }
+      : details;
     property.reservedAmount = reservedAmount || property.reservedAmount;
     property.discussedAmount = discussedAmount || property.discussedAmount;
     property.images = images || property.images;
@@ -612,8 +614,8 @@ const editOthers = async (req, res) => {
           make,
           model,
           year,
+          gearbox,
           mileage,
-          transmission,
           car_type,
           power,
           color,
@@ -621,14 +623,15 @@ const editOthers = async (req, res) => {
           engine,
           fuel_type,
           condition,
-          price,
+          market_price,
           property_address,
         } = req.body;
         property.details.make = make;
         property.details.model = model;
         property.details.year = year;
+        property.details.gearbox = gearbox;
         property.details.mileage = mileage;
-        property.details.transmission = transmission;
+
         property.details.car_type = car_type;
         property.details.power = power;
         property.details.color = color;
@@ -636,13 +639,14 @@ const editOthers = async (req, res) => {
         property.details.engine = engine;
         property.details.fuel_type = fuel_type;
         property.details.condition = condition;
-        property.details.price = price;
+        property.details.market_price = market_price;
         property.details.property_address = property_address;
         property.markModified("details.make");
         property.markModified("details.model");
         property.markModified("details.year");
+        property.markModified("details.gearbox");
         property.markModified("details.mileage");
-        property.markModified("details.transmission");
+
         property.markModified("details.car_type");
         property.markModified("details.power");
         property.markModified("details.color");
@@ -650,7 +654,7 @@ const editOthers = async (req, res) => {
         property.markModified("details.engine");
         property.markModified("details.fuel_type");
         property.markModified("details.condition");
-        property.markModified("details.price");
+        property.markModified("details.market_price");
         property.markModified("details.property_address");
       }
       if (property.type === "yacht") {
@@ -702,7 +706,6 @@ const editOthers = async (req, res) => {
           number_of_engines,
           propeller_builder_name,
           propeller_model_designation,
-          number_of_aircraft,
           imported_aircraft,
           property_address,
         } = req.body;
@@ -717,7 +720,7 @@ const editOthers = async (req, res) => {
         property.details.propeller_builder_name = propeller_builder_name;
         property.details.propeller_model_designation =
           propeller_model_designation;
-        property.details.number_of_aircraft = number_of_aircraft;
+
         property.details.imported_aircraft = imported_aircraft;
         property.details.property_address = property_address;
         property.markModified("details.registration_mark");
@@ -729,7 +732,7 @@ const editOthers = async (req, res) => {
         property.markModified("details.number_of_engines");
         property.markModified("details.propeller_builder_name");
         property.markModified("details.propeller_model_designation");
-        property.markModified("details.number_of_aircraft");
+
         property.markModified("details.imported_aircraft");
         property.markModified("details.property_address");
       }
@@ -755,7 +758,9 @@ const editOthers = async (req, res) => {
     // }
 
     property.type = type || property.type;
-    property.details = details || property.details;
+    property.details = property.details
+      ? { ...property.details, ...details }
+      : details;
     property.reservedAmount = reservedAmount || property.reservedAmount;
     property.discussedAmount = discussedAmount || property.discussedAmount;
     property.images = images || property.images;

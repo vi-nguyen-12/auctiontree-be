@@ -132,6 +132,7 @@ propertySchema.pre("save", function (next) {
           // "third-party_report",
           // "demographics",
           // "market_and_valuations",
+          // other_document
         ];
         break;
       case "car":
@@ -143,6 +144,8 @@ propertySchema.pre("save", function (next) {
           // "engine_details",
           // "insurance_document",
           // "valuation_report",
+          // "loan_document",
+          // other_document
         ];
         break;
       case "yacht":
@@ -155,14 +158,15 @@ propertySchema.pre("save", function (next) {
           // "vessel_insurance",
           // "vessel_marine_surveyor_report",
           // "vessel_valuation_report",
+          // other_document
         ];
         break;
       case "jet":
         requiredDocuments = [
           // "ownership_document",
           "registration_document",
-          // "title_certificate",
-          "detail_specification",
+          "title_certificate",
+          // "detail_specification",
           // "insurance_document",
           "jet_detail_history",
           "fitness_report",
@@ -170,6 +174,8 @@ propertySchema.pre("save", function (next) {
           "engine_details",
           "inspection_report",
           // "valuation_report",
+          // "loan_document",
+          // other_document
         ];
         break;
     }
