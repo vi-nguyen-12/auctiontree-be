@@ -126,6 +126,7 @@ const validateBuyer = (req, res, next) => {
             }),
             otherwise: Joi.forbidden(),
           }),
+          _id: Joi.string().optional(),
         })
       )
       .required(),
@@ -221,7 +222,6 @@ const propertyObjectSchema = {
       year: Joi.date().format("YYYY").required(),
       gearbox: Joi.string().required(),
       mileage: Joi.number().required(),
-      transmission: Joi.string().required(),
       car_type: Joi.string().required(),
       power: Joi.string().required(),
       color: Joi.string().required(),
@@ -230,7 +230,6 @@ const propertyObjectSchema = {
       fuel_type: Joi.string().required(),
       condition: Joi.string().required(),
       market_price: Joi.number().required(),
-      condition: Joi.string().required(),
       // property_address: Joi.string().required(),
       property_address: Joi.object({
         formatted_street_address: Joi.string().required(),
@@ -254,7 +253,6 @@ const propertyObjectSchema = {
       running_cost: Joi.number().required(),
       no_of_crew_required: Joi.number().required(),
       others: Joi.string().optional(),
-      // property_address: Joi.string().required(),
       property_address: Joi.object({
         formatted_street_address: Joi.string().required(),
         city: Joi.string().required(),
@@ -276,9 +274,7 @@ const propertyObjectSchema = {
       number_of_engines: Joi.number().required(),
       propeller_builder_name: Joi.string().required(),
       propeller_model_designation: Joi.string().required(),
-      number_of_aircraft: Joi.string().required(),
       imported_aircraft: Joi.boolean().required(),
-      property_address: Joi.string().required(),
       property_address: Joi.object({
         formatted_street_address: Joi.string().required(),
         city: Joi.string().required(),
@@ -307,6 +303,8 @@ const propertyObjectSchema = {
       Joi.object({
         name: Joi.string().required(),
         url: Joi.string().required(),
+        isVerified: Joi.string().optional(),
+        _id: Joi.string().optional(),
       })
     ),
     step: Joi.number().required().valid(3),
@@ -331,6 +329,8 @@ const propertyObjectSchema = {
               .required(),
             url: Joi.string().required(),
             name: Joi.string().required(),
+            isVerified: Joi.string().optional(),
+            _id: Joi.string().optional(),
           })
         )
         .required(),
@@ -355,6 +355,8 @@ const propertyObjectSchema = {
             .required(),
           name: Joi.string().required(),
           url: Joi.string().required(),
+          isVerified: Joi.string().optional(),
+          _id: Joi.string().optional(),
         })
         .required(),
       step: Joi.number().required().valid(4),
@@ -378,6 +380,8 @@ const propertyObjectSchema = {
             .required(),
           name: Joi.string().required(),
           url: Joi.string().required(),
+          isVerified: Joi.string().optional(),
+          _id: Joi.string().optional(),
         })
         .required(),
       step: Joi.number().required().valid(4),
@@ -405,6 +409,8 @@ const propertyObjectSchema = {
             .required(),
           name: Joi.string().required(),
           url: Joi.string().required(),
+          isVerified: Joi.string().optional(),
+          _id: Joi.string().optional(),
         })
         .required(),
       step: Joi.number().required().valid(4),
