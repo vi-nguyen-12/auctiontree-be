@@ -9,11 +9,6 @@ const jwt = require("jsonwebtoken");
 const docusign = require("docusign-esign");
 const AWS = require("aws-sdk");
 
-const server_url =
-  process.env.NODE_ENV === "production"
-    ? process.env.PROD_API_URL
-    : process.env.DEV_API_URL;
-
 const client_url =
   process.env.NODE_ENV === "production"
     ? process.env.PROD_CLIENT_URL
