@@ -196,7 +196,7 @@ const getAllAuctions = async (req, res) => {
       auctionEndDate: Joi.date().iso().optional(),
       // startingBid: Joi.number().min(0).optional(),
       // incrementAmount: Joi.number().min(0).optional(),
-      time: Joi.string().optional().valid("ongoing", "upcoming"),
+      time: Joi.string().optional().valid("ongoing", "upcoming", "completed"),
       isFeatured: Joi.boolean().optional(),
       isSold: Joi.boolean().optional(),
       min_price: Joi.number().optional(),
@@ -232,10 +232,10 @@ const getAllAuctions = async (req, res) => {
     });
 
     const {
-      registerStartDate,
-      registerEndDate,
-      auctionStartDate,
-      auctionEndDate,
+      // registerStartDate,
+      // registerEndDate,
+      // auctionStartDate,
+      // auctionEndDate,
       time,
       isFeatured,
       isSold,
@@ -249,6 +249,7 @@ const getAllAuctions = async (req, res) => {
       real_estate_country,
       condition,
       make,
+      model,
     } = req.query;
 
     const { error } = querySchema.validate(req.query);
@@ -259,6 +260,9 @@ const getAllAuctions = async (req, res) => {
     let auctions;
     let filter = {};
     let filterProperty = {};
+    let unset;
+    const now = new Date();
+
     if (isFeatured === "true") {
       filter.isFeatured = true;
     }
@@ -266,13 +270,22 @@ const getAllAuctions = async (req, res) => {
       filter.isFeatured = false;
     }
     if (time === "ongoing") {
-      filter.auctionStartDate;
+      filter.auctionStartDate = { $lte: now };
+      filter.auctionEndDate = { $gte: now };
+    }
+    if (time === "upcoming") {
+      filter.auctionStartDate = { $gte: now };
+    }
+    if (time === "completed") {
+      filter.auctionEndDate = { $lte: now };
     }
     if (min_price) {
       filter.startingBid = { $gt: parseInt(min_price) };
     }
     if (max_price) {
-      filter.startingBid = { $lt: parseInt(max_price) };
+      filter.startingBid = filter.startingBid
+        ? { ...filter.startingBid, $lt: parseInt(max_price) }
+        : { $lt: parseInt(max_price) };
     }
     if (type) {
       filterProperty["property.type"] = type;
@@ -300,7 +313,12 @@ const getAllAuctions = async (req, res) => {
     if (condition) {
       filterProperty["property.details.condition"] = condition;
     }
-
+    if (make) {
+      filterProperty["property.details.make"] = make;
+    }
+    if (model) {
+      filterProperty["property.details.model"] = model;
+    }
     if (req.admin?.roles.includes("auction_read")) {
       auctions = await Auction.find(filter).populate({
         path: "property",
@@ -355,7 +373,12 @@ const getAllAuctions = async (req, res) => {
       },
       { $unwind: { path: "$property" } },
       { $match: filterProperty },
-      { $unset: ["incrementAmount", "winner", "bids"] },
+      {
+        $unset:
+          time === "completed"
+            ? ["incrementAmount", "bids"]
+            : ["incrementAmount", "winner", "bids"],
+      },
     ]);
 
     return res.status(200).send(auctions);
