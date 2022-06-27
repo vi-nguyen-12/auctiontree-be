@@ -172,7 +172,7 @@ const editAuction = async (req, res) => {
 };
 
 //@desc  Delete an auction
-//@route DELETE api/auctions/:id
+//@route DELETE api/auctions/:id   //should check this, how about related seller and buyer info
 const deleteAuction = async (req, res) => {
   try {
     if (req.admin && req.admin.roles.includes("auction_delete")) {
@@ -186,7 +186,7 @@ const deleteAuction = async (req, res) => {
 };
 
 //@desc  Get all auctions
-//@route GET /api/auctions?isFeatured=... & isSold=
+//@route GET /api/auctions?isFeatured=..& isSold=..& time=... type=... &real_estate_type=...&min_price=...&max_price=...&condition=..
 const getAllAuctions = async (req, res) => {
   try {
     const querySchema = Joi.object({
@@ -194,11 +194,62 @@ const getAllAuctions = async (req, res) => {
       registerEndDate: Joi.date().iso().optional(),
       auctionStartDate: Joi.date().iso().optional(),
       auctionEndDate: Joi.date().iso().optional(),
-      startingBid: Joi.number().min(0).optional(),
-      incrementAmount: Joi.number().min(0).optional(),
+      // startingBid: Joi.number().min(0).optional(),
+      // incrementAmount: Joi.number().min(0).optional(),
+      time: Joi.string().optional().valid("ongoing", "upcoming"),
       isFeatured: Joi.boolean().optional(),
       isSold: Joi.boolean().optional(),
+      min_price: Joi.number().optional(),
+      max_price: Joi.number().optional(),
+      type: Joi.string().optional(),
+      real_estate_type: Joi.string()
+        .optional()
+        .valid(
+          "house",
+          "villa",
+          "estate",
+          "country_house",
+          "finca",
+          "chalet",
+          "townhouse",
+          "bungalow",
+          "apartment",
+          "penhouse",
+          "condo",
+          "co_op",
+          "land",
+          "castle",
+          "chateau",
+          "farm_ranch",
+          "private_island"
+        ),
+      real_estate_zip_code: Joi.string().optional(),
+      real_estate_city: Joi.string().optional(),
+      real_estate_state: Joi.string().optional(),
+      real_estate_country: Joi.string().optional(),
+      condition: Joi.string().optional().valid("used", "new"),
+      make: Joi.string().optional(),
     });
+
+    const {
+      registerStartDate,
+      registerEndDate,
+      auctionStartDate,
+      auctionEndDate,
+      time,
+      isFeatured,
+      isSold,
+      min_price,
+      max_price,
+      type,
+      real_estate_type,
+      real_estate_zip_code,
+      real_estate_city,
+      real_estate_state,
+      real_estate_country,
+      condition,
+      make,
+    } = req.query;
 
     const { error } = querySchema.validate(req.query);
     if (error) {
@@ -207,11 +258,47 @@ const getAllAuctions = async (req, res) => {
 
     let auctions;
     let filter = {};
-    if (req.query.isFeatured === "true") {
+    let filterProperty = {};
+    if (isFeatured === "true") {
       filter.isFeatured = true;
     }
-    if (req.query.isFeatured === "false") {
+    if (isFeatured === "false") {
       filter.isFeatured = false;
+    }
+    if (time === "ongoing") {
+      filter.auctionStartDate;
+    }
+    if (min_price) {
+      filter.startingBid = { $gt: parseInt(min_price) };
+    }
+    if (max_price) {
+      filter.startingBid = { $lt: parseInt(max_price) };
+    }
+    if (type) {
+      filterProperty["property.type"] = type;
+    }
+    if (real_estate_type) {
+      filterProperty["property.details.real_estate_type"] = real_estate_type;
+    }
+    if (real_estate_zip_code) {
+      filterProperty["property.details.property_address.zip_code"] =
+        real_estate_zip_code;
+    }
+    if (real_estate_city) {
+      filterProperty["property.details.property_address.city"] =
+        real_estate_city;
+    }
+    if (real_estate_state) {
+      filterProperty["property.details.property_address.city"] =
+        real_estate_city;
+    }
+    if (real_estate_country) {
+      filterProperty["property.details.property_address.country"] =
+        real_estate_country;
+    }
+
+    if (condition) {
+      filterProperty["property.details.condition"] = condition;
     }
 
     if (req.admin?.roles.includes("auction_read")) {
@@ -220,9 +307,9 @@ const getAllAuctions = async (req, res) => {
         select:
           "type createdBy details.owner_name details.property_address images.url",
         populate: { path: "createdBy", select: "userName" },
-      });
+      }); //should add filter by property as well.
 
-      if (req.query.isSold === "true") {
+      if (isSold === "true") {
         auctions = auctions.filter((auction) => {
           return auction.winner.userId;
         });
@@ -245,9 +332,32 @@ const getAllAuctions = async (req, res) => {
       }
       return res.status(200).send(auctions);
     }
-    auctions = await Auction.find(filter)
-      .populate("property", "type details images")
-      .select("-incrementAmount -winner -bids");
+
+    auctions = await Auction.aggregate([
+      { $match: filter },
+      {
+        $lookup: {
+          from: "properties",
+          localField: "property",
+          foreignField: "_id",
+          as: "property",
+          pipeline: [
+            {
+              $project: {
+                _id: "$_id",
+                type: "$type",
+                details: "$details",
+                images: "$images",
+              },
+            },
+          ],
+        },
+      },
+      { $unwind: { path: "$property" } },
+      { $match: filterProperty },
+      { $unset: ["incrementAmount", "winner", "bids"] },
+    ]);
+
     return res.status(200).send(auctions);
   } catch (err) {
     res.status(500).send(err);
@@ -260,7 +370,7 @@ const getAllAuctions = async (req, res) => {
 const getAuction = async (req, res) => {
   try {
     const url = req.originalUrl;
-    let auction, result;
+    let auction;
 
     let filter = {};
     if (!url.includes("propertyId")) {
