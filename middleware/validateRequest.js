@@ -201,7 +201,27 @@ const propertyObjectSchema = {
       state: Joi.string().required(),
       zip_code: Joi.string().required(),
       country: Joi.string().required(),
-      real_estate_type: Joi.string().required(),
+      real_estate_type: Joi.string()
+        .required()
+        .valid(
+          "house",
+          "villa",
+          "estate",
+          "country_house",
+          "finca",
+          "chalet",
+          "townhouse",
+          "bungalow",
+          "apartment",
+          "penhouse",
+          "condo",
+          "co_op",
+          "land",
+          "castle",
+          "chateau",
+          "farm_ranch",
+          "private_island"
+        ),
       year_built: Joi.number().required(),
       owner_name: Joi.string().required(),
       beds_count: Joi.number().required(),
@@ -218,6 +238,23 @@ const propertyObjectSchema = {
     },
     car: {
       make: Joi.string().required(),
+      // .valid(
+      //   "ferrari",
+      //   "aston_martin",
+      //   "rolls_royce",
+      //   "bugatti",
+      //   "pagani",
+      //   "koenig",
+      //   "lamborghini",
+      //   "w_motors",
+      //   "mercedes",
+      //   "mc_laren_elva",
+      //   "zenvo",
+      //   "bentley",
+      //   "gordon_murray",
+      //   "czinger",
+      //   "mazzanti"
+      // )
       model: Joi.string().required(),
       year: Joi.date().format("YYYY").required(),
       gearbox: Joi.string().required(),
@@ -228,7 +265,7 @@ const propertyObjectSchema = {
       VIN: Joi.string().required(),
       engine: Joi.string().required(),
       fuel_type: Joi.string().required(),
-      condition: Joi.string().required(),
+      condition: Joi.string().required().valid("used,new"),
       market_price: Joi.number().required(),
       // property_address: Joi.string().required(),
       property_address: Joi.object({
