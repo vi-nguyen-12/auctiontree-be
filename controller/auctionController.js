@@ -187,6 +187,7 @@ const deleteAuction = async (req, res) => {
 
 //@desc  Get all auctions
 //@route GET /api/auctions?isFeatured=..& isSold=..& time=... type=... &real_estate_type=...&min_price=...&max_price=...&condition=..
+// &min_mileage=.. & max_mileage=..
 const getAllAuctions = async (req, res) => {
   try {
     const querySchema = Joi.object({
@@ -229,6 +230,9 @@ const getAllAuctions = async (req, res) => {
       real_estate_country: Joi.string().optional(),
       condition: Joi.string().optional().valid("used", "new"),
       make: Joi.string().optional(),
+      model: Joi.string().optional(),
+      min_mileage: Joi.number().optional(),
+      max_mileage: Joi.number().optional(),
     });
 
     const {
@@ -250,6 +254,8 @@ const getAllAuctions = async (req, res) => {
       condition,
       make,
       model,
+      min_mileage,
+      max_mileage,
     } = req.query;
 
     const { error } = querySchema.validate(req.query);
@@ -260,7 +266,6 @@ const getAllAuctions = async (req, res) => {
     let auctions;
     let filter = {};
     let filterProperty = {};
-    let unset;
     const now = new Date();
 
     if (isFeatured === "true") {
@@ -302,8 +307,8 @@ const getAllAuctions = async (req, res) => {
         real_estate_city;
     }
     if (real_estate_state) {
-      filterProperty["property.details.property_address.city"] =
-        real_estate_city;
+      filterProperty["property.details.property_address.state"] =
+        real_estate_state;
     }
     if (real_estate_country) {
       filterProperty["property.details.property_address.country"] =
@@ -319,6 +324,22 @@ const getAllAuctions = async (req, res) => {
     if (model) {
       filterProperty["property.details.model"] = model;
     }
+    if (min_mileage) {
+      filterProperty["property.details.mileage"] = {
+        $gte: parseInt(min_mileage),
+      };
+    }
+    if (max_mileage) {
+      filterProperty["property.details.mileage"] = filterProperty[
+        "property.details.mileage"
+      ]
+        ? {
+            ...filterProperty["property.details.mileage"],
+            $lte: parseInt(max_mileage),
+          }
+        : { $lte: parseInt(max_mileage) };
+    }
+    console.log(filterProperty);
     if (req.admin?.roles.includes("auction_read")) {
       auctions = await Auction.find(filter).populate({
         path: "property",

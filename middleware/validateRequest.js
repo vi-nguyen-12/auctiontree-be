@@ -201,6 +201,8 @@ const propertyObjectSchema = {
       state: Joi.string().required(),
       zip_code: Joi.string().required(),
       country: Joi.string().required(),
+      lat: Joi.number().required(),
+      lng: Joi.number().required(),
       real_estate_type: Joi.string()
         .required()
         .valid(
@@ -213,7 +215,7 @@ const propertyObjectSchema = {
           "townhouse",
           "bungalow",
           "apartment",
-          "penhouse",
+          "penthouse",
           "condo",
           "co_op",
           "land",
@@ -226,7 +228,6 @@ const propertyObjectSchema = {
       owner_name: Joi.string().required(),
       beds_count: Joi.number().required(),
       baths_count: Joi.number().required(),
-      standardized_land_use_type: Joi.string().required(),
       total_value: Joi.number().required(),
       area_sq_ft: Joi.number().required(),
       lot_size: Joi.number().required(),
@@ -265,7 +266,7 @@ const propertyObjectSchema = {
       VIN: Joi.string().required(),
       engine: Joi.string().required(),
       fuel_type: Joi.string().required(),
-      condition: Joi.string().required().valid("used,new"),
+      condition: Joi.string().required().valid("used", "new"),
       market_price: Joi.number().required(),
       // property_address: Joi.string().required(),
       property_address: Joi.object({

@@ -41,7 +41,6 @@ const createRealestate = async (req, res) => {
       owner_name,
       beds_count,
       baths_count,
-      standardized_land_use_type,
       total_value,
       area_sq_ft,
       lot_size,
@@ -127,7 +126,7 @@ const createRealestate = async (req, res) => {
       }
       details.real_estate_type = real_estate_type;
       details.year_built = year_built;
-      details.parcel.standardized_land_use_type = standardized_land_use_type;
+
       details.parcel.area_sq_ft = area_sq_ft;
       details.parcel.lot_size = lot_size;
       details.type_of_garage = type_of_garage;
@@ -357,7 +356,6 @@ const editRealestate = async (req, res) => {
       owner_name,
       beds_count,
       baths_count,
-      standardized_land_use_type,
       total_value,
       area_sq_ft,
       lot_size,
@@ -458,7 +456,6 @@ const editRealestate = async (req, res) => {
         property.details.real_estate_type = real_estate_type;
         property.details.year_built = year_built;
         property.details.parcel = {
-          standardized_land_use_type,
           area_sq_ft,
           lot_size,
         };
