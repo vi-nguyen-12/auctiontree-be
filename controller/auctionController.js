@@ -224,10 +224,10 @@ const getAllAuctions = async (req, res) => {
           "farm_ranch",
           "private_island"
         ),
-      real_estate_zip_code: Joi.string().optional(),
-      real_estate_city: Joi.string().optional(),
-      real_estate_state: Joi.string().optional(),
-      real_estate_country: Joi.string().optional(),
+      property_zip_code: Joi.string().optional(),
+      property_city: Joi.string().optional(),
+      property_state: Joi.string().optional(),
+      property_country: Joi.string().optional(),
       condition: Joi.string().optional().valid("used", "new"),
       make: Joi.string().optional(),
       model: Joi.string().optional(),
@@ -247,10 +247,10 @@ const getAllAuctions = async (req, res) => {
       max_price,
       type,
       real_estate_type,
-      real_estate_zip_code,
-      real_estate_city,
-      real_estate_state,
-      real_estate_country,
+      property_zip_code,
+      property_city,
+      property_state,
+      property_country,
       condition,
       make,
       model,
@@ -298,21 +298,20 @@ const getAllAuctions = async (req, res) => {
     if (real_estate_type) {
       filterProperty["property.details.real_estate_type"] = real_estate_type;
     }
-    if (real_estate_zip_code) {
+    if (property_zip_code) {
       filterProperty["property.details.property_address.zip_code"] =
-        real_estate_zip_code;
+        property_zip_code;
     }
-    if (real_estate_city) {
-      filterProperty["property.details.property_address.city"] =
-        real_estate_city;
+    if (property_city) {
+      filterProperty["property.details.property_address.city"] = property_city;
     }
-    if (real_estate_state) {
+    if (property_state) {
       filterProperty["property.details.property_address.state"] =
-        real_estate_state;
+        property_state;
     }
-    if (real_estate_country) {
+    if (property_country) {
       filterProperty["property.details.property_address.country"] =
-        real_estate_country;
+        property_country;
     }
 
     if (condition) {

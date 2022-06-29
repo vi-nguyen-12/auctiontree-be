@@ -4,22 +4,25 @@ const Document = require("../model/Document");
 //@route POST /api/documents body {name, officialName, url}
 const createDocument = async (req, res) => {
   try {
-    const { name, officialName, url } = req.body;
-    const docType = url.split(".").pop();
-    if (
-      (officialName === "buying_agreement" ||
-        officialName === "selling_agreement") &&
-      docType !== "docx"
-    ) {
-      return res.status(200).send({ error: "Only docx files are allowed" });
+    const { name, officialName, url, htmlText } = req.body;
+    if (name && url) {
+      const docType = url.split(".").pop();
+      if (
+        (officialName === "buying_agreement" ||
+          officialName === "selling_agreement") &&
+        docType !== "docx"
+      ) {
+        return res.status(200).send({ error: "Only docx files are allowed" });
+      }
     }
+
     const isDocumentExist = await Document.findOne({ officialName });
     if (isDocumentExist) {
       return res
         .status(200)
         .send({ error: `Document ${officialName} already exists` });
     }
-    const document = new Document({ name, officialName, url });
+    const document = new Document({ name, officialName, url, htmlText });
     const newDocument = await document.save();
     res.status(200).send(newDocument);
   } catch (err) {
@@ -32,7 +35,7 @@ const createDocument = async (req, res) => {
 
 const editDocument = async (req, res) => {
   try {
-    const { name, officialName, url } = req.body;
+    const { name, officialName, url, htmlText } = req.body;
     const docType = url.split(".").pop();
     if (
       (officialName === "buying_agreement" ||
@@ -43,10 +46,9 @@ const editDocument = async (req, res) => {
     }
     const newDocument = await Document.findByIdAndUpdate(
       req.params.id,
-      { name, officialName, url },
+      { name, officialName, url, htmlText },
       { new: true }
     );
-    console.log(newDocument);
     res.status(200).send(newDocument);
   } catch (err) {
     res.status(500).send(err.message);
