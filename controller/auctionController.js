@@ -338,7 +338,7 @@ const getAllAuctions = async (req, res) => {
           }
         : { $lte: parseInt(max_mileage) };
     }
-    console.log(filterProperty);
+
     if (req.admin?.roles.includes("auction_read")) {
       auctions = await Auction.find(filter).populate({
         path: "property",
