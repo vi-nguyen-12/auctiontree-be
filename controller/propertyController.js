@@ -271,6 +271,7 @@ const createOthers = async (req, res) => {
             engine_deck_type,
             running_cost,
             no_of_crew_required,
+            length,
             others,
             property_address,
           } = req.body;
@@ -283,6 +284,7 @@ const createOthers = async (req, res) => {
           details.engine_deck_type = engine_deck_type;
           details.running_cost = running_cost;
           details.no_of_crew_required = no_of_crew_required;
+          details.length = length;
           details.others = others;
           details.property_address = property_address;
         }
@@ -297,8 +299,8 @@ const createOthers = async (req, res) => {
             number_of_engines,
             propeller_builder_name,
             propeller_model_designation,
-
             imported_aircraft,
+            year_built,
             property_address,
           } = req.body;
           details.registration_mark = registration_mark;
@@ -310,8 +312,8 @@ const createOthers = async (req, res) => {
           details.number_of_engines = number_of_engines;
           details.propeller_builder_name = propeller_builder_name;
           details.propeller_model_designation = propeller_model_designation;
-
           details.imported_aircraft = imported_aircraft;
+          details.year_built = year_built;
           details.property_address = property_address;
         }
       }
@@ -636,7 +638,6 @@ const editOthers = async (req, res) => {
         property.details.year = year;
         property.details.gearbox = gearbox;
         property.details.mileage = mileage;
-
         property.details.car_type = car_type;
         property.details.power = power;
         property.details.color = color;
@@ -651,7 +652,6 @@ const editOthers = async (req, res) => {
         property.markModified("details.year");
         property.markModified("details.gearbox");
         property.markModified("details.mileage");
-
         property.markModified("details.car_type");
         property.markModified("details.power");
         property.markModified("details.color");
@@ -673,6 +673,7 @@ const editOthers = async (req, res) => {
           engine_deck_type,
           running_cost,
           no_of_crew_required,
+          length,
           others,
           property_address,
         } = req.body;
@@ -686,6 +687,7 @@ const editOthers = async (req, res) => {
         property.details.engine_deck_type = engine_deck_type;
         property.details.running_cost = running_cost;
         property.details.no_of_crew_required = no_of_crew_required;
+        property.details.length = length;
         property.details.others = others;
         property.details.property_address = property_address;
         property.markModified("details.vessel_registration_number");
@@ -697,10 +699,10 @@ const editOthers = async (req, res) => {
         property.markModified("details.engine_deck_type");
         property.markModified("details.running_cost");
         property.markModified("details.no_of_crew_required");
+        property.markModified("details.length");
         property.markModified("details.property_address");
       }
       if (property.type === "jet") {
-        console.log("vo day");
         let {
           registration_mark,
           aircraft_builder_name,
@@ -712,6 +714,7 @@ const editOthers = async (req, res) => {
           propeller_builder_name,
           propeller_model_designation,
           imported_aircraft,
+          year_built,
           property_address,
         } = req.body;
         property.details.registration_mark = registration_mark;
@@ -727,6 +730,7 @@ const editOthers = async (req, res) => {
           propeller_model_designation;
 
         property.details.imported_aircraft = imported_aircraft;
+        property.details.year_built = year_built;
         property.details.property_address = property_address;
         property.markModified("details.registration_mark");
         property.markModified("details.aircraft_builder_name");
@@ -737,8 +741,8 @@ const editOthers = async (req, res) => {
         property.markModified("details.number_of_engines");
         property.markModified("details.propeller_builder_name");
         property.markModified("details.propeller_model_designation");
-
         property.markModified("details.imported_aircraft");
+        property.markModified("details.year_built");
         property.markModified("details.property_address");
       }
     }

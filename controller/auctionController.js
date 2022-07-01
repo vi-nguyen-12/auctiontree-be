@@ -233,6 +233,8 @@ const getAllAuctions = async (req, res) => {
       model: Joi.string().optional(),
       min_mileage: Joi.number().optional(),
       max_mileage: Joi.number().optional(),
+      manufacture_name: Joi.string().optional(),
+      length: Joi.number().optional(),
     });
 
     const {
@@ -256,6 +258,11 @@ const getAllAuctions = async (req, res) => {
       model,
       min_mileage,
       max_mileage,
+      manufacture_name,
+      min_length,
+      max_length,
+      aircraft_builder_name,
+      year_built,
     } = req.query;
 
     const { error } = querySchema.validate(req.query);
@@ -337,6 +344,26 @@ const getAllAuctions = async (req, res) => {
             $lte: parseInt(max_mileage),
           }
         : { $lte: parseInt(max_mileage) };
+    }
+    if (manufacture_name) {
+      filterProperty["property.details.manufacture_name"] = manufacture_name;
+    }
+    if (min_length) {
+      filterProperty["property.details.length"] = {
+        $gte: parseInt(min_length),
+      };
+    }
+    if (max_length) {
+      filterProperty["property.details.length"] = {
+        $gte: parseInt(max_length),
+      };
+    }
+    if (aircraft_builder_name) {
+      filterProperty["property.details.aircraft_builder_name"] =
+        aircraft_builder_name;
+    }
+    if (year_built) {
+      filterProperty["property.details.year_built"] = year_built;
     }
 
     if (req.admin?.roles.includes("auction_read")) {
