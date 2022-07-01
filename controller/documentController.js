@@ -36,6 +36,7 @@ const createDocument = async (req, res) => {
 const editDocument = async (req, res) => {
   try {
     const { name, officialName, url, htmlText } = req.body;
+    console.log(req.body);
     const docType = url.split(".").pop();
     if (
       (officialName === "buying_agreement" ||

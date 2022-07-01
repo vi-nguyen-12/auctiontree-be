@@ -36,6 +36,8 @@ const createRealestate = async (req, res) => {
       state,
       zip_code,
       country,
+      lat,
+      lng,
       real_estate_type,
       year_built,
       owner_name,
@@ -117,6 +119,8 @@ const createRealestate = async (req, res) => {
         details.property_address.city = city;
         details.property_address.state = state;
         details.property_address.zip_code = zip_code;
+        details.property_address.lat = lat;
+        details.property_address.lng = lng;
       }
       details.property_address.country = country;
       if (!response) {
@@ -351,6 +355,8 @@ const editRealestate = async (req, res) => {
       state,
       zip_code,
       country,
+      lat,
+      lng,
       real_estate_type,
       year_built,
       owner_name,
@@ -452,6 +458,8 @@ const editRealestate = async (req, res) => {
           state,
           zip_code,
           country,
+          lat,
+          lng,
         };
         property.details.real_estate_type = real_estate_type;
         property.details.year_built = year_built;
