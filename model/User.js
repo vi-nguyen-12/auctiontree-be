@@ -32,18 +32,22 @@ const userSchema = new mongoose.Schema({
   agent: {
     licenseNumber: { type: String, trim: true },
     licenseDocument: {
-      name: {
-        type: String,
-        required: function () {
-          return this.licenseNumber?.length > 0;
+      type: [
+        {
+          name: {
+            type: String,
+            required: function () {
+              return this.licenseNumber?.length > 0;
+            },
+          },
+          url: {
+            type: String,
+            required: function () {
+              return this.licenseNumber?.length > 0;
+            },
+          },
         },
-      },
-      url: {
-        type: String,
-        required: function () {
-          return this.licenseNumber?.length > 0;
-        },
-      },
+      ],
     },
   },
   secret: { type: Object },

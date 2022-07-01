@@ -20,10 +20,15 @@ const validateUser = (req, res, next) => {
       licenseDocument: Joi.when("licenseNumber", {
         is: Joi.any().valid(null, ""),
         then: Joi.valid(null, "").optional(),
-        otherwise: Joi.object({
-          name: Joi.string().required(),
-          url: Joi.string().required(),
-        }).required(),
+        otherwise: Joi.array()
+          .items(
+            Joi.object({
+              name: Joi.string().required(),
+              url: Joi.string().required(),
+            })
+          )
+          .min(1)
+          .required(),
       }),
     }),
     profileImage: Joi.string(),
@@ -268,13 +273,14 @@ const propertyObjectSchema = {
       fuel_type: Joi.string().required(),
       condition: Joi.string().required().valid("used", "new"),
       market_price: Joi.number().required(),
-      // property_address: Joi.string().required(),
       property_address: Joi.object({
         formatted_street_address: Joi.string().required(),
         city: Joi.string().required(),
         state: Joi.string().required(),
         zip_code: Joi.string().required(),
         country: Joi.string().required(),
+        lat: Joi.number().required(),
+        lng: Joi.number().required(),
       }).required(),
       reservedAmount: Joi.number().required(),
       discussedAmount: Joi.number().required(),
@@ -290,6 +296,7 @@ const propertyObjectSchema = {
       engine_deck_type: Joi.string().required(),
       running_cost: Joi.number().required(),
       no_of_crew_required: Joi.number().required(),
+      length: Joi.number().required(),
       others: Joi.string().optional(),
       property_address: Joi.object({
         formatted_street_address: Joi.string().required(),
@@ -297,6 +304,8 @@ const propertyObjectSchema = {
         state: Joi.string().required(),
         zip_code: Joi.string().required(),
         country: Joi.string().required(),
+        lat: Joi.number().required(),
+        lng: Joi.number().required(),
       }).required(),
       reservedAmount: Joi.number().required(),
       discussedAmount: Joi.number().required(),
@@ -313,12 +322,15 @@ const propertyObjectSchema = {
       propeller_builder_name: Joi.string().required(),
       propeller_model_designation: Joi.string().required(),
       imported_aircraft: Joi.boolean().required(),
+      year_built: Joi.date().format("YYYY").required(),
       property_address: Joi.object({
         formatted_street_address: Joi.string().required(),
         city: Joi.string().required(),
         state: Joi.string().required(),
         zip_code: Joi.string().required(),
         country: Joi.string().required(),
+        lat: Joi.number().required(),
+        lng: Joi.number().required(),
       }).required(),
       reservedAmount: Joi.number().required(),
       discussedAmount: Joi.number().required(),
