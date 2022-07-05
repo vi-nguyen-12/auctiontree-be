@@ -238,6 +238,12 @@ const propertyObjectSchema = {
       lot_size: Joi.number().required(),
       type_of_garage: Joi.string().required(),
       number_of_stories: Joi.number().required(),
+      description: Joi.object({
+        summary: Joi.string().required(),
+        investment: Joi.string().required(),
+        location: Joi.string().required(),
+        market: Joi.string().required(),
+      }).required(),
       reservedAmount: Joi.number().required(),
       discussedAmount: Joi.number().required(),
       step: Joi.number().required().valid(2),
@@ -273,6 +279,12 @@ const propertyObjectSchema = {
       fuel_type: Joi.string().required(),
       condition: Joi.string().required().valid("used", "new"),
       market_price: Joi.number().required(),
+      description: Joi.object({
+        summary: Joi.string().required(),
+        investment: Joi.string().required(),
+        location: Joi.string().required(),
+        market: Joi.string().required(),
+      }).required(),
       property_address: Joi.object({
         formatted_street_address: Joi.string().required(),
         city: Joi.string().required(),
@@ -298,6 +310,12 @@ const propertyObjectSchema = {
       no_of_crew_required: Joi.number().required(),
       length: Joi.number().required(),
       others: Joi.string().optional(),
+      description: Joi.object({
+        summary: Joi.string().required(),
+        investment: Joi.string().required(),
+        location: Joi.string().required(),
+        market: Joi.string().required(),
+      }).required(),
       property_address: Joi.object({
         formatted_street_address: Joi.string().required(),
         city: Joi.string().required(),
@@ -323,6 +341,12 @@ const propertyObjectSchema = {
       propeller_model_designation: Joi.string().required(),
       imported_aircraft: Joi.boolean().required(),
       year_built: Joi.date().format("YYYY").required(),
+      description: Joi.object({
+        summary: Joi.string().required(),
+        investment: Joi.string().required(),
+        location: Joi.string().required(),
+        market: Joi.string().required(),
+      }).required(),
       property_address: Joi.object({
         formatted_street_address: Joi.string().required(),
         city: Joi.string().required(),
