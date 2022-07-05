@@ -48,6 +48,7 @@ const createRealestate = async (req, res) => {
       lot_size,
       type_of_garage,
       number_of_stories,
+      description,
       reservedAmount,
       discussedAmount,
       images,
@@ -135,6 +136,7 @@ const createRealestate = async (req, res) => {
       details.parcel.lot_size = lot_size;
       details.type_of_garage = type_of_garage;
       details.number_of_stories = number_of_stories;
+      details.description = description;
       details.structure.beds_count = beds_count;
       details.structure.baths = baths_count;
       details.owner.name = owner_name;
@@ -271,6 +273,7 @@ const createOthers = async (req, res) => {
             engine_deck_type,
             running_cost,
             no_of_crew_required,
+            description,
             length,
             others,
             property_address,
@@ -284,6 +287,7 @@ const createOthers = async (req, res) => {
           details.engine_deck_type = engine_deck_type;
           details.running_cost = running_cost;
           details.no_of_crew_required = no_of_crew_required;
+          details.description = description;
           details.length = length;
           details.others = others;
           details.property_address = property_address;
@@ -300,6 +304,7 @@ const createOthers = async (req, res) => {
             propeller_builder_name,
             propeller_model_designation,
             imported_aircraft,
+            description,
             year_built,
             property_address,
           } = req.body;
@@ -313,6 +318,7 @@ const createOthers = async (req, res) => {
           details.propeller_builder_name = propeller_builder_name;
           details.propeller_model_designation = propeller_model_designation;
           details.imported_aircraft = imported_aircraft;
+          details.description = description;
           details.year_built = year_built;
           details.property_address = property_address;
         }
@@ -369,6 +375,7 @@ const editRealestate = async (req, res) => {
       lot_size,
       type_of_garage,
       number_of_stories,
+      description,
       reservedAmount,
       discussedAmount,
       images,
@@ -481,7 +488,7 @@ const editRealestate = async (req, res) => {
         ];
         property.details.type_of_garage = type_of_garage;
         property.details.number_of_stories = number_of_stories;
-
+        property.details.description = description;
         property.markModified("details.property_address");
         property.markModified("details.real_estate_type");
         property.markModified("details.year_built");
@@ -491,6 +498,7 @@ const editRealestate = async (req, res) => {
         property.markModified("details.market_assessments");
         property.markModified("details.type_of_garage");
         property.markModified("details.number_of_stories");
+        property.markModified("details.description");
       }
     }
     //if edit step 4, keep listing_agreement from step 1 ((if it exists)), if document is already verified, keep its status;
@@ -631,6 +639,7 @@ const editOthers = async (req, res) => {
           fuel_type,
           condition,
           market_price,
+          description,
           property_address,
         } = req.body;
         property.details.make = make;
@@ -646,6 +655,7 @@ const editOthers = async (req, res) => {
         property.details.fuel_type = fuel_type;
         property.details.condition = condition;
         property.details.market_price = market_price;
+        property.details.description = description;
         property.details.property_address = property_address;
         property.markModified("details.make");
         property.markModified("details.model");
@@ -660,6 +670,7 @@ const editOthers = async (req, res) => {
         property.markModified("details.fuel_type");
         property.markModified("details.condition");
         property.markModified("details.market_price");
+        property.markModified("details.description");
         property.markModified("details.property_address");
       }
       if (property.type === "yacht") {
@@ -673,6 +684,7 @@ const editOthers = async (req, res) => {
           engine_deck_type,
           running_cost,
           no_of_crew_required,
+          description,
           length,
           others,
           property_address,
@@ -687,6 +699,7 @@ const editOthers = async (req, res) => {
         property.details.engine_deck_type = engine_deck_type;
         property.details.running_cost = running_cost;
         property.details.no_of_crew_required = no_of_crew_required;
+        property.details.description = description;
         property.details.length = length;
         property.details.others = others;
         property.details.property_address = property_address;
@@ -699,6 +712,7 @@ const editOthers = async (req, res) => {
         property.markModified("details.engine_deck_type");
         property.markModified("details.running_cost");
         property.markModified("details.no_of_crew_required");
+        property.markModified("details.description");
         property.markModified("details.length");
         property.markModified("details.property_address");
       }
@@ -714,6 +728,7 @@ const editOthers = async (req, res) => {
           propeller_builder_name,
           propeller_model_designation,
           imported_aircraft,
+          description,
           year_built,
           property_address,
         } = req.body;
@@ -730,6 +745,7 @@ const editOthers = async (req, res) => {
           propeller_model_designation;
 
         property.details.imported_aircraft = imported_aircraft;
+        property.details.description = description;
         property.details.year_built = year_built;
         property.details.property_address = property_address;
         property.markModified("details.registration_mark");
@@ -742,6 +758,7 @@ const editOthers = async (req, res) => {
         property.markModified("details.propeller_builder_name");
         property.markModified("details.propeller_model_designation");
         property.markModified("details.imported_aircraft");
+        property.markModified("details.description");
         property.markModified("details.year_built");
         property.markModified("details.property_address");
       }
