@@ -311,7 +311,7 @@ const resetForgotPassword = async (req, res) => {
       });
       return res.status(200).send({ message: "Reset link sent successfully" });
     }
-    if (token & password) {
+    if (token && password) {
       const user = await User.findOne({ temp_token: token });
       if (!user) {
         return res.status(200).send({
