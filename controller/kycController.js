@@ -81,7 +81,7 @@ const callback = async (req, res) => {
       );
       let email = user.email;
       sendEmail({
-        email,
+        to: email,
         subject: "Auction3- KYC approved",
         text: "Thank you for completing KYC. Your ID is successfuly approved",
       });

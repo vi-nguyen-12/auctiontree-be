@@ -52,7 +52,7 @@ const remindPendingProperties = async () => {
       This is a reminder you have one property which is pending for more than 15 days. It will be deleted after 30 days.
       Please check your property and update the status.
       `;
-      sendEmail({ email, subject, text });
+      sendEmail({ to: email, subject, text });
     }
   } catch (err) {
     console.log(err);
@@ -185,7 +185,7 @@ const remindUpcomingAuction = async () => {
           let emailList = auction.buyers.map((buyer) => buyer.email);
           emailList.push(auction.property.createdBy.email);
           sendEmail({
-            email: emailList,
+            to: emailList,
             subject: "Reminder: Auction Starts in 24 hours",
             content: `Hi ,\n\nThis is a reminder that your auction for ${
               auction.property.address

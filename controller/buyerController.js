@@ -78,7 +78,7 @@ const createBuyer = async (req, res) => {
       answers,
     };
     sendEmail({
-      email: user.email,
+      to: user.email,
       subject: "Auction3- Register to bid",
       text: `Thank you for registering to bid for a ${property.type}. Your bidder ID is ${savedBuyer._id}. Your registration will be reviewed`,
     });
@@ -123,7 +123,7 @@ const editBuyer = async (req, res) => {
       documents: savedBuyer.documents,
     };
     sendEmail({
-      email: buyer.userId.email,
+      to: buyer.userId.email,
       subject: "Auction3- Request to change funding",
       text: `Your request for changing funding has been sent to the admin`,
     });
@@ -174,10 +174,10 @@ const approveBuyer = async (req, res) => {
         let previousFund = buyer.approvedFund || 0;
         buyer.approvedFund = approvedFund;
         const user = await User.findOne({ _id: buyer.userId });
-        user.wallet = user.wallet - previousFund + approvedFund;
+        user.wallet = user.wallet + -previousFund + approvedFund;
         await user.save();
         sendEmail({
-          email: buyer.userId.email,
+          to: buyer.userId.email,
           subject: "Auction3- Buyer Application Approved",
           text: `Congratulation, your application application is approved with $${approvedFund} in your wallet. This amount is available for your bidding.`,
         });
@@ -189,7 +189,7 @@ const approveBuyer = async (req, res) => {
             .send({ error: "Please specify reason for reject" });
         }
         sendEmail({
-          email: buyer.userId.email,
+          to: buyer.userId.email,
           subject: "Auction3- Buyer Application Rejected",
           text: `Your application application is rejected. The reason is $${rejectedReason}`,
         });
@@ -242,6 +242,9 @@ const verifyDocument = async (req, res) => {
       const document = buyer.documents.id(documentId);
       if (!document) {
         return res.status(200).send({ error: "Document not found" });
+      }
+      if (document.isVerified != "success" && buyer.isApproved == "success") {
+        buyer.isApproved = "pending";
       }
       document.isVerified = status;
       const savedDocument = await document.save();

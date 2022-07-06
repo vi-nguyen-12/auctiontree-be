@@ -26,7 +26,7 @@ const addSubscription = async (req, res) => {
     const newSubscription = new Subscription({ email });
     const savedSubscription = await newSubscription.save();
     sendEmail({
-      email,
+      to: email,
       subject: "Auction3X- Register for subscription",
       text: "Thank you for subscribing to Auction3X. We will send you updates about the latest auctions.",
     });
@@ -52,7 +52,7 @@ const removeSubscription = async (req, res) => {
     }
     await Subscription.deleteOne({ email });
     sendEmail({
-      email,
+      to: email,
       subject: "Auction3X- Unregister for subscription",
       text: "Your subscription has been removed from Auction3X.",
     });
