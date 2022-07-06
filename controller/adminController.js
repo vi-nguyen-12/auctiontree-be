@@ -61,7 +61,7 @@ const createAdmin = async (req, res) => {
         description,
       });
       sendEmail({
-        email: newAdmin.personalEmail,
+        to: newAdmin.personalEmail,
         subject: "Welcome to the team",
         text: `Please log in with this email ${newAdmin.email} and password ${newAdmin.password} to access your account and change your password as soon as possible. Thank you`,
       });
@@ -325,7 +325,7 @@ const forgotPassword = async (req, res) => {
       await admin.save();
 
       sendEmail({
-        email: admin.personalEmail,
+        to: admin.personalEmail,
         subject: "Auction3X- Reset Password",
         text: `Please click in this link to reset your password:${client_url}/reset-password?token=${token}`,
       });

@@ -29,7 +29,7 @@ const sendEmailToAdmin = async (req, res) => {
     );
 
     sendEmail({
-      email: generalAdmin.email,
+      to: generalAdmin.email,
       subject: "Auction 3X- New message",
       text: `Received a new message from ${firstName} ${lastName} with email ${email} and phone ${phone} with the following message: ${message}`,
     });

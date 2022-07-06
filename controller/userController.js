@@ -56,7 +56,7 @@ const registerUser = async (req, res) => {
     });
     const savedUser = await user.save();
     sendEmail({
-      email: user.email,
+      to: user.email,
       subject: "Auction3- Confirm email",
       text: `Please click here to confirm your email: ${client_url}/confirm_email?token=${token}`,
     });
@@ -94,7 +94,7 @@ const verify = async (req, res) => {
     await user.save();
 
     sendEmail({
-      email: user.email,
+      to: user.email,
       subject: "Auction3- Successful Registration",
       text: `Hi ${user.firstName} ${user.lastName}, We are delighted to have you join us. Welcome to AUCTION3. Your email has been successfully verified. Thanks. The Auction3 Team`,
     });
@@ -134,7 +134,7 @@ const sendConfirmEmail = async (req, res) => {
     user.temp_token = token;
     const savedUser = await user.save();
     sendEmail({
-      email: user.email,
+      to: user.email,
       subject: "Auction3- Confirm email",
       text: `Please click here to confirm your email: ${client_url}/confirm_email?token=${token}`,
     });
@@ -305,7 +305,7 @@ const resetForgotPassword = async (req, res) => {
       user.temp_token = token;
       await user.save();
       sendEmail({
-        email,
+        to: email,
         subject: "Auction3- Reset password",
         text: `Please click here to reset password: ${client_url}/reset_password?token=${token}`,
       });

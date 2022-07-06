@@ -160,7 +160,7 @@ const createRealestate = async (req, res) => {
 
     const { email } = await User.findOne({ _id: req.user.id }, "email");
     sendEmail({
-      email,
+      to: email,
       subject: "Auction3-Listing real-estate status",
       text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
     });
@@ -339,7 +339,7 @@ const createOthers = async (req, res) => {
       const savedProperty = await newProperty.save();
       const { email } = await User.findOne({ _id: req.user.id }, "email");
       sendEmail({
-        email,
+        to: email,
         subject: `Auction3-Listing  ${type} status`,
         text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
       });
@@ -800,7 +800,7 @@ const editOthers = async (req, res) => {
 
     const { email } = await User.findOne({ _id: req.user.id }, "email");
     sendEmail({
-      email,
+      to: email,
       subject: "Auction3- Updating property",
       text: "Thank you for updating your property. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
     });
@@ -977,7 +977,7 @@ const approveProperty = async (req, res) => {
               .send({ error: `Document ${document.name}is not verified` });
         }
         sendEmail({
-          email: user.email,
+          to: user.email,
           subject: "Auction3- Property Application Approved",
           text: `Congratulation, your application to sell property is approved`,
         });
@@ -990,7 +990,7 @@ const approveProperty = async (req, res) => {
         }
         property.rejectedReason = rejectedReason;
         sendEmail({
-          email: user.email,
+          to: user.email,
           subject: "Auction3- Property Application Rejected",
           text: `Your application to sell property is rejected. Reason: ${rejectedReason}`,
         });

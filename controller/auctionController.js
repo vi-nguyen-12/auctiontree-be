@@ -82,7 +82,7 @@ const createAuction = async (req, res) => {
       let text = `We create an auction for your property with starting register date ${registerStartDate} and auction start date ${auctionStartDate}.
       Starting bid is ${startingBid} and increment amount is ${incrementAmount}
        `;
-      sendEmail({ email, subject, text });
+      sendEmail({ to: email, subject, text });
       return res.status(200).send(savedAuction);
     }
     res.status(200).send({ error: "Not allowed to create auction" });
@@ -710,7 +710,7 @@ const placeBidding = async (req, res) => {
     let email = user.email;
     let subject = "Auction3- Bidding completed successfully";
     let text = `Hi ${user.firstName} ${user.lastName} Thank you for your bid. Your price is highest with ${biddingPrice} at ${biddingTime}`;
-    sendEmail({ email, subject, text });
+    sendEmail({ to: email, subject, text });
 
     const newBidder = {
       userId: req.user.id,
@@ -814,12 +814,12 @@ const getAuctionResult = async (req, res) => {
       email = user.email;
       subject = "Auction3- Congratulation for winning an auction";
       text = `Congratulation for winning auction for property with id number ${auction.property._id}`;
-      sendEmail({ email, subject, text });
+      sendEmail({ to: email, subject, text });
 
       email = auction.property.createdBy.email;
       subject = "Auction3 - Your property has been successfully sold";
       text = `Your property with id number ${property._id} has been sold to ${user.userName} with price ${highestBidder.amount}`;
-      sendEmail({ email, subject, text });
+      sendEmail({ to: email, subject, text });
 
       return res.status(200).send({
         _id: savedAuction.id,
@@ -841,7 +841,7 @@ const getAuctionResult = async (req, res) => {
         let email = user.email;
         let subject = "Auction3- Discuss auction price";
         let text = `Thank you for bidding for real-estate with id number ${auction._id}. Your bid is ${item.amount} is not met reserved amount. However, our seller is willing to discuss more about the price.`;
-        sendEmail({ email, subject, text });
+        sendEmail({ to: email, subject, text });
       }
     }
     res.status(200).send({
