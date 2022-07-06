@@ -58,7 +58,7 @@ const registerUser = async (req, res) => {
     sendEmail({
       email: user.email,
       subject: "Auction3- Confirm email",
-      text: `Please click here to confirm your email: ${client_url}/confirm_email&?token=${token}`,
+      text: `Please click here to confirm your email: ${client_url}/confirm_email?token=${token}`,
     });
     res.status(200).send({
       userId: savedUser._id,
