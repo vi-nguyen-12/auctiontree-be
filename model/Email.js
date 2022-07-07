@@ -7,7 +7,6 @@ const emailSchema = new Schema(
       _id: {
         type: Schema.Types.ObjectId,
         refPath: "senderModel",
-        required: true,
       },
       firstName: { type: String },
       lastName: { type: String },
@@ -30,7 +29,6 @@ const emailSchema = new Schema(
           _id: {
             type: Schema.Types.ObjectId,
             refPath: "recipientsModel",
-            required: true,
           },
           firstName: { type: String },
           lastName: { type: String },
