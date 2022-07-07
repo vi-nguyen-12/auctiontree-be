@@ -7,10 +7,10 @@ const emailSchema = new Schema(
       _id: {
         type: Schema.Types.ObjectId,
         refPath: "senderModel",
-        required: true,
       },
       firstName: { type: String },
       lastName: { type: String },
+      company: { type: String },
       email: { type: String },
       phone: { type: String },
     },
@@ -30,10 +30,10 @@ const emailSchema = new Schema(
           _id: {
             type: Schema.Types.ObjectId,
             refPath: "recipientsModel",
-            required: true,
           },
           firstName: { type: String },
           lastName: { type: String },
+          company: { type: String },
           email: { type: String },
           phone: { type: String },
         },
@@ -58,6 +58,7 @@ emailSchema.pre("save", function (next) {
     if (
       this.sender.firstName ||
       this.sender.lastName ||
+      this.sender.company ||
       this.sender.email ||
       this.sender.phone
     ) {
@@ -75,6 +76,7 @@ emailSchema.pre("save", function (next) {
       if (
         recipient.firstName ||
         recipient.lastName ||
+        recipient.company ||
         recipient.email ||
         recipient.phone
       ) {
