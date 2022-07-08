@@ -14,6 +14,7 @@ const createEmail = async (req, res) => {
       lastName,
       email,
       phone,
+      company,
       subject,
       content,
     } = req.body;
@@ -27,6 +28,11 @@ const createEmail = async (req, res) => {
         otherwise: Joi.string().required(),
       }),
       lastName: Joi.when("userId", {
+        is: Joi.exist(),
+        then: Joi.string().allow(null),
+        otherwise: Joi.string().required(),
+      }),
+      company: Joi.when("userId", {
         is: Joi.exist(),
         then: Joi.string().allow(null),
         otherwise: Joi.string().required(),
@@ -84,7 +90,7 @@ const createEmail = async (req, res) => {
         return res.status(200).send({ message: "Successfully sent message" });
       } else {
         await Email.create({
-          sender: { firstName, lastName, phone, email },
+          sender: { firstName, lastName, phone, email, company },
           recipients: admins.map((item) => {
             return { _id: item._id };
           }),
@@ -125,7 +131,7 @@ const createEmail = async (req, res) => {
         await Email.create({
           sender: { _id: req.admin.id },
           senderModel: "Admin",
-          recipients: [{ firstName, lastName, phone, email }],
+          recipients: [{ firstName, lastName, phone, email, company }],
           content,
         });
         sendEmail({
