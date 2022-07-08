@@ -292,12 +292,12 @@ const getAllAuctions = async (req, res) => {
       filter.auctionEndDate = { $lte: now };
     }
     if (min_price) {
-      filter.startingBid = { $gt: parseInt(min_price) };
+      filter.startingBid = { $gte: parseInt(min_price) };
     }
     if (max_price) {
       filter.startingBid = filter.startingBid
-        ? { ...filter.startingBid, $lt: parseInt(max_price) }
-        : { $lt: parseInt(max_price) };
+        ? { ...filter.startingBid, $lte: parseInt(max_price) }
+        : { $lte: parseInt(max_price) };
     }
     if (type) {
       filterProperty["property.type"] = type;
