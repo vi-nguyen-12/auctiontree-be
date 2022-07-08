@@ -3,12 +3,13 @@ const Buyer = require("../model/Buyer");
 const Property = require("../model/Property");
 const Auction = require("../model/Auction");
 const Kyc = require("../model/Kyc");
+const EmailTemplate = require("../model/EmailTemplate");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const speakeasy = require("speakeasy");
 const { sendEmail } = require("../helper");
 const Joi = require("joi");
-const { getBidsInformation } = require("../helper");
+const { getBidsInformation, replaceEmailTemplate } = require("../helper");
 
 const client_url =
   process.env.NODE_ENV === "production"
@@ -55,10 +56,17 @@ const registerUser = async (req, res) => {
       temp_token: token,
     });
     const savedUser = await user.save();
+    const emailBody = await replaceEmailTemplate("registration_confirm", {
+      customer_id: savedUser._id,
+      link: `${client_url}/confirm_email?token=${token}`,
+    });
+    if (emailBody.error) {
+      return res.status(200).send({ error: emailBody.error });
+    }
     sendEmail({
       to: user.email,
-      subject: "Auction3- Confirm email",
-      text: `Please click here to confirm your email: ${client_url}/confirm_email?token=${token}`,
+      subject: emailBody.subject,
+      text: emailBody.content,
     });
     res.status(200).send({
       userId: savedUser._id,
