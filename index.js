@@ -22,6 +22,7 @@ const documentRoute = require("./routes/documentRoutes");
 const subscriptionRoute = require("./routes/subscriptionRoutes");
 const contactRoute = require("./routes/contactRoutes");
 const emailRoute = require("./routes/emailRoutes");
+const emailTemplateRoute = require("./routes/emailTemplateRoutes");
 const {
   remindUpcomingAuction,
   remindPendingProperties,
@@ -111,6 +112,7 @@ app.use("/api/documents", documentRoute);
 app.use("/api/subscriptions", subscriptionRoute);
 app.use("/api/contacts", contactRoute);
 app.use("/api/emails", emailRoute);
+app.use("/api/emailTemplates", emailTemplateRoute);
 
 // if (process.env.NODE_ENV === "production") {
 //   app.use();

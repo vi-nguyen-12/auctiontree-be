@@ -47,7 +47,7 @@ const authNotStrict = async (req, res, next) => {
 };
 
 // auth for only user
-const authUser = (req, res) => {
+const authUser = (req, res, next) => {
   const authHeader = req.header("Authorization");
   if (!authHeader) return res.status(200).send({ error: "Access Denied" });
   try {
@@ -64,4 +64,23 @@ const authUser = (req, res) => {
   }
 };
 
-module.exports = { auth, authNotStrict, authUser };
+// auth for only admin
+const authAdmin = async (req, res, next) => {
+  const authHeader = req.header("Authorization");
+  if (!authHeader) return res.status(200).send({ error: "Access Denied" });
+  try {
+    const token = authHeader.split(" ")[1];
+    const verified = jwt.verify(token, process.env.TOKEN_KEY);
+    if (verified.adminId) {
+      const admin = await Admin.findById(verified.adminId);
+      req.admin = { id: admin._id, roles: admin.roles };
+      next();
+    } else {
+      return res.status(200).send({ error: "Access Denied" });
+    }
+  } catch (err) {
+    res.status(200).send({ error: "Invalid Token" });
+  }
+};
+
+module.exports = { auth, authNotStrict, authUser, authAdmin };

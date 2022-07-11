@@ -1,12 +1,14 @@
 const sgMail = require("@sendgrid/mail");
+const EmailTemplate = require("./model/EmailTemplate");
 
 const sendEmail = ({ from, to, subject, text }) => {
+  console.log(from, to, subject, text);
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
   const msg = {
     to,
     from: from || "auction3x@gmail.com",
     subject,
-    text,
+    text, //for html text use html instead of text
   };
   sgMail
     .send(msg, true)
@@ -48,4 +50,33 @@ const generateRandomString = (length) => {
   return randomString;
 };
 
-module.exports = { sendEmail, getBidsInformation, generateRandomString };
+const replaceEmailTemplate = async (emailTemplateType, replacedObject) => {
+  try {
+    const emailTemplate = await EmailTemplate.findOne({
+      type: emailTemplateType,
+    });
+
+    if (!emailTemplate) {
+      return { error: "Email template not found" };
+    }
+    let result = emailTemplate.content;
+    const keys = Object.keys(replacedObject);
+    for (let i of emailTemplate.replacedTexts) {
+      if (keys.indexOf(i) === -1) {
+        return { error: `Error: ${i} is needed for replacing email template` };
+      } else {
+        result = result.replace(`[${i}####]`, replacedObject[i]);
+      }
+    }
+    return { subject: emailTemplate.subject, content: result };
+  } catch (err) {
+    return { error: `Error: ${err.message}` };
+  }
+};
+
+module.exports = {
+  sendEmail,
+  getBidsInformation,
+  generateRandomString,
+  replaceEmailTemplate,
+};
