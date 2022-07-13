@@ -65,7 +65,7 @@ const replaceEmailTemplate = async (emailTemplateType, replacedObject) => {
       if (keys.indexOf(i) === -1) {
         return { error: `Error: ${i} is needed for replacing email template` };
       } else {
-        result = result.replace(`[${i}####]`, replacedObject[i]);
+        result = result.replace(`[${i}###]`, replacedObject[i]);
       }
     }
     return { subject: emailTemplate.subject, content: result };

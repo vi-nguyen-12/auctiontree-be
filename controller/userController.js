@@ -701,9 +701,6 @@ const getAuctionsOfBuyer = async (req, res) => {
       });
     //should check if admin return all bidders, if just a user return only 5 highest bidders
 
-    const result = buyerApprovedList.map((buyer) => {
-      return;
-    });
     res.status(200).send(buyerApprovedList);
   } catch (error) {
     res.status(500).send(error.message);

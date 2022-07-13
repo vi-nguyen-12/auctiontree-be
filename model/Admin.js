@@ -87,51 +87,53 @@ const adminSchema = new mongoose.Schema({
 });
 
 adminSchema.pre("save", function (next) {
-  if (this.title === "general_admin" || this.title === "regional_admin") {
-    this.department = "administration";
+  if (
+    (this.title === "general_admin" || this.title === "regional_admin") &&
+    this.department == "administration"
+  ) {
     next();
   }
   if (
-    this.title === "marketing_admin" ||
-    this.title === "marketing_manager" ||
-    this.title === "marketing_coordinator"
+    (this.title === "marketing_admin" ||
+      this.title === "marketing_manager" ||
+      this.title === "marketing_coordinator") &&
+    this.department == "marketing"
   ) {
-    this.department = "marketing";
     next();
   }
   if (
-    this.title === "business_admin" ||
-    this.title === "business_manager" ||
-    this.title === "business_coordinator"
+    (this.title === "business_admin" ||
+      this.title === "business_manager" ||
+      this.title === "business_coordinator") &&
+    this.department == "business"
   ) {
-    this.department = "business";
-  }
-  if (
-    this.title === "financial_admin" ||
-    this.title === "financial_manager" ||
-    this.title === "financial_coordinator"
-  ) {
-    this.department = "financial";
     next();
   }
   if (
-    this.title === "legal_admin" ||
-    this.title === "legal_manager" ||
-    this.title === "legal_coordinator"
+    (this.title === "financial_admin" ||
+      this.title === "financial_manager" ||
+      this.title === "financial_coordinator") &&
+    this.department == "financial"
   ) {
-    this.department = "legal";
     next();
   }
   if (
-    this.title === "technical_admin" ||
-    this.title === "technical_manager" ||
-    this.title === "technical_coordinator"
+    (this.title === "legal_admin" ||
+      this.title === "legal_manager" ||
+      this.title === "legal_coordinator") &&
+    this.department == "legal"
   ) {
-    this.department = "technical";
     next();
   }
-  if (this.title === "escrow_agent") {
-    this.department = "escrow";
+  if (
+    (this.title === "technical_admin" ||
+      this.title === "technical_manager" ||
+      this.title === "technical_coordinator") &&
+    this.department == "technical"
+  ) {
+    next();
+  }
+  if (this.title === "escrow_agent" && this.department == "escrow") {
     next();
   }
   next(new Error(`${this.title} is not in ${this.department}`));

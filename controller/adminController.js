@@ -259,7 +259,7 @@ const editAdmin = async (req, res) => {
 const deleteAdmin = async (req, res) => {
   try {
     if (req.admin?.roles.includes("admin_delete")) {
-      await Buyer.deleteOne({ _id: req.params.id });
+      await Admin.deleteOne({ _id: req.params.id });
       return res.status(200).send({ message: "Admin deleted successfully" });
     }
     res.status(200).send({ error: "Not allowed to delete admin" });
