@@ -35,7 +35,7 @@ const createEmail = async (req, res) => {
       company: Joi.when("userId", {
         is: Joi.exist(),
         then: Joi.string().allow(null),
-        otherwise: Joi.string().required(),
+        otherwise: Joi.string().optional(),
       }),
       email: Joi.when("userId", {
         is: Joi.exist(),
