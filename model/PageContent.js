@@ -26,12 +26,6 @@ const PageContentSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    addressHtmlText: {
-      type: String,
-      required: function () {
-        return this.name === "contact_us";
-      },
-    },
   },
   { timestamps: true }
 );
