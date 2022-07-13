@@ -6,7 +6,6 @@ Joi.objectId = require("joi-objectid")(Joi);
 //@route POST /api/emailTemplates
 const createEmailTemplate = async (req, res) => {
   try {
-    const { type, subject, content } = req.body;
     const bodySchema = Joi.object({
       type: Joi.string()
         .required()
@@ -21,7 +20,7 @@ const createEmailTemplate = async (req, res) => {
           "KYC_complete",
           "KYC_incomplete",
           "stripe_payment",
-          "propery_registration",
+          "property_registration",
           "property_payment",
           "property_approval",
           "property_auction",
@@ -47,6 +46,8 @@ const createEmailTemplate = async (req, res) => {
     if (error) {
       return res.status(200).send({ error: error.details[0].message });
     }
+
+    const { type, subject, content } = req.body;
     const newEmailTemplate = new EmailTemplate({
       type,
       subject,
@@ -62,6 +63,7 @@ const createEmailTemplate = async (req, res) => {
 //@desc  Edit a new email template
 //@route PUT /api/emailTemplates/:id
 const editEmailTemplate = async (req, res) => {
+  console.log(req.params.id);
   try {
     const { type, subject, content } = req.body;
     const bodySchema = Joi.object({

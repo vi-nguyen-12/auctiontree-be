@@ -16,7 +16,7 @@ const emailTemplateSchema = new Schema(
         "KYC_complete",
         "KYC_incomplete",
         "stripe_payment",
-        "propery_registration",
+        "property_registration",
         "property_payment",
         "property_approval",
         "property_auction",
@@ -83,7 +83,7 @@ emailTemplateSchema.pre("save", function (next) {
     this.replacedTexts = ["property_address"];
   }
   if (this.type == "property_payment") {
-    this.replacedTexts = ["amount"];
+    this.replacedTexts = ["amount", "property_address"];
   }
   if (this.type == "property_approval") {
     this.replacedTexts = ["property_address", "property_id"];
@@ -113,7 +113,7 @@ emailTemplateSchema.pre("save", function (next) {
     this.replacedTexts = ["name"];
   }
   if (this.type == "settlement_between_seller_and_buyer") {
-    this.replacedTexts = ["seller_name"];
+    this.replacedTexts = ["seller_name", "buyer_name", "property_address"];
   }
   if (this.type == "final_settlement") {
     this.replacedTexts = ["property_type", "property_address"];
@@ -123,6 +123,9 @@ emailTemplateSchema.pre("save", function (next) {
   }
   if (this.type == "deposited_won_property") {
     this.replacedTexts = ["amount", "property_type", "property_address"];
+  }
+  if (this.type == "buyer_missing_document") {
+    this.replacedTexts = ["name"];
   }
   if (this.type == "buyer_approval") {
     this.replacedTexts = [
@@ -136,20 +139,25 @@ emailTemplateSchema.pre("save", function (next) {
     this.replacedTexts = ["name", "auction_id"];
   }
   if (this.type == "highest_bidder_notification") {
-    this.replacedTexts = ["name", "bidding_amount"];
+    this.replacedTexts = ["name", "auction_id", "bidding_amount"];
   }
   if (this.type == "escrow") {
-    this.replacedTexts = ["name"];
+    this.replacedTexts = [
+      "name",
+      "property_type",
+      "property_address",
+      "auction_id",
+    ];
   }
   if (this.type == "settlement_fees_and_balance") {
-    this.replacedTexts = ["name"];
+    this.replacedTexts = ["name", "property_type", "property_address"];
   }
   if (this.type == "winner_of_auction") {
     this.replacedTexts = ["name", "property_type", "property_address"];
   }
   for (let i of this.replacedTexts) {
-    if (!this.content.includes(`[${i}####]`)) {
-      next(new Error(`[${i}####] is missing in email template`));
+    if (!this.content.includes(`[${i}###]`)) {
+      next(new Error(`[${i}###] is missing in email template`));
     }
   }
   next();
