@@ -5,7 +5,7 @@ const Joi = require("joi");
 //@route POST /api/pageContent body {name, htmlText}
 const createPageContent = async (req, res) => {
   try {
-    const { name, htmlText, addressHtmlText } = req.body;
+    const { name, htmlText } = req.body;
     const bodySchema = Joi.object({
       name: Joi.string()
         .required()
@@ -23,11 +23,6 @@ const createPageContent = async (req, res) => {
           "disclaimer"
         ),
       htmlText: Joi.string().required(),
-      addressHtmlText: Joi.when("name", {
-        is: Joi.string().valid("contact_us"),
-        then: Joi.string().required(),
-        otherwise: Joi.forbidden(),
-      }),
     });
     const { error } = bodySchema.validate(req.body);
     if (error) {
@@ -39,7 +34,7 @@ const createPageContent = async (req, res) => {
     if (isPageContentExists) {
       return res.status(200).send({ error: "Page content already exists" });
     }
-    const newPageContent = new PageContent({ name, htmlText, addressHtmlText });
+    const newPageContent = new PageContent({ name, htmlText });
     const savedPageContent = await newPageContent.save();
     res.status(200).send(savedPageContent);
   } catch (err) {
@@ -68,7 +63,7 @@ const getPageContents = async (req, res) => {
 //@route PUT /api/pageContent/:id body {name, htmlText}
 const editPageContent = async (req, res) => {
   try {
-    const { name, htmlText, addressHtmlText } = req.body;
+    const { name, htmlText } = req.body;
     const bodySchema = Joi.object({
       name: Joi.string()
         .required()
@@ -86,11 +81,6 @@ const editPageContent = async (req, res) => {
           "disclaimer"
         ),
       htmlText: Joi.string().required(),
-      addressHtmlText: Joi.when("name", {
-        is: Joi.string().valid("contact_us"),
-        then: Joi.string().required(),
-        otherwise: Joi.forbidden(),
-      }),
     });
     const { error } = bodySchema.validate(req.body);
     if (error) {
@@ -99,7 +89,7 @@ const editPageContent = async (req, res) => {
 
     const updatedPageContent = await PageContent.findByIdAndUpdate(
       req.params.id,
-      { name, htmlText, addressHtmlText }
+      { name, htmlText }
     );
     res.status(200).send(updatedPageContent);
   } catch (err) {
