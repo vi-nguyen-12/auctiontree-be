@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
 
-const teamSchema = new mongoose.Schema({
+const teamMemberSchema = new mongoose.Schema({
   firstName: {
     type: String,
     trim: true,
@@ -14,7 +13,7 @@ const teamSchema = new mongoose.Schema({
   },
   department: {
     type: String,
-    required: true,
+    required: [true, "Department is required"],
     enum: [
       "operation",
       "founder",
@@ -34,4 +33,4 @@ const teamSchema = new mongoose.Schema({
   profileImage: String,
 });
 
-module.exports = mongoose.model("Team", teamSchema);
+module.exports = mongoose.model("TeamMember", teamMemberSchema);
