@@ -7,6 +7,8 @@ const { sendEmail, generateRandomString } = require("../helper");
 const client_url =
   process.env.NODE_ENV === "production"
     ? process.env.PROD_CLIENT_ADMIN_URL
+    : process.env.NODE_ENV === "test"
+    ? process.env.TEST_CLIENT_ADMIN_URL
     : process.env.DEV_CLIENT_ADMIN_URL;
 //@desc  Create a new admin
 //@route POST /api/admins body={fullName,email,phone,location,role, department,image, designation,description}

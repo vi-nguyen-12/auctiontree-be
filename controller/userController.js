@@ -13,8 +13,10 @@ const { getBidsInformation, replaceEmailTemplate } = require("../helper");
 
 const client_url =
   process.env.NODE_ENV === "production"
-    ? process.env.PROD_CLIENT_URL
-    : process.env.DEV_CLIENT_URL;
+    ? process.env.PROD_CLIENT_ADMIN_URL
+    : process.env.NODE_ENV === "test"
+    ? process.env.TEST_CLIENT_ADMIN_URL
+    : process.env.DEV_CLIENT_ADMIN_URL;
 
 //@desc  Register a new user & create secret
 //@route POST /api/users/register

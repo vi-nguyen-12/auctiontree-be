@@ -11,8 +11,10 @@ const AWS = require("aws-sdk");
 
 const client_url =
   process.env.NODE_ENV === "production"
-    ? process.env.PROD_CLIENT_URL
-    : process.env.DEV_CLIENT_URL;
+    ? process.env.PROD_CLIENT_ADMIN_URL
+    : process.env.NODE_ENV === "test"
+    ? process.env.TEST_CLIENT_ADMIN_URL
+    : process.env.DEV_CLIENT_ADMIN_URL;
 
 // const consentURI =
 //   "https://account-d.docusign.com/oauth/auth?response_type=code&scope=signature%20impersonation&client_id=54bc1507-9cbe-4119-916f-ec1073bf7b48&redirect_uri=https://www.transenergy360.com/";

@@ -24,6 +24,7 @@ const contactRoute = require("./routes/contactRoutes");
 const emailRoute = require("./routes/emailRoutes");
 const emailTemplateRoute = require("./routes/emailTemplateRoutes");
 const pageContentRoute = require("./routes/pageContentRoutes");
+const teamMemberRoute = require("./routes/teamMemberRoutes");
 const {
   remindUpcomingAuction,
   remindPendingProperties,
@@ -44,8 +45,10 @@ app.use(function (req, res, next) {
 
 const allowedDomains = [
   process.env.DEV_CLIENT_URL,
+  process.env.TEST_CLIENT_URL,
   process.env.PROD_CLIENT_URL,
   process.env.DEV_CLIENT_ADMIN_URL,
+  process.env.TEST_CLIENT_ADMIN_URL,
   process.env.PROD_CLIENT_ADMIN_URL,
   "https://demo.docusign.net/restapi",
 ];
@@ -115,6 +118,7 @@ app.use("/api/contacts", contactRoute);
 app.use("/api/emails", emailRoute);
 app.use("/api/emailTemplates", emailTemplateRoute);
 app.use("/api/pageContents", pageContentRoute);
+app.use("/api/teamMembers", teamMemberRoute);
 
 // if (process.env.NODE_ENV === "production") {
 //   app.use();
