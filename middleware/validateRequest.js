@@ -98,43 +98,46 @@ const validateBuyer = (req, res, next) => {
         }),
       })
     ),
-    documents: Joi.array()
-      .items(
-        Joi.object({
-          officialName: Joi.string()
-            .valid(
-              "bank_statement",
-              "brokerage_account_statement",
-              "crypto_account_statement",
-              "line_of_credit_doc"
-            )
-            .required(),
-          url: Joi.string().required(),
-          name: Joi.string().required(),
-          validity: Joi.date().iso().optional(),
-          isSelf: Joi.boolean().required(),
-          funderName: Joi.when("isSelf", {
-            is: Joi.boolean().valid(false),
-            then: Joi.string().required(),
-            otherwise: Joi.forbidden(),
-          }),
-          providerName: Joi.when("isSelf", {
-            is: Joi.boolean().valid(false),
-            then: Joi.string().required(),
-            otherwise: Joi.forbidden(),
-          }),
-          declaration: Joi.when("isSelf", {
-            is: Joi.boolean().valid(false),
-            then: Joi.object({
-              time: Joi.date().iso().required(),
-              IPAddress: Joi.string().required(),
+    funds: Joi.array().items({
+      documents: Joi.array()
+        .items(
+          Joi.object({
+            officialName: Joi.string()
+              .valid(
+                "bank_statement",
+                "brokerage_account_statement",
+                "crypto_account_statement",
+                "line_of_credit_doc"
+              )
+              .required(),
+            url: Joi.string().required(),
+            name: Joi.string().required(),
+            validity: Joi.date().iso().optional(),
+            isSelf: Joi.boolean().required(),
+            funderName: Joi.when("isSelf", {
+              is: Joi.boolean().valid(false),
+              then: Joi.string().required(),
+              otherwise: Joi.forbidden(),
             }),
-            otherwise: Joi.forbidden(),
-          }),
-          _id: Joi.string().optional(),
-        })
-      )
-      .required(),
+            providerName: Joi.when("isSelf", {
+              is: Joi.boolean().valid(false),
+              then: Joi.string().required(),
+              otherwise: Joi.forbidden(),
+            }),
+            declaration: Joi.when("isSelf", {
+              is: Joi.boolean().valid(false),
+              then: Joi.object({
+                time: Joi.date().iso().required(),
+                IPAddress: Joi.string().required(),
+              }),
+              otherwise: Joi.forbidden(),
+            }),
+            _id: Joi.string().optional(),
+          })
+        )
+        .required(),
+    }),
+
     docusignId: Joi.objectId().required(),
     TC: Joi.object({
       time: Joi.date().iso().required(),

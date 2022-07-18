@@ -80,13 +80,13 @@ emailTemplateSchema.pre("save", function (next) {
     this.replacedTexts = ["name"];
   }
   if (this.type == "property_registration") {
-    this.replacedTexts = ["property_address"];
+    this.replacedTexts = ["name"];
   }
   if (this.type == "property_payment") {
     this.replacedTexts = ["amount", "property_address"];
   }
   if (this.type == "property_approval") {
-    this.replacedTexts = ["property_address", "property_id"];
+    this.replacedTexts = ["name", "property_address", "property_id"];
   }
   if (this.type == "property_auction") {
     this.replacedTexts = [
@@ -129,6 +129,7 @@ emailTemplateSchema.pre("save", function (next) {
   }
   if (this.type == "buyer_approval") {
     this.replacedTexts = [
+      "name",
       "property_type",
       "property_address",
       "auction_start_date",
@@ -142,15 +143,15 @@ emailTemplateSchema.pre("save", function (next) {
     this.replacedTexts = ["name", "auction_id", "bidding_amount"];
   }
   if (this.type == "escrow") {
+    this.replacedTexts = ["name", "auction_id"];
+  }
+  if (this.type == "settlement_fees_and_balance") {
     this.replacedTexts = [
       "name",
       "property_type",
       "property_address",
-      "auction_id",
+      "closing_fee",
     ];
-  }
-  if (this.type == "settlement_fees_and_balance") {
-    this.replacedTexts = ["name", "property_type", "property_address"];
   }
   if (this.type == "winner_of_auction") {
     this.replacedTexts = ["name", "property_type", "property_address"];

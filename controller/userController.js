@@ -7,9 +7,12 @@ const EmailTemplate = require("../model/EmailTemplate");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const speakeasy = require("speakeasy");
-const { sendEmail } = require("../helper");
 const Joi = require("joi");
-const { getBidsInformation, replaceEmailTemplate } = require("../helper");
+const {
+  sendEmail,
+  getBidsInformation,
+  replaceEmailTemplate,
+} = require("../helper");
 
 const client_url =
   process.env.NODE_ENV === "production"
@@ -102,6 +105,15 @@ const verify = async (req, res) => {
     user.isActive = true;
     user.temp_token = undefined;
     await user.save();
+
+    const emailBody = replaceEmailTemplate("registration_confirm", {
+      name: `${user.firstName} ${user.lastName}`,
+      customer_id: user._id,
+    });
+
+    if (emailBody.error) {
+      return res.status(200).send({ error: emailBody.error });
+    }
 
     sendEmail({
       to: user.email,

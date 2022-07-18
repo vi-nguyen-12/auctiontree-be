@@ -131,6 +131,7 @@ const io = socket(server, {
     origin: [
       process.env.DEV_CLIENT_URL,
       process.env.PROD_CLIENT_URL,
+      process.env.TEST_CLIENT_URL,
       "http://localhost:3001",
     ],
   },
