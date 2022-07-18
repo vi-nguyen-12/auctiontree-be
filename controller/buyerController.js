@@ -147,7 +147,7 @@ const editBuyer = async (req, res) => {
 };
 
 //@desc  Request more funding
-//@route PUT /api/buyers/:id/funds/addition body:{documents:[{_id:...}{officialName:..., name:...,url:...}]}}
+//@route PUT /api/buyers/:id/funds/addition body:{documents:[{officialName:..., name:...,url:...}]}}
 const addFund = async (req, res) => {
   try {
     let { documents } = req.body;
@@ -182,7 +182,7 @@ const addFund = async (req, res) => {
   }
 };
 
-//@desc  Approve fund of a buyer,
+//@desc  Approve a fund,
 //@route PUT /api/buyers/:id/funds/:id body: {amount}
 const approveFund = async (req, res) => {
   try {
