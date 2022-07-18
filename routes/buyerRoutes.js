@@ -4,6 +4,8 @@ const { validateBuyer } = require("../middleware/validateRequest");
 const { checkKyc } = require("../middleware/checkKyc");
 const {
   createBuyer,
+  approveFund,
+  addFund,
   editBuyer,
   approveBuyer,
   verifyDocument,
@@ -13,6 +15,8 @@ const {
 } = require("../controller/buyerController");
 
 router.post("/", auth, checkKyc, validateBuyer, createBuyer);
+router.put("/:id/funds/addition", auth, addFund);
+router.put("/:buyerId/funds/:fundId", auth, approveFund);
 router.put("/:id", auth, editBuyer);
 router.put("/:buyerId/documents/:documentId/status", auth, verifyDocument);
 router.put("/:buyerId/answers/:questionId/approved", auth, approveAnswer);

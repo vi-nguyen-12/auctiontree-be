@@ -63,7 +63,6 @@ const createEmailTemplate = async (req, res) => {
 //@desc  Edit a new email template
 //@route PUT /api/emailTemplates/:id
 const editEmailTemplate = async (req, res) => {
-  console.log(req.params.id);
   try {
     const { type, subject, content } = req.body;
     const bodySchema = Joi.object({
@@ -80,7 +79,7 @@ const editEmailTemplate = async (req, res) => {
           "KYC_complete",
           "KYC_incomplete",
           "stripe_payment",
-          "propery_registration",
+          "property_registration",
           "property_payment",
           "property_approval",
           "property_auction",
@@ -106,14 +105,14 @@ const editEmailTemplate = async (req, res) => {
     if (error) {
       return res.status(200).send({ error: error.details[0].message });
     }
-    const updatedEmailTemplate = await EmailTemplate.findByIdAndUpdate(
-      req.params.id,
-      {
-        type,
-        subject,
-        content,
-      }
-    );
+    const emailTemmplate = await EmailTemplate.findById(req.params.id);
+    if (!emailTemmplate) {
+      return res.status(200).send({ error: "Email template not found}" });
+    }
+    emailTemmplate.type = type;
+    emailTemmplate.subject = subject;
+    emailTemmplate.content = content;
+    const updatedEmailTemplate = await emailTemmplate.save();
 
     return res.status(200).send(updatedEmailTemplate);
   } catch (error) {
