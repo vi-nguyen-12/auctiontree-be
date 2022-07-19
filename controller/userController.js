@@ -608,9 +608,7 @@ const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
               $project: {
                 _id: "$auctionId",
                 buyerId: "$_id",
-                documents: "$documents",
-                isApproved: "$isApproved",
-                approvedFund: "$approvedFund",
+                funds: "$funds",
               },
             },
 
@@ -685,25 +683,15 @@ const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
 };
 
 //@desc  Get auctions of a buyer
-//@route GET /api/users/:id/buyer/auctions?status=...
+//@route GET /api/users/:id/buyer/auctions
 const getAuctionsOfBuyer = async (req, res) => {
   try {
-    const querySchema = Joi.object({
-      status: Joi.string().valid("pending", "success", "fail").optional(),
-    });
-    const { error } = querySchema.validate(req.query);
-    if (error) return res.status(200).send({ error: error.details[0].message });
-
-    const { status } = req.query;
     const user = await User.findById(req.params.id);
     if (!user) return res.status(200).send("User not found");
 
     let filter = { userId: user._id };
-    if (status) {
-      filter["isApproved"] = status;
-    }
     const buyerApprovedList = await Buyer.find(filter)
-      .select("auctionId answers documents isApproved approvedFund")
+      .select("auctionId answers funds")
       .populate({
         path: "auctionId",
         select:
