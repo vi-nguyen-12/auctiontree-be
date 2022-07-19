@@ -12,12 +12,12 @@ const { sendEmail } = require("../helper");
 const createBuyer = async (req, res) => {
   try {
     const user = await User.findOne({ _id: req.user.id });
-    const { auctionId, docusignId, TC, answers, funds } = req.body;
+    const { auctionId, docusignId, TC, answers, documents } = req.body;
     const auction = await Auction.findOne({ _id: auctionId }).populate(
       "property"
     );
-
     const docusign = await Docusign.findOne({ _id: docusignId });
+    let funds = [];
 
     if (!auction) {
       return res.status(200).send({ error: "Auction not found" });
@@ -34,6 +34,7 @@ const createBuyer = async (req, res) => {
       auctionId,
       userId: user._id,
     });
+
     if (isRegisteredAuction) {
       return res.status(200).send({
         error: "This user is already registered to buy this property",
@@ -57,6 +58,10 @@ const createBuyer = async (req, res) => {
       return res
         .status(200)
         .send({ error: "This auction is out of buying registration period" });
+    }
+
+    for (document of documents) {
+      funds.push({ document });
     }
 
     const newBuyer = new Buyer({
@@ -155,70 +160,80 @@ const addFund = async (req, res) => {
     if (!buyer) {
       return res.status(200).send({ error: "Buyer not found" });
     }
+
     if (
-      req.user?.id.toString() !== buyer.userId._id.toString() ||
-      !req.admin?.roles.includes("buyer_edit")
+      req.user?.id.toString() === buyer.userId._id.toString() ||
+      req.admin?.roles.includes("buyer_edit")
     ) {
+      for (document of documents) {
+        buyer.funds.push({ document });
+      }
+
+      const savedBuyer = await buyer.save();
+      const result = {
+        _id: savedBuyer._id,
+        funds: savedBuyer.funds,
+      };
+      sendEmail({
+        to: buyer.userId.email,
+        subject: "Auction3- Request to change funding",
+        text: `Your request to add more funding has been sent to the admin`,
+      });
+      return res.status(200).send(result);
+    } else {
       return res
         .status(200)
         .send({ error: "Not allowed to add fund for this buyer" });
     }
-
-    buyer.funds.push({ documents });
-    const savedBuyer = await buyer.save();
-    const result = {
-      _id: savedBuyer._id,
-      funds: savedBuyer.funds,
-    };
-    sendEmail({
-      to: buyer.userId.email,
-      subject: "Auction3- Request to change funding",
-      text: `Your request to add more funding has been sent to the admin`,
-    });
-
-    res.status(200).send(result);
   } catch (err) {
     res.status(500).send(err.message);
   }
 };
 
-//@desc  Approve a fund,
-//@route PUT /api/buyers/:id/funds/:id body: {amount}
+//@desc  Approve/disapprove a fund,
+//@route PUT /api/buyers/:id/fund/:id body: {status:..., amount}
 const approveFund = async (req, res) => {
   try {
+    const bodySchema = Joi.object({
+      status: Joi.string().required().valid("pending", "success", "fail"),
+      amount: Joi.when("status", {
+        is: Joi.string().valid("success"),
+        then: Joi.number().required().min(0),
+        otherwise: Joi.forbidden(),
+      }),
+    });
+    const { error } = bodySchema.validate(req.body);
+    if (error) return res.status(200).send({ error: error.details[0].message });
     if (!req.admin?.roles.includes("buyer_edit")) {
       return res
         .status(200)
         .send({ error: "Not allowed to approve fund for this buyer" });
     }
     const { buyerId, fundId } = req.params;
-    const { amount } = req.body;
-
-    const bodySchema = Joi.object({
-      amount: Joi.number().required().min(0),
-    });
-    const { error } = bodySchema.validate(req.body);
-    if (error) return res.status(200).send({ error: error.details[0].message });
+    const { status, amount } = req.body;
 
     const buyer = await Buyer.findById(buyerId).populate("userId");
     if (!buyer) {
       return res.status(200).send({ error: "Buyer not found" });
     }
-    //check if buyer is approved
-    if (buyer.isApproved !== "success") {
-      return res.status(200).send({ error: "Buyer is not approved" });
+    //check if all answers are approved
+    for (let item of buyer.answers) {
+      if (item.isApproved === false) {
+        const question = await Question.findById(item.questionId);
+        return res.status(200).send({
+          error: `Answer of question "${question.questionText}" is not approved`,
+        });
+      }
     }
 
     const fund = buyer.funds.id(fundId);
-    //check if all documents are verified
-    for (document of fund.documents) {
-      if (document.isVerified !== "success") {
-        return res
-          .status(200)
-          .send({ error: "Not all documents are verified" });
-      }
+    if (!fund) {
+      return res.status(200).send({ error: "Document is not found" });
     }
-    fund.amount = amount;
+    fund.document.isVerified = status;
+    if (amount) {
+      fund.amount = amount;
+    }
 
     await fund.save({ suppressWarning: true });
     const savedBuyer = await buyer.save();
@@ -238,14 +253,14 @@ const approveFund = async (req, res) => {
   }
 };
 
-//@desc  Approve a buyer
-//@route PUT /api/buyers/:id/status body: {status:"pending"/"success"/"fail", rejectedReason:...}
+//@desc  Approve a buyer with fund
+//@route PUT /api/buyers/:id/status body: {status:"pending"/"success"/"fail", approvedFund,...,rejectedReason:...}
 const approveBuyer = async (req, res) => {
   try {
     if (req.admin?.roles.includes("buyer_approval")) {
       const bodySchema = Joi.object({
         status: Joi.string().valid("pending", "success", "fail"),
-        // approvedFund: Joi.number().strict(),
+        approvedFund: Joi.number().required().min(0),
         rejectedReason: Joi.string().optional(),
       });
       const { error } = bodySchema.validate(req.body);
@@ -260,34 +275,7 @@ const approveBuyer = async (req, res) => {
         return res.status(200).send({ error: "Buyer not found" });
       }
       if (status === "success") {
-        let isAFundApproved = false;
-        for (let fund of buyer.funds) {
-          let isFundApproved = true;
-          for (document of fund.documents) {
-            if (document.isVerified !== "success") {
-              isFundApproved = false;
-              break;
-            }
-          }
-          if (isFundApproved) {
-            isAFundApproved = true;
-            break;
-          }
-        }
-        if (!isAFundApproved) {
-          return res.status(200).send({
-            error: "Not all documents for a specific fund is approved",
-          });
-        }
-
-        for (let item of buyer.answers) {
-          if (item.isApproved === false) {
-            const question = await Question.findById(item.questionId);
-            return res.status(200).send({
-              error: `Answer of question "${question.questionText}" is not approved`,
-            });
-          }
-        }
+        buyer.approvedFund = approvedFund;
         // let previousFund = buyer.approvedFund || 0;
         // buyer.approvedFund = approvedFund;
         // const user = await User.findOne({ _id: buyer.userId });
@@ -336,85 +324,85 @@ const approveBuyer = async (req, res) => {
   }
 };
 
+//no need
 //@desc  Verify a document
-//@route PUT /api/buyers/:buyerId/documents/:documentId/status body={status:"pending"/"success"/"fail"}
+//@route PUT /api/buyers/:buyerId/fund/:fundId/document/status body={status:"pending"/"success"/"fail"}
 
-const verifyDocument = async (req, res) => {
-  try {
-    if (req.admin?.roles.includes("buyer_document_approval")) {
-      const bodySchema = Joi.object({
-        status: Joi.string().valid("pending", "success", "fail"),
-      });
-      const { error } = bodySchema.validate(req.body);
-      if (error) {
-        return res.status(200).send({ error: error.details[0].message });
-      }
+// const verifyDocument = async (req, res) => {
+//   try {
+//     if (req.admin?.roles.includes("buyer_document_approval")) {
+//       const bodySchema = Joi.object({
+//         status: Joi.string().valid("pending", "success", "fail"),
+//       });
+//       const { error } = bodySchema.validate(req.body);
+//       if (error) {
+//         return res.status(200).send({ error: error.details[0].message });
+//       }
 
-      const { status } = req.body;
-      const { buyerId, documentId } = req.params;
-      const buyer = await Buyer.findById(buyerId);
-      if (!buyer) {
-        return res.status(200).send({ error: "Buyer not found" });
-      }
+//       const { status } = req.body;
+//       const { buyerId, documentId } = req.params;
+//       const buyer = await Buyer.findById(buyerId);
+//       if (!buyer) {
+//         return res.status(200).send({ error: "Buyer not found" });
+//       }
 
-      // update document status
-      let updatedDocument, fund;
-      buyer.funds = buyer.funds.map((fund) => {
-        for (document of fund.documents) {
-          if (document._id.toString() === documentId) {
-            document.isVerified = status;
-            updatedDocument = document;
-            if (status !== "success") {
-              fund.amount = 0;
-            }
-            break;
-          }
-        }
-        return fund;
-      });
+//       // update document status
+//       buyer.funds = buyer.funds.map((fund) => {
+//         for (document of fund.documents) {
+//           if (document._id.toString() === documentId) {
+//             document.isVerified = status;
+//             updatedDocument = document;
+//             if (status !== "success") {
+//               fund.amount = 0;
+//             }
+//             break;
+//           }
+//         }
+//         return fund;
+//       });
 
-      if (!updatedDocument) {
-        return res.status(200).send({ error: "No document found" });
-      }
+//       if (!updatedDocument) {
+//         return res.status(200).send({ error: "No document found" });
+//       }
 
-      //update status of buyer
-      if (status !== "success") {
-        let isAFundApproved = false;
-        for (let fund of buyer.funds) {
-          let isFundApproved = true;
-          for (document of fund.documents) {
-            if (document.isVerified !== "success") {
-              isFundApproved = false;
-              break;
-            }
-          }
-          if (isFundApproved) {
-            isAFundApproved = true;
-            break;
-          }
-        }
-        if (!isAFundApproved) {
-          buyer.isApproved = "pending";
-        }
-      }
+//       //update status of buyer
+//       if (status !== "success") {
+//         let isAFundApproved = false;
+//         for (let fund of buyer.funds) {
+//           let isFundApproved = true;
+//           for (document of fund.documents) {
+//             if (document.isVerified !== "success") {
+//               isFundApproved = false;
+//               break;
+//             }
+//           }
+//           if (isFundApproved) {
+//             isAFundApproved = true;
+//             break;
+//           }
+//         }
+//         if (!isAFundApproved) {
+//           buyer.isApproved = "pending";
+//         }
+//       }
 
-      const savedBuyer = await buyer.save();
-      const data = {
-        _id: updatedDocument._id,
-        name: updatedDocument.name,
-        url: updatedDocument.url,
-        isVerified: updatedDocument.isVerified,
-        buyerId: savedBuyer._id,
-        auctionId: savedBuyer.auctionId,
-        isApproved: savedBuyer.isApproved,
-      };
-      return res.status(200).send(data);
-    }
-    return res.status(200).send({ error: "Not allowed to verify document" });
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-};
+//       const savedBuyer = await buyer.save();
+//       const data = {
+//         _id: updatedDocument._id,
+//         name: updatedDocument.name,
+//         url: updatedDocument.url,
+//         isVerified: updatedDocument.isVerified,
+//         buyerId: savedBuyer._id,
+//         auctionId: savedBuyer.auctionId,
+//         isApproved: savedBuyer.isApproved,
+//       };
+//       return res.status(200).send(data);
+//     }
+//     return res.status(200).send({ error: "Not allowed to verify document" });
+//   } catch (err) {
+//     res.status(500).send(err.message);
+//   }
+// };
 
 //@desc  Approve an answer
 //@route PUT /api/buyers/:buyerId/answers/:questionId/approved
@@ -526,7 +514,7 @@ module.exports = {
   addFund,
   editBuyer,
   approveBuyer,
-  verifyDocument,
+  // verifyDocument,
   getBuyers,
   approveAnswer,
   deleteBuyer,

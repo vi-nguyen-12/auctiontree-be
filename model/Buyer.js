@@ -43,75 +43,69 @@ const buyerSchema = new Schema(
     ],
     funds: [
       {
-        documents: {
-          type: [
-            {
-              officialName: {
-                type: String,
-                required: true,
-                enum: {
-                  values: [
-                    "bank_statement",
-                    "brokerage_account_statement",
-                    "crypto_account_statement",
-                    "line_of_credit_doc",
-                  ],
-                  message:
-                    "Document with official name {VALUE} is not a supported",
-                },
-              },
-              name: {
-                type: String,
-                required: [true, "Name of document is required"],
-              },
-              url: {
-                type: String,
-                required: [true, "Url of document is required"],
-              },
-              validity: String,
-              isSelf: {
-                type: Boolean,
-                require: [true, "isSelf of document is required"],
-              },
-              funderName: {
-                type: String,
-                required: [
-                  function () {
-                    return this.isSelf === false;
-                  },
-                  "funderName is required",
-                ],
-              },
-              providerName: {
-                type: String,
-                required: [
-                  function () {
-                    return this.isSelf === false;
-                  },
-                  "providerName is required",
-                ],
-              },
-              declaration: {
-                type: {
-                  time: { type: String, required: true },
-                  IPAddress: { type: String, required: true },
-                },
-                required: [
-                  function () {
-                    return this.isSelf === false;
-                  },
-                  "declaration with time and IPAddress is required",
-                ],
-              },
-              isVerified: {
-                type: String,
-                required: true,
-                enum: ["pending", "success", "fail"],
-                default: "pending",
-              },
+        document: {
+          officialName: {
+            type: String,
+            required: true,
+            enum: {
+              values: [
+                "bank_statement",
+                "brokerage_account_statement",
+                "crypto_account_statement",
+                "line_of_credit_doc",
+              ],
+              message: "Document with official name {VALUE} is not a supported",
             },
-          ],
-          required: true,
+          },
+          name: {
+            type: String,
+            required: [true, "Name of document is required"],
+          },
+          url: {
+            type: String,
+            required: [true, "Url of document is required"],
+          },
+          validity: String,
+          isSelf: {
+            type: Boolean,
+            require: [true, "isSelf of document is required"],
+          },
+          funderName: {
+            type: String,
+            required: [
+              function () {
+                return this.isSelf === false;
+              },
+              "funderName is required",
+            ],
+          },
+          providerName: {
+            type: String,
+            required: [
+              function () {
+                return this.isSelf === false;
+              },
+              "providerName is required",
+            ],
+          },
+          declaration: {
+            type: {
+              time: { type: String, required: true },
+              IPAddress: { type: String, required: true },
+            },
+            required: [
+              function () {
+                return this.isSelf === false;
+              },
+              "declaration with time and IPAddress is required",
+            ],
+          },
+          isVerified: {
+            type: String,
+            required: true,
+            enum: ["pending", "success", "fail"],
+            default: "pending",
+          },
         },
         amount: {
           type: Number,
@@ -128,13 +122,7 @@ const buyerSchema = new Schema(
       time: { type: String, required: true },
       IPAddress: { type: String, required: true },
     },
-    isApproved: {
-      type: String,
-      required: true,
-      enum: ["pending", "success", "fail"],
-      default: "pending",
-    },
-    rejectedReason: String,
+    // rejectedReason: String,
   },
   { timestamp: true }
 );

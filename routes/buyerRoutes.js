@@ -7,8 +7,8 @@ const {
   approveFund,
   addFund,
   editBuyer,
-  approveBuyer,
-  verifyDocument,
+  // approveBuyer,
+  // verifyDocument,
   getBuyers,
   approveAnswer,
   deleteBuyer,
@@ -18,9 +18,7 @@ router.post("/", auth, checkKyc, validateBuyer, createBuyer);
 router.put("/:id/funds/addition", auth, addFund);
 router.put("/:buyerId/funds/:fundId", auth, approveFund);
 router.put("/:id", auth, editBuyer);
-router.put("/:buyerId/documents/:documentId/status", auth, verifyDocument);
 router.put("/:buyerId/answers/:questionId/approved", auth, approveAnswer);
-router.put("/:id/status", auth, approveBuyer);
 router.get("/", auth, getBuyers);
 router.delete("/:id", auth, deleteBuyer);
 module.exports = router;
