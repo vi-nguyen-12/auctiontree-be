@@ -75,67 +75,63 @@ const validateUpdateUser = (req, res, next) => {
 const validateBuyer = (req, res, next) => {
   const buyerSchema = Joi.object({
     auctionId: Joi.objectId().required(),
-    answers: Joi.array().items(
-      Joi.object({
-        questionId: Joi.objectId().required(),
-        answer: Joi.string().valid("yes", "no").required(),
-        explanation: Joi.when("answer", {
-          is: Joi.string().valid("yes"),
-          then: Joi.string().required(),
-          otherwise: Joi.string().allow(null, ""),
-        }),
-        files: Joi.when("answer", {
-          is: Joi.string().valid("yes"),
-          then: Joi.array()
-            .required()
-            .items(
-              Joi.object({
-                name: Joi.string().required(),
-                url: Joi.string().required(),
-              })
-            ),
-          otherwise: Joi.string().allow(null, ""),
-        }),
-      })
-    ),
-    funds: Joi.array().items({
-      documents: Joi.array()
-        .items(
-          Joi.object({
-            officialName: Joi.string()
-              .valid(
-                "bank_statement",
-                "brokerage_account_statement",
-                "crypto_account_statement",
-                "line_of_credit_doc"
-              )
-              .required(),
-            url: Joi.string().required(),
-            name: Joi.string().required(),
-            validity: Joi.date().iso().optional(),
-            isSelf: Joi.boolean().required(),
-            funderName: Joi.when("isSelf", {
-              is: Joi.boolean().valid(false),
-              then: Joi.string().required(),
-              otherwise: Joi.forbidden(),
-            }),
-            providerName: Joi.when("isSelf", {
-              is: Joi.boolean().valid(false),
-              then: Joi.string().required(),
-              otherwise: Joi.forbidden(),
-            }),
-            declaration: Joi.when("isSelf", {
-              is: Joi.boolean().valid(false),
-              then: Joi.object({
-                time: Joi.date().iso().required(),
-                IPAddress: Joi.string().required(),
-              }),
-              otherwise: Joi.forbidden(),
-            }),
-            _id: Joi.string().optional(),
-          })
+    answers: Joi.array()
+      .items(
+        Joi.object({
+          questionId: Joi.objectId().required(),
+          answer: Joi.string().valid("yes", "no").required(),
+          explanation: Joi.when("answer", {
+            is: Joi.string().valid("yes"),
+            then: Joi.string().required(),
+            otherwise: Joi.string().allow(null, ""),
+          }),
+          files: Joi.when("answer", {
+            is: Joi.string().valid("yes"),
+            then: Joi.array()
+              .required()
+              .items(
+                Joi.object({
+                  name: Joi.string().required(),
+                  url: Joi.string().required(),
+                })
+              ),
+            otherwise: Joi.string().allow(null, ""),
+          }),
+        })
+      )
+      .required(),
+    documents: Joi.array().items({
+      officialName: Joi.string()
+        .valid(
+          "bank_statement",
+          "brokerage_account_statement",
+          "crypto_account_statement",
+          "line_of_credit_doc"
         )
         .required(),
+      url: Joi.string().required(),
+      name: Joi.string().required(),
+      validity: Joi.date().iso().optional(),
+      isSelf: Joi.boolean().required(),
+      funderName: Joi.when("isSelf", {
+        is: Joi.boolean().valid(false),
+        then: Joi.string().required(),
+        otherwise: Joi.forbidden(),
+      }),
+      providerName: Joi.when("isSelf", {
+        is: Joi.boolean().valid(false),
+        then: Joi.string().required(),
+        otherwise: Joi.forbidden(),
+      }),
+      declaration: Joi.when("isSelf", {
+        is: Joi.boolean().valid(false),
+        then: Joi.object({
+          time: Joi.date().iso().required(),
+          IPAddress: Joi.string().required(),
+        }),
+        otherwise: Joi.forbidden(),
+      }),
+      _id: Joi.string().optional(),
     }),
 
     docusignId: Joi.objectId().required(),
