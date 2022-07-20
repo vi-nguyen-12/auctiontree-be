@@ -7,7 +7,6 @@ const {
   approveFund,
   addFund,
   editBuyer,
-  // approveBuyer,
   // verifyDocument,
   getBuyers,
   approveAnswer,

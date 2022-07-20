@@ -62,11 +62,6 @@ const userSchema = new mongoose.Schema({
     instagram: { type: String, set: deleteEmpty },
     twitter: { type: String, set: deleteEmpty },
   },
-  wallet: {
-    type: Number,
-    default: 0,
-    min: [0, "Wallet must be greater than 0"],
-  },
 });
 
 module.exports = mongoose.model("User", userSchema);

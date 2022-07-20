@@ -255,77 +255,6 @@ const approveFund = async (req, res) => {
   }
 };
 
-//@desc  Approve a buyer with fund
-//@route PUT /api/buyers/:id/status body: {status:"pending"/"success"/"fail", approvedFund,...,rejectedReason:...}
-const approveBuyer = async (req, res) => {
-  try {
-    if (req.admin?.roles.includes("buyer_approval")) {
-      const bodySchema = Joi.object({
-        status: Joi.string().valid("pending", "success", "fail"),
-        approvedFund: Joi.number().required().min(0),
-        rejectedReason: Joi.string().optional(),
-      });
-      const { error } = bodySchema.validate(req.body);
-      if (error)
-        return res.status(200).send({ error: error.details[0].message });
-
-      const { status, approvedFund, rejectedReason } = req.body;
-      const buyer = await Buyer.findOne({ _id: req.params.id }).populate(
-        "userId"
-      );
-      if (!buyer) {
-        return res.status(200).send({ error: "Buyer not found" });
-      }
-      if (status === "success") {
-        buyer.approvedFund = approvedFund;
-        // let previousFund = buyer.approvedFund || 0;
-        // buyer.approvedFund = approvedFund;
-        // const user = await User.findOne({ _id: buyer.userId });
-        // user.wallet = user.wallet + -previousFund + approvedFund;
-        // await user.save();
-        sendEmail({
-          to: buyer.userId.email,
-          subject: "Auction3- Buyer Application Approved",
-          text: `Congratulation, your application application is approved with $${approvedFund} in your wallet. This amount is available for your bidding.`,
-        });
-      }
-      if (status === "fail") {
-        if (!rejectedReason) {
-          return res
-            .status(200)
-            .send({ error: "Please specify reason for reject" });
-        }
-        sendEmail({
-          to: buyer.userId.email,
-          subject: "Auction3- Buyer Application Rejected",
-          text: `Your application application is rejected. The reason is $${rejectedReason}`,
-        });
-        buyer.rejectedReason = rejectedReason;
-      }
-      buyer.isApproved = status;
-      const savedBuyer = await buyer.save();
-      const result = {
-        _id: savedBuyer._id,
-        userId: {
-          _id: savedBuyer.userId._id,
-          firstName: savedBuyer.userId.firstName,
-          lastName: savedBuyer.userId.lastName,
-          userName: savedBuyer.userId.userName,
-        },
-        auctionId: savedBuyer.auctionId,
-        documents: savedBuyer.documents,
-        isApproved: savedBuyer.isApproved,
-        // approvedFund: savedBuyer.approvedFund,
-        rejectedReason: savedBuyer.rejectedReason,
-      };
-      return res.status(200).send(result);
-    }
-    return res.status(200).send({ error: "Not allowed to edit this buyer" });
-  } catch (error) {
-    res.status(500).send(error.message);
-  }
-};
-
 //@desc  Approve an answer
 //@route PUT /api/buyers/:buyerId/answers/:questionId/approved
 const approveAnswer = async (req, res) => {
@@ -435,7 +364,7 @@ module.exports = {
   approveFund,
   addFund,
   editBuyer,
-  approveBuyer,
+
   // verifyDocument,
   getBuyers,
   approveAnswer,

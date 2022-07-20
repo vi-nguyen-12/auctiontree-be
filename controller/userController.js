@@ -8,6 +8,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const speakeasy = require("speakeasy");
 const Joi = require("joi");
+const ObjectId = require("mongoose").Types.ObjectId;
 const {
   sendEmail,
   getBidsInformation,
@@ -563,7 +564,7 @@ const setUnlikedAuction = async (req, res) => {
 };
 
 //@desc  Get bid auctions of a buyer
-//@route GET /api/users/:id/buyer/auctions/bid
+//@route GET /api/users/:id/buyer/auctions/bid  //should check if admin also
 const getBidAuctionsOfBuyer = async (req, res) => {
   try {
     let id = req.params.id;
@@ -683,14 +684,17 @@ const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
 };
 
 //@desc  Get auctions of a buyer
-//@route GET /api/users/:id/buyer/auctions
+//@route GET /api/users/:id/buyer/auctions   //should check if admin also
 const getAuctionsOfBuyer = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(200).send("User not found");
-
+    //check if auth user is same with user id
+    if (req.user.id !== req.params.id) {
+      return res
+        .status(200)
+        .send({ error: "Not authorized to access actions of this buyer" });
+    }
     const auctions = await Buyer.aggregate([
-      { $match: { userId: user._id } },
+      { $match: { userId: ObjectId(req.user.id) } },
       {
         $lookup: {
           from: "auctions",
@@ -744,6 +748,74 @@ const getAuctionsOfBuyer = async (req, res) => {
     //should check if admin return all bidders, if just a user return only 5 highest bidders
 
     res.status(200).send(auctions);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
+//@desc  Get funds of a buyer
+//@route GET /api/users/:id/buyer/funds   //should check if admin also
+const getFundsOfBuyer = async (req, res) => {
+  try {
+    //check if auth user is same with user id
+    if (req.user.id !== req.params.id) {
+      return res
+        .status(200)
+        .send({ error: "Not authorized to access actions of this buyer" });
+    }
+    const buyers = await Buyer.aggregate([
+      { $match: { userId: ObjectId(req.user.id) } },
+      {
+        $lookup: {
+          from: "auctions",
+          localField: "auctionId",
+          foreignField: "_id",
+          as: "auction",
+          pipeline: [
+            {
+              $lookup: {
+                from: "properties",
+                localField: "property",
+                foreignField: "_id",
+                as: "property",
+                pipeline: [
+                  {
+                    $project: {
+                      _id: "$_id",
+                      type: "$type",
+                      images: "$images",
+                      property_address: "$details.property_address",
+                    },
+                  },
+                ],
+              },
+            },
+            { $unwind: "$property" },
+          ],
+        },
+      },
+      { $unwind: "$auction" },
+      {
+        $project: {
+          _id: "$_id",
+          auctionId: "$auction._id",
+          property: "$auction.property",
+          funds: "$funds",
+        },
+      },
+    ]);
+
+    for (let buyer of buyers) {
+      buyer.totalFunds = buyer.funds.reduce(
+        (prev, curr) => prev + curr.amount,
+        0
+      );
+      delete buyer.funds;
+    }
+
+    //should check if admin return all bidders, if just a user return only 5 highest bidders
+
+    res.status(200).send(buyers);
   } catch (error) {
     res.status(500).send(error.message);
   }
@@ -917,6 +989,7 @@ module.exports = {
   setUnlikedAuction,
   getBidAuctionsOfBuyer,
   getAuctionsOfBuyer,
+  getFundsOfBuyer,
   getWinAuctionsOfBuyer,
   getAuctionsOfSeller,
   getListingsOfSeller,
