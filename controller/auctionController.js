@@ -597,6 +597,7 @@ const getOngoingAuctions = async (req, res) => {
   }
 };
 
+//should remove this, as duplicate
 //@desc  Get status of auctions  which buyer register to buy
 //@route GET /api/auctions/status?buyer=true
 const getAuctionStatusOfABuyer = async (req, res) => {

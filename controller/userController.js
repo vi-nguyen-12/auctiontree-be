@@ -689,21 +689,61 @@ const getAuctionsOfBuyer = async (req, res) => {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(200).send("User not found");
 
-    let filter = { userId: user._id };
-    const buyerApprovedList = await Buyer.find(filter)
-      .select("auctionId answers funds")
-      .populate({
-        path: "auctionId",
-        select:
-          "property startingBid incrementAmount registerStartDate registerEndDate auctionStartDate auctionEndDate bids",
-        populate: {
-          path: "property",
-          select: "type details images ",
+    const auctions = await Buyer.aggregate([
+      { $match: { userId: user._id } },
+      {
+        $lookup: {
+          from: "auctions",
+          localField: "auctionId",
+          foreignField: "_id",
+          as: "auction",
+          pipeline: [
+            {
+              $lookup: {
+                from: "properties",
+                localField: "property",
+                foreignField: "_id",
+                as: "property",
+                pipeline: [
+                  {
+                    $project: {
+                      _id: "$_id",
+                      type: "$type",
+                      details: "$details",
+                      images: "$images",
+                    },
+                  },
+                ],
+              },
+            },
+            { $unwind: "$property" },
+          ],
         },
-      });
+      },
+      { $unwind: "$auction" },
+      {
+        $project: {
+          _id: "$auction._id",
+          startingBid: "$auction.startingBid",
+          incrementAmount: "$auction.incrementAmount",
+          registerStartDate: "$auction.registerStartDate",
+          registerEndDate: "$auction.registerEndDate",
+          auctionStartDate: "$auction.auctionStartDate",
+          auctionEndDate: "$auction.auctionEndDate",
+          // bids: "$auction.bids",
+          property: "$auction.property",
+          buyer: {
+            _id: "$_id",
+            answers: "$answers",
+            funds: "$funds",
+          },
+        },
+      },
+    ]);
+
     //should check if admin return all bidders, if just a user return only 5 highest bidders
 
-    res.status(200).send(buyerApprovedList);
+    res.status(200).send(auctions);
   } catch (error) {
     res.status(500).send(error.message);
   }
