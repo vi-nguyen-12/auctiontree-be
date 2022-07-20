@@ -216,25 +216,27 @@ const approveFund = async (req, res) => {
     if (!buyer) {
       return res.status(200).send({ error: "Buyer not found" });
     }
-    //check if all answers are approved
-    for (let item of buyer.answers) {
-      if (item.isApproved === false) {
-        const question = await Question.findById(item.questionId);
-        return res.status(200).send({
-          error: `Answer of question "${question.questionText}" is not approved`,
-        });
-      }
-    }
 
     const fund = buyer.funds.id(fundId);
     if (!fund) {
       return res.status(200).send({ error: "Document is not found" });
     }
     fund.document.isVerified = status;
-    if (amount) {
-      fund.amount = amount;
-    }
 
+    //check if all answers are approved
+    if (status === "success") {
+      for (let item of buyer.answers) {
+        if (item.isApproved === false) {
+          const question = await Question.findById(item.questionId);
+          return res.status(200).send({
+            error: `Answer of question "${question.questionText}" is not approved`,
+          });
+        }
+      }
+      fund.amount = amount;
+    } else {
+      fund.amount = 0;
+    }
     await fund.save({ suppressWarning: true });
     const savedBuyer = await buyer.save();
     const result = {

@@ -497,17 +497,25 @@ const getAuction = async (req, res) => {
       auctionId: auction._id,
       userId,
     });
-    if (isRegisteredToBuy?.isApproved === "success") {
+    if (isRegisteredToBuy) {
+      for (let fund of isRegisteredToBuy.funds) {
+        if (fund.document.isVerified === "success") {
+          return res.status(200).send(auction);
+        }
+      }
+      delete auction.highestBidders;
+      delete auction.isReservedMet;
       return res.status(200).send(auction);
     }
+
     //Authenticate: registered buyer not approved cannot see highestBidders and if reserved is met
-    //Authenticate: normal user : the same and add 1 field: "isNotRegisteredToBuy": true
+    //Authenticate: normal user, cannot see number of bids and highest bid: the same and add 1 field: "isNotRegisteredToBuy": true
+    auction.isNotRegisteredToBuy = true;
     delete auction.highestBidders;
     delete auction.isReservedMet;
-    if (isRegisteredToBuy) {
-      return res.status(200).send(auction);
-    }
-    auction.isNotRegisteredToBuy = true;
+    delete auction.numberOfBids;
+    delete auction.highestBid;
+    console.log(auction);
     return res.status(200).send(auction);
   } catch (error) {
     res.status(500).send(error.message);
