@@ -109,6 +109,7 @@ const buyerSchema = new Schema(
         },
         amount: {
           type: Number,
+          default: 0,
           min: [0, "Fund amount must be greater than 0"],
         },
       },
@@ -122,8 +123,10 @@ const buyerSchema = new Schema(
       time: { type: String, required: true },
       IPAddress: { type: String, required: true },
     },
+    availableFund: { type: Number, required: true, default: 0 },
     // rejectedReason: String,
   },
+
   { timestamp: true }
 );
 

@@ -91,6 +91,7 @@ const createBuyer = async (req, res) => {
         documents: property.documents,
       },
       answers,
+      availableFund: savedBuyer.availableFund,
     };
 
     sendEmail({
@@ -234,10 +235,15 @@ const approveFund = async (req, res) => {
         }
       }
       fund.amount = amount;
+      buyer.availableFund = buyer.availableFund + amount;
     } else {
+      if (fund.amount !== 0) {
+        buyer.availableFund = buyer.availableFund - fund.amount;
+      }
       fund.amount = 0;
     }
     await fund.save({ suppressWarning: true });
+
     const savedBuyer = await buyer.save();
     const result = {
       _id: savedBuyer._id,
@@ -364,8 +370,6 @@ module.exports = {
   approveFund,
   addFund,
   editBuyer,
-
-  // verifyDocument,
   getBuyers,
   approveAnswer,
   deleteBuyer,

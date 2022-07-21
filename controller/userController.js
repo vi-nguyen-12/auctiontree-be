@@ -233,7 +233,6 @@ const login = async (req, res) => {
         city: user.city,
         isActive: user.isActive,
         KYC: user.KYC,
-        wallet: user.wallet,
         token,
       },
     });
@@ -610,6 +609,7 @@ const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
                 _id: "$auctionId",
                 buyerId: "$_id",
                 funds: "$funds",
+                availableFund: "$availableFund",
               },
             },
 
@@ -653,7 +653,7 @@ const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
     const result = await Promise.all(
       aggregate.map(async (item) => {
         const user = await User.findById(item._id).select(
-          "firstName lastName userName phone email city country wallet"
+          "firstName lastName userName phone email city country"
         );
 
         item = { ...item, ...user.toObject() };
@@ -740,6 +740,7 @@ const getAuctionsOfBuyer = async (req, res) => {
             _id: "$_id",
             answers: "$answers",
             funds: "$funds",
+            availableFund: "$availableFund",
           },
         },
       },
@@ -801,6 +802,7 @@ const getFundsOfBuyer = async (req, res) => {
           auctionId: "$auction._id",
           property: "$auction.property",
           funds: "$funds",
+          availableFund: "$availableFund",
         },
       },
     ]);
