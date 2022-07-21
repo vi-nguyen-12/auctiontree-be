@@ -803,15 +803,37 @@ const getFundsOfBuyer = async (req, res) => {
           property: "$auction.property",
           funds: "$funds",
           availableFund: "$availableFund",
+          bids: "$auction.bids",
+          // should filter from this, it should better
+          // {
+          //   $cond: {
+          //     if: { $size: { $gt: [$size, 0] } },
+          //     then: {
+          //       $filter: {
+          //         input: "$auction.bids",
+          //         as: "bids",
+          //         $eq: ["$$buyerId", "$_id"],
+          //       },
+          //     },
+          //     else: [],
+          //   },
+          // },
         },
       },
     ]);
 
     for (let buyer of buyers) {
-      buyer.totalFunds = buyer.funds.reduce(
-        (prev, curr) => prev + curr.amount,
-        0
-      );
+      buyer.bids =
+        buyer.bids.length > 0
+          ? buyer.bids
+              .filter(
+                (item) => item.buyerId.toString() === buyer._id.toString()
+              )
+              .map((item) => {
+                delete item.buyerId;
+                return item;
+              })
+          : [];
       delete buyer.funds;
     }
 

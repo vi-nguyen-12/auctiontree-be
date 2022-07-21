@@ -658,13 +658,10 @@ const placeBidding = async (req, res) => {
   try {
     let email, subject, text;
     const buyer = await Buyer.findOne({ userId: req.user.id, auctionId });
+    console.log(buyer);
     const user = await User.findById(req.user.id);
     if (!buyer) {
       return res.status(200).send({ error: "User did not register to buy" });
-    }
-
-    if (buyer.isApproved !== "success") {
-      return res.status(200).send({ error: "User is not approved to bid yet" });
     }
 
     const auction = await Auction.findOne({ _id: auctionId });
@@ -706,19 +703,31 @@ const placeBidding = async (req, res) => {
     //add money back to funds of the highest bidder & send email
     let highestBidder =
       auction.bids.length > 0 ? auction.bids.slice(-1)[0] : null;
+
     if (highestBidder) {
-      let buyer = await Buyer.findById(highestBidder.buyerId).populate(
+      console.log(highestBidder);
+      let highestBuyer = await Buyer.findById(highestBidder.buyerId).populate(
         "userId"
       );
-      buyer.availableFund = buyer.availableFund + highestBidder.amount;
+      console.log(buyer);
+      highestBuyer.availableFund =
+        highestBuyer.availableFund + highestBidder.amount;
+
       await buyer.save();
-      email = buyer.userId.email;
+
+      email = highestBuyer.userId.email;
       subject = "Auction3- You bid is not highest anymore";
-      text = `Hi ${buyer.firstName} ${buyer.lastName} Your bid is not highest anymore, and your avaible fund for this property is now ${buyer.availableFund}`;
+      text = `Hi ${highestBuyer.firstName} ${highestBuyer.lastName} Your bid is not highest anymore, and your avaible fund for this property is now ${highestBuyer.availableFund}`;
     }
 
     // deduct money from this bidder
-    buyer.availableFund = buyer.availableFund - biddingPrice;
+    if (highestBidder?.buyerId.toString() === buyer._id.toString()) {
+      buyer.availableFund =
+        buyer.availableFund + highestBidder.amount - biddingPrice;
+    } else {
+      buyer.availableFund = buyer.availableFund - biddingPrice;
+    }
+
     await buyer.save();
 
     //send email to this bidder, and their total available fund
@@ -728,7 +737,7 @@ const placeBidding = async (req, res) => {
     sendEmail({ to: email, subject, text });
 
     const newBidder = {
-      userId: req.user.id,
+      buyerId: buyer._id,
       amount: biddingPrice,
       time: biddingTime,
     };
