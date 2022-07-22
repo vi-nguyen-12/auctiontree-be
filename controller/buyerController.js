@@ -80,7 +80,6 @@ const createBuyer = async (req, res) => {
       funds: savedBuyer.funds,
       docusign: savedBuyer.docusign,
       TC: savedBuyer.TC,
-      isApproved: savedBuyer.isApproved,
       auctionId: savedBuyer.auctionId,
       property: {
         _id: property._id,
@@ -227,12 +226,10 @@ const approveFund = async (req, res) => {
     //check if all answers are approved
     if (status === "success") {
       for (let item of buyer.answers) {
-        if (item.isApproved === false) {
-          const question = await Question.findById(item.questionId);
-          return res.status(200).send({
-            error: `Answer of question "${question.questionText}" is not approved`,
-          });
-        }
+        const question = await Question.findById(item.questionId);
+        return res.status(200).send({
+          error: `Answer of question "${question.questionText}" is not approved`,
+        });
       }
       fund.amount = amount;
       buyer.availableFund = buyer.availableFund + amount;
@@ -287,7 +284,6 @@ const approveAnswer = async (req, res) => {
         userId: savedBuyer.userId,
         auctionId: savedBuyer.auctionId,
         answers: savedBuyer.answers,
-        isApproved: savedBuyer.isApproved,
       };
       return res.status(200).send(result);
     }
@@ -301,13 +297,8 @@ const approveAnswer = async (req, res) => {
 //@route GET /api/buyers?status=...
 const getBuyers = async (req, res) => {
   try {
-    console.log(req.admin);
     if (req.admin?.roles.includes("buyer_read")) {
-      const { status } = req.query;
       let query = {};
-      if (status) {
-        query.isApproved = status;
-      }
       const buyers = await Buyer.aggregate([
         { $match: query },
         {

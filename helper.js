@@ -1,14 +1,14 @@
 const sgMail = require("@sendgrid/mail");
 const EmailTemplate = require("./model/EmailTemplate");
 
-const sendEmail = ({ from, to, subject, text }) => {
-  console.log(from, to, subject, text);
+const sendEmail = ({ from, to, subject, text, htmlText }) => {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
   const msg = {
     to,
     from: from || "auction3x@gmail.com",
     subject,
     text, //for html text use html instead of text
+    html: htmlText,
   };
   sgMail
     .send(msg, true)

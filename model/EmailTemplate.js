@@ -7,6 +7,7 @@ const emailTemplateSchema = new Schema(
       type: String,
       enum: [
         "registration_confirm",
+        "reset_password",
         "contact_us_reply",
         "customer_id_docs_approval",
         "customer_id_docs_rejected",
@@ -57,6 +58,9 @@ const emailTemplateSchema = new Schema(
 emailTemplateSchema.pre("save", function (next) {
   if (this.type == "registration_confirm") {
     this.replacedTexts = ["name", "customer_id"];
+  }
+  if (this.type == "reset_password") {
+    this.replacedTexts = ["name", "link"];
   }
   if (this.type == "contact_us_reply") {
     this.replacedTexts = ["name"];

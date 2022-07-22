@@ -63,16 +63,18 @@ const registerUser = async (req, res) => {
     });
     const savedUser = await user.save();
     const emailBody = await replaceEmailTemplate("registration_confirm", {
+      name: `${savedUser.firstName} ${savedUser.lastName}`,
       customer_id: savedUser._id,
       link: `${client_url}/confirm_email?token=${token}`,
     });
     if (emailBody.error) {
       return res.status(200).send({ error: emailBody.error });
     }
+
     sendEmail({
       to: user.email,
       subject: emailBody.subject,
-      text: emailBody.content,
+      htmlText: emailBody.content,
     });
     res.status(200).send({
       userId: savedUser._id,
@@ -662,13 +664,15 @@ const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
             const auction = await Auction.findById(item._id).select(
               "_id registerStartDate registerEndDate auctionStartDate auctionEndDate bids"
             );
-            auction.bids = auction.bids
-              .filter((item) => item.userId.toString() === user._id.toString())
-              .map((item) => {
-                item = item.toObject();
-                delete item.userId;
-                return item;
-              });
+            // auction.bids = auction.bids
+            //   .filter(
+            //     (auction) => auction.buyerId.toString() === item.toString()
+            //   )
+            //   .map((auction) => {
+            //     item = item.toObject();
+            //     delete auction.buyerId;
+            //     return auction;
+            //   });
             return { ...item, ...auction.toObject() };
           })
         );
@@ -745,6 +749,17 @@ const getAuctionsOfBuyer = async (req, res) => {
         },
       },
     ]);
+
+    for (let auction of auctions) {
+      let isAbleToBid = false;
+      for (let fund of auction.buyer.funds) {
+        if (fund.document.isVerified === "success") {
+          isAbleToBid = true;
+          break;
+        }
+      }
+      auction.isAbleToBid = isAbleToBid;
+    }
 
     //should check if admin return all bidders, if just a user return only 5 highest bidders
 
