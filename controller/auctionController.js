@@ -643,7 +643,7 @@ const getAuctionStatusOfABuyer = async (req, res) => {
 };
 
 //@desc  Buyer do bidding  //should money back to bidder's wallet
-//@route PUT /api/auctions/bidding/:id   body:{biddingTime, biddingPrice }
+//@route PUT /api/auctions/:id/bidding   body:{biddingTime, biddingPrice }
 const placeBidding = async (req, res) => {
   const bodySchema = Joi.object({
     biddingTime: Joi.date().iso().required(),
@@ -656,14 +656,12 @@ const placeBidding = async (req, res) => {
   const { biddingTime: biddingTimeISOString, biddingPrice } = req.body;
   const biddingTime = new Date(biddingTimeISOString);
   try {
+    let email, subject, text;
     const buyer = await Buyer.findOne({ userId: req.user.id, auctionId });
+    console.log(buyer);
     const user = await User.findById(req.user.id);
     if (!buyer) {
       return res.status(200).send({ error: "User did not register to buy" });
-    }
-
-    if (buyer.isApproved !== "success") {
-      return res.status(200).send({ error: "User is not approved to bid yet" });
     }
 
     const auction = await Auction.findOne({ _id: auctionId });
@@ -673,7 +671,8 @@ const placeBidding = async (req, res) => {
 
     const property = await Property.findOne({ _id: auction.property });
 
-    if (user.wallet < biddingPrice) {
+    //check if has enough funds for that property
+    if (buyer.availableFund < biddingPrice) {
       return res.status(200).send({ error: "Wallet is insufficient to bid" });
     }
 
@@ -701,28 +700,44 @@ const placeBidding = async (req, res) => {
       });
     }
 
-    //deduct amount from wallet;
-    user.wallet = user.wallet - biddingPrice;
-    await user.save();
+    //add money back to funds of the highest bidder & send email
+    let highestBidder =
+      auction.bids.length > 0 ? auction.bids.slice(-1)[0] : null;
 
-    //add money back to wallet of 4th highest bidder;
-    if (auction.bids.length > 3) {
-      const fourthHighestBidder = auction.bids.slice(-4)[0];
-      const fourthHighestBidderUser = await User.findById(
-        fourthHighestBidder.userId
+    if (highestBidder) {
+      console.log(highestBidder);
+      let highestBuyer = await Buyer.findById(highestBidder.buyerId).populate(
+        "userId"
       );
-      fourthHighestBidderUser.wallet =
-        fourthHighestBidderUser.wallet + fourthHighestBidder.amount;
-      await fourthHighestBidderUser.save();
+      console.log(buyer);
+      highestBuyer.availableFund =
+        highestBuyer.availableFund + highestBidder.amount;
+
+      await buyer.save();
+
+      email = highestBuyer.userId.email;
+      subject = "Auction3- You bid is not highest anymore";
+      text = `Hi ${highestBuyer.firstName} ${highestBuyer.lastName} Your bid is not highest anymore, and your avaible fund for this property is now ${highestBuyer.availableFund}`;
     }
-    //send email;
-    let email = user.email;
-    let subject = "Auction3- Bidding completed successfully";
-    let text = `Hi ${user.firstName} ${user.lastName} Thank you for your bid. Your price is highest with ${biddingPrice} at ${biddingTime}`;
+
+    // deduct money from this bidder
+    if (highestBidder?.buyerId.toString() === buyer._id.toString()) {
+      buyer.availableFund =
+        buyer.availableFund + highestBidder.amount - biddingPrice;
+    } else {
+      buyer.availableFund = buyer.availableFund - biddingPrice;
+    }
+
+    await buyer.save();
+
+    //send email to this bidder, and their total available fund
+    email = user.email;
+    subject = "Auction3- Bidding completed successfully";
+    text = `Hi ${user.firstName} ${user.lastName} Thank you for your bid. Your price is highest with ${biddingPrice} at ${biddingTime}`;
     sendEmail({ to: email, subject, text });
 
     const newBidder = {
-      userId: req.user.id,
+      buyerId: buyer._id,
       amount: biddingPrice,
       time: biddingTime,
     };
@@ -730,7 +745,7 @@ const placeBidding = async (req, res) => {
 
     const savedAuction = await auction.save();
     let numberOfBids, highestBidders;
-    ({ numberOfBids, highestBid, highestBidders } = await getBidsInformation(
+    ({ numberOfBids, highestBid, highestBidders } = getBidsInformation(
       savedAuction.bids,
       savedAuction.startingBid
     ));

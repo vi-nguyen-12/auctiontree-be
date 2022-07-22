@@ -15,7 +15,6 @@ const {
   getAllAuctions,
 } = require("../controller/auctionController");
 
-router.put("/bidding/:id", auth, placeBidding);
 router.get("/upcoming/:type", getUpcomingAuctions);
 router.get("/ongoing/:type", getOngoingAuctions);
 router.get("/upcoming", getUpcomingAuctions);
@@ -27,6 +26,7 @@ router.get("/propertyId/:propertyId", authNotStrict, getAuction);
 router.get("/:id/result", getAuctionResult);
 router.get("/:id", authNotStrict, getAuction);
 router.get("/", authNotStrict, getAllAuctions);
+router.put("/bidding/:id", auth, placeBidding);
 router.put("/:id", auth, editAuction);
 router.delete("/:id", auth, deleteAuction);
 module.exports = router;

@@ -31,9 +31,9 @@ const auctionSchema = new Schema(
     },
     bids: [
       {
-        userId: {
+        buyerId: {
           type: Schema.Types.ObjectId,
-          ref: "User",
+          ref: "Buyer",
           required: true,
         },
         amount: Number,
@@ -41,7 +41,7 @@ const auctionSchema = new Schema(
       },
     ],
     winner: {
-      userId: { type: Schema.Types.ObjectId, ref: "User" },
+      buyerId: { type: Schema.Types.ObjectId, ref: "Buyer" },
       amount: Number,
     },
     isFeatured: { type: Boolean, default: false, required: true },
