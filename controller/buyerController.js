@@ -226,7 +226,7 @@ const approveFund = async (req, res) => {
     //check if all answers are approved
     if (status === "success") {
       for (let item of buyer.answers) {
-        if (!item.answer.isApproved) {
+        if (!item.isApproved) {
           const question = await Question.findById(item.questionId);
           return res.status(200).send({
             error: `Answer of question "${question.questionText}" is not approved`,
