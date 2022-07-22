@@ -233,8 +233,11 @@ const approveFund = async (req, res) => {
           });
         }
       }
+      //check if that document is approved for a fund before
+      if (fund.amount) {
+        buyer.availableFund = buyer.availableFund - fund.amount + amount;
+      }
       fund.amount = amount;
-      buyer.availableFund = buyer.availableFund + amount;
     } else {
       if (fund.amount !== 0) {
         buyer.availableFund = buyer.availableFund - fund.amount;
