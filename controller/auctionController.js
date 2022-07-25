@@ -454,10 +454,8 @@ const getAuction = async (req, res) => {
       select: "-step -isApproved",
     });
     if (!auction) return res.status(200).send({ error: "Auction not found!" });
-    const { numberOfBids, highestBid, highestBidders } = getBidsInformation(
-      auction.bids,
-      auction.startingBid
-    );
+    const { numberOfBids, highestBid, highestBidders } =
+      await getBidsInformation(auction.bids, auction.startingBid);
     let isReservedMet =
       highestBid >= auction.property.reservedAmount ? true : false;
     auction = {
@@ -484,7 +482,7 @@ const getAuction = async (req, res) => {
       return res.status(200).send(auction);
     }
 
-    //Authenticate: registered buyer & be approved can see list top 5, not whole list of bids
+    //Authenticate: registered buyer & be approved at least 1 fund can see list top 5, not whole list of bids
     delete auction.bids;
     delete auction.property.reservedAmount;
     delete auction.property.discussedAmount;
@@ -497,12 +495,21 @@ const getAuction = async (req, res) => {
       auctionId: auction._id,
       userId,
     });
+    let isApprovedToBid = false;
+
     if (isRegisteredToBuy) {
       for (let fund of isRegisteredToBuy.funds) {
         if (fund.document.isVerified === "success") {
-          return res.status(200).send(auction);
+          isApprovedToBid = true;
+          break;
         }
       }
+    }
+
+    if (isRegisteredToBuy && isApprovedToBid) {
+      return res.status(200).send(auction);
+    }
+    if (isRegisteredToBuy && !isApprovedToBid) {
       delete auction.highestBidders;
       delete auction.isReservedMet;
       return res.status(200).send(auction);
@@ -515,7 +522,6 @@ const getAuction = async (req, res) => {
     delete auction.isReservedMet;
     delete auction.numberOfBids;
     delete auction.highestBid;
-    console.log(auction);
     return res.status(200).send(auction);
   } catch (error) {
     res.status(500).send(error.message);
@@ -573,11 +579,9 @@ const getOngoingAuctions = async (req, res) => {
 
     allAuctions = allAuctions
       .filter((auction) => auction.property)
-      .map((auction) => {
-        const { numberOfBids, highestBid, highestBidders } = getBidsInformation(
-          auction.bids,
-          auction.startingBid
-        );
+      .map(async (auction) => {
+        const { numberOfBids, highestBid, highestBidders } =
+          await getBidsInformation(auction.bids, auction.startingBid);
         let isReservedMet =
           highestBid >= auction.property.reservedAmount ? true : false;
         auction = {
@@ -745,7 +749,7 @@ const placeBidding = async (req, res) => {
 
     const savedAuction = await auction.save();
     let numberOfBids, highestBidders;
-    ({ numberOfBids, highestBid, highestBidders } = getBidsInformation(
+    ({ numberOfBids, highestBid, highestBidders } = await getBidsInformation(
       savedAuction.bids,
       savedAuction.startingBid
     ));
