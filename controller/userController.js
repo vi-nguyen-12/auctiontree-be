@@ -17,10 +17,10 @@ const {
 
 const client_url =
   process.env.NODE_ENV === "production"
-    ? process.env.PROD_CLIENT_ADMIN_URL
+    ? process.env.PROD_CLIENT_URL
     : process.env.NODE_ENV === "test"
-    ? process.env.TEST_CLIENT_ADMIN_URL
-    : process.env.DEV_CLIENT_ADMIN_URL;
+    ? process.env.TEST_CLIENT_URL
+    : process.env.DEV_CLIENT_URL;
 
 //@desc  Register a new user & create secret
 //@route POST /api/users/register
@@ -359,6 +359,14 @@ const resetForgotPassword = async (req, res) => {
       user.password = hashedPassword;
       user.temp_token = undefined;
       await user.save();
+      const emailBody = await replaceEmailTemplate("reset_password", {
+        name: `${savedUser.firstName} ${savedUser.lastName}`,
+        customer_id: savedUser._id,
+        link: `${client_url}/confirm_email?token=${token}`,
+      });
+      if (emailBody.error) {
+        return res.status(200).send({ error: emailBody.error });
+      }
       res.status(200).send({ message: "Reset password successfully" });
     }
   } catch (err) {
@@ -664,15 +672,15 @@ const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
             const auction = await Auction.findById(item._id).select(
               "_id registerStartDate registerEndDate auctionStartDate auctionEndDate bids"
             );
-            // auction.bids = auction.bids
-            //   .filter(
-            //     (auction) => auction.buyerId.toString() === item.toString()
-            //   )
-            //   .map((auction) => {
-            //     item = item.toObject();
-            //     delete auction.buyerId;
-            //     return auction;
-            //   });
+            auction.bids = auction.bids
+              .filter(
+                (auction) => auction.buyerId.toString() === item.toString()
+              )
+              .map((auction) => {
+                item = item.toObject();
+                delete auction.buyerId;
+                return auction;
+              });
             return { ...item, ...auction.toObject() };
           })
         );
@@ -963,7 +971,7 @@ const getListingsOfSeller = async (req, res) => {
         const result = await Auction.findOne({ property: item._id });
         if (result) {
           const { numberOfBids, highestBid, highestBidders } =
-            getBidsInformation(result.bids, result.startingBid);
+            await getBidsInformation(result.bids, result.startingBid);
           item = item.toJSON();
           item["auctionDetails"] = {
             _id: result._id,
