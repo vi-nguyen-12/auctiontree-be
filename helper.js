@@ -1,5 +1,6 @@
 const sgMail = require("@sendgrid/mail");
 const EmailTemplate = require("./model/EmailTemplate");
+const Buyer = require("./model/Buyer");
 
 const sendEmail = ({ from, to, subject, text, htmlText }) => {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -20,10 +21,17 @@ const sendEmail = ({ from, to, subject, text, htmlText }) => {
     });
 };
 
-const getBidsInformation = (bids, startingBid) => {
+const getBidsInformation = async (bids, startingBid) => {
   const numberOfBids = bids.length;
   const highestBid = bids.length === 0 ? startingBid : bids.slice(-1)[0].amount;
   let highestBidders = bids.slice(-5);
+  highestBidders = await Promise.all(
+    highestBidders.map(async (bidder) => {
+      let buyer = await Buyer.findById(bidder.buyerId).select("userId");
+      console.log(buyer.userId.toString());
+      return { ...bidder.toObject(), userId: buyer.userId.toString() };
+    })
+  );
   return { numberOfBids, highestBid, highestBidders };
 };
 
