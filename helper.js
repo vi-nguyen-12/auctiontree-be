@@ -28,7 +28,6 @@ const getBidsInformation = async (bids, startingBid) => {
   highestBidders = await Promise.all(
     highestBidders.map(async (bidder) => {
       let buyer = await Buyer.findById(bidder.buyerId).select("userId");
-      console.log(buyer.userId.toString());
       return { ...bidder.toObject(), userId: buyer.userId.toString() };
     })
   );
