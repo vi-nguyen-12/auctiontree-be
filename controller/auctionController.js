@@ -3,7 +3,11 @@ const Auction = require("../model/Auction");
 const Property = require("../model/Property");
 const Buyer = require("../model/Buyer");
 const User = require("../model/User");
-const { sendEmail, getBidsInformation } = require("../helper");
+const {
+  sendEmail,
+  getBidsInformation,
+  replaceEmailTemplate,
+} = require("../helper");
 
 //@desc  Create an auction
 //@route POST api/auctions/  body:{propertyId, registerStartDate,registerEndDate,auctionStartDate,auctionEndDate,startingBid,incrementAmount}  all dates are in ISOString format
@@ -76,13 +80,27 @@ const createAuction = async (req, res) => {
         isFeatured,
       });
       const savedAuction = await newAuction.save();
+      let emailBody;
+      emailBody = await replaceEmailTemplate("property_auction", {
+        name: `${property.createdBy.firstName} ${property.createdBy.lastName}`,
+        property_address: `${property.details.property_address.formatted_street_address} ${property.details.property_address.zip_code} ${property.details.property_address.city} ${property.details.property_address.state} ${property.details.property_address.country}`,
+        auction_id: savedAuction._id,
+        auction_registration_start_date: registerStartDate,
+        auction_registration_end_date: registerEndDate,
+        auction_start_date: auctionStartDate,
+        auction_end_date: auctionEndDate,
+        starting_bid_price: startingBid,
+        increment_amount: incrementAmount,
+      });
+      if (emailBody.error) {
+        return res.status(200).send({ error: emailBody.error });
+      }
+      sendEmail({
+        to: property.createdBy.email,
+        subject: emailBody.subject,
+        htmlText: emailBody.content,
+      });
 
-      let email = property.createdBy.email;
-      let subject = "Auction3 - Create an auction for your property";
-      let text = `We create an auction for your property with starting register date ${registerStartDate} and auction start date ${auctionStartDate}.
-      Starting bid is ${startingBid} and increment amount is ${incrementAmount}
-       `;
-      sendEmail({ to: email, subject, text });
       return res.status(200).send(savedAuction);
     }
     res.status(200).send({ error: "Not allowed to create auction" });
@@ -577,24 +595,27 @@ const getOngoingAuctions = async (req, res) => {
           "-createdBy -discussedAmount -isApproved -step -docusignId -createdAt -updatedAt",
       });
 
-    allAuctions = allAuctions
-      .filter((auction) => auction.property)
-      .map(async (auction) => {
-        const { numberOfBids, highestBid, highestBidders } =
-          await getBidsInformation(auction.bids, auction.startingBid);
-        let isReservedMet =
-          highestBid >= auction.property.reservedAmount ? true : false;
-        auction = {
-          ...auction.toObject(),
-          numberOfBids,
-          highestBid,
-          highestBidders,
-          isReservedMet,
-        };
-        delete auction.bids;
-        delete auction.property.reservedAmount;
-        return auction;
-      });
+    allAuctions = await Promise.all(
+      allAuctions
+        .filter((auction) => auction.property)
+        .map(async (auction) => {
+          const { numberOfBids, highestBid, highestBidders } =
+            await getBidsInformation(auction.bids, auction.startingBid);
+          let isReservedMet =
+            highestBid >= auction.property.reservedAmount ? true : false;
+          auction = {
+            ...auction.toObject(),
+            numberOfBids,
+            highestBid,
+            highestBidders,
+            isReservedMet,
+          };
+          delete auction.bids;
+          delete auction.property.reservedAmount;
+          return auction;
+        })
+    );
+    console.log(allAuctions);
     res.status(200).send(allAuctions);
   } catch (err) {
     res.status(500).send(err.message);
