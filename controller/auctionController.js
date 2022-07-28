@@ -615,7 +615,6 @@ const getOngoingAuctions = async (req, res) => {
           return auction;
         })
     );
-    console.log(allAuctions);
     res.status(200).send(allAuctions);
   } catch (err) {
     res.status(500).send(err.message);
@@ -728,13 +727,13 @@ const placeBidding = async (req, res) => {
     //add money back to funds of the highest bidder & send email
     let highestBidder =
       auction.bids.length > 0 ? auction.bids.slice(-1)[0] : null;
+    let emailBody;
 
     if (highestBidder) {
       console.log(highestBidder);
       let highestBuyer = await Buyer.findById(highestBidder.buyerId).populate(
         "userId"
       );
-      console.log(buyer);
       highestBuyer.availableFund =
         highestBuyer.availableFund + highestBidder.amount;
 

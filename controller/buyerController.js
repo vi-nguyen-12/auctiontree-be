@@ -5,7 +5,7 @@ const Question = require("../model/Question");
 const Property = require("../model/Property");
 const Auction = require("../model/Auction");
 const Docusign = require("../model/Docusign");
-const { sendEmail } = require("../helper");
+const { sendEmail, replaceEmailTemplate } = require("../helper");
 
 //@desc  Create a buyer
 //@route POST /api/buyers body:{auctionId, docusignId,TC, answers:[{questionId, answer: "yes"/"no", explanation:"", documents:[{officialName:..., name:...,url:...}]}] } TC:{time: ISOString format, IPAddress:...}
@@ -75,6 +75,25 @@ const createBuyer = async (req, res) => {
 
     const savedBuyer = await newBuyer.save();
     const property = await Property.findOne({ _id: auction.property });
+
+    //send email
+    let emailBody;
+    emailBody = await replaceEmailTemplate("register_to_bid", {
+      name: `${user.firstName} ${user.lastName}`,
+      auction_id: savedBuyer.auctionId,
+      property_type: property.type,
+      property_address: `${property.details.property_address.formatted_street_address} ${property.details.property_address.zip_code} ${property.details.property_address.city} ${property.details.property_address.state} ${property.details.property_address.country}`,
+    });
+    if (emailBody.error) {
+      return res.status(200).send({ error: emailBody.error });
+    }
+
+    sendEmail({
+      to: user.email,
+      subject: emailBody.subject,
+      htmlText: emailBody.content,
+    });
+
     const result = {
       _id: savedBuyer._id,
       funds: savedBuyer.funds,
@@ -92,12 +111,6 @@ const createBuyer = async (req, res) => {
       answers,
       availableFund: savedBuyer.availableFund,
     };
-
-    sendEmail({
-      to: user.email,
-      subject: "Auction3- Register to bid",
-      text: `Thank you for registering to bid for a ${property.type}. Your bidder ID is ${savedBuyer._id}. Your registration will be reviewed`,
-    });
     res.status(200).send(result);
   } catch (err) {
     res.status(500).send(err);
@@ -236,8 +249,6 @@ const approveFund = async (req, res) => {
       //check if that document is approved for a fund before
       buyer.availableFund = buyer.availableFund - fund.amount + amount;
       fund.amount = amount;
-      console.log(buyer.availableFund);
-      console.log(fund.amount);
     } else {
       if (fund.amount !== 0) {
         buyer.availableFund = buyer.availableFund - fund.amount;
@@ -251,10 +262,29 @@ const approveFund = async (req, res) => {
       _id: savedBuyer._id,
       fund,
     };
+
+    //send email to buyer
+    let emailBody;
+    if (status == "success") {
+      emailBody = await replaceEmailTemplate("POF_approval", {
+        name: `${buyer.userId.firstName} ${buyer.userId.lastName}`,
+        document_name: fund.document.name,
+        amount,
+      });
+    } else {
+      emailBody = await replaceEmailTemplate("POF_rejected", {
+        name: `${buyer.userId.firstName} ${buyer.userId.lastName}`,
+        document_name: fund.document.name,
+      });
+    }
+    if (emailBody.error) {
+      return res.status(200).send({ error: emailBody.error });
+    }
+
     sendEmail({
       to: buyer.userId.email,
-      subject: "Auction3- Request to change funding",
-      text: `Your request to add more funding has been sent to the admin`,
+      subject: emailBody.subject,
+      htmlText: emailBody.content,
     });
 
     res.status(200).send(result);

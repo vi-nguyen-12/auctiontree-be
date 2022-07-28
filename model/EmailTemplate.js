@@ -20,6 +20,7 @@ const emailTemplateSchema = new Schema(
         "property_registration",
         "property_payment",
         "property_approval",
+        "property_rejected",
         "property_auction",
         "RM_to_auction",
         "property_sold_at_auction",
@@ -29,8 +30,6 @@ const emailTemplateSchema = new Schema(
         "register_to_bid",
         "deposited_won_property",
         "buyer_missing_document",
-        "buyer_approval",
-        "buyer_not_approved",
         "highest_bidder_notification",
         "escrow",
         "settlement_fees_and_balance",
@@ -69,10 +68,10 @@ emailTemplateSchema.pre("save", function (next) {
     this.replacedTexts = ["link"];
   }
   if (this.type == "POF_approval") {
-    this.replacedTexts = ["amount"];
+    this.replacedTexts = ["name", "document_name", "amount"];
   }
   if (this.type == "POF_rejected") {
-    this.replacedTexts = ["amount"];
+    this.replacedTexts = ["name", "document_name"];
   }
   if (this.type == "KYC") {
     this.replacedTexts = ["name"];
@@ -84,7 +83,7 @@ emailTemplateSchema.pre("save", function (next) {
     this.replacedTexts = ["name"];
   }
   if (this.type == "property_registration") {
-    this.replacedTexts = ["name"];
+    this.replacedTexts = ["name", "property_adddress"];
   }
   if (this.type == "property_payment") {
     this.replacedTexts = ["amount", "property_address"];
@@ -92,14 +91,25 @@ emailTemplateSchema.pre("save", function (next) {
   if (this.type == "property_approval") {
     this.replacedTexts = ["name", "property_address", "property_id"];
   }
+  if (this.type == "property_rejected") {
+    this.replacedTexts = [
+      "name",
+      "property_address",
+      "property_id",
+      "rejected_reason",
+    ];
+  }
   if (this.type == "property_auction") {
     this.replacedTexts = [
+      "name",
       "property_address",
       "auction_id",
       "auction_registration_start_date",
       "auction_registration_end_date",
       "auction_start_date",
       "auction_end_date",
+      "starting_bid_price",
+      "increment_amount",
     ];
   }
   if (this.type == "RM_to_auction") {
@@ -123,7 +133,12 @@ emailTemplateSchema.pre("save", function (next) {
     this.replacedTexts = ["property_type", "property_address"];
   }
   if (this.type == "register_to_bid") {
-    this.replacedTexts = ["auction_id", "property_type", "property_address"];
+    this.replacedTexts = [
+      "name",
+      "auction_id",
+      "property_type",
+      "property_address",
+    ];
   }
   if (this.type == "deposited_won_property") {
     this.replacedTexts = ["amount", "property_type", "property_address"];
@@ -131,18 +146,7 @@ emailTemplateSchema.pre("save", function (next) {
   if (this.type == "buyer_missing_document") {
     this.replacedTexts = ["name"];
   }
-  if (this.type == "buyer_approval") {
-    this.replacedTexts = [
-      "name",
-      "property_type",
-      "property_address",
-      "auction_start_date",
-      "bidding_limit_amount",
-    ];
-  }
-  if (this.type == "buyer_not_approved") {
-    this.replacedTexts = ["name", "auction_id"];
-  }
+
   if (this.type == "highest_bidder_notification") {
     this.replacedTexts = ["name", "auction_id", "bidding_amount"];
   }
