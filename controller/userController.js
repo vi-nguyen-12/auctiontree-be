@@ -367,7 +367,7 @@ const resetForgotPassword = async (req, res) => {
       if (emailBody.error) {
         return res.status(200).send({ error: emailBody.error });
       }
-      res.status(200).send({ message: "Reset password successfully" });
+      res.status(200).send({ message: "Your password is changed" });
     }
   } catch (err) {
     res.status(500).send(err.message);
@@ -620,6 +620,7 @@ const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
                 buyerId: "$_id",
                 funds: "$funds",
                 availableFund: "$availableFund",
+                answers: "$answers",
               },
             },
 
@@ -674,12 +675,12 @@ const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
             );
             auction.bids = auction.bids
               .filter(
-                (auction) => auction.buyerId.toString() === item.toString()
+                (bid) => bid.buyerId.toString() === item.buyerId.toString()
               )
-              .map((auction) => {
-                item = item.toObject();
-                delete auction.buyerId;
-                return auction;
+              .map((bid) => {
+                bid = bid.toObject();
+                delete bid.buyerId;
+                return bid;
               });
             return { ...item, ...auction.toObject() };
           })
