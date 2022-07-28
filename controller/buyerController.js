@@ -327,6 +327,40 @@ const approveAnswer = async (req, res) => {
     res.status(500).send(err.message);
   }
 };
+//@desc  Disapprove an answer
+//@route PUT /api/buyers/:buyerId/answers/:questionId/disapproved
+const disapproveAnswer = async (req, res) => {
+  try {
+    if (req.admin?.roles.includes("buyer_answer_approval")) {
+      const { buyerId, questionId } = req.params;
+      const buyer = await Buyer.findById(buyerId).populate("answers");
+      if (!buyer) {
+        return res.status(200).send({ error: "Buyer not found" });
+      }
+
+      const question = buyer.answers.find(
+        (item) => item.questionId.toString() === questionId
+      );
+      if (!question) {
+        return res.status(200).send({ error: "Question not found" });
+      }
+
+      question.isApproved = false;
+      await question.save({ suppressWarning: true });
+      const savedBuyer = await buyer.save();
+      const result = {
+        _id: savedBuyer._id,
+        userId: savedBuyer.userId,
+        auctionId: savedBuyer.auctionId,
+        answers: savedBuyer.answers,
+      };
+      return res.status(200).send(result);
+    }
+    res.status(200).send({ error: "Not allowed to disapprove answer" });
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
 
 //@desc  Get all buyers & filter by status
 //@route GET /api/buyers?status=...
@@ -398,5 +432,6 @@ module.exports = {
   editBuyer,
   getBuyers,
   approveAnswer,
+  disapproveAnswer,
   deleteBuyer,
 };
