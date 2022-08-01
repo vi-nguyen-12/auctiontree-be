@@ -62,6 +62,11 @@ const userSchema = new mongoose.Schema({
     instagram: { type: String, set: deleteEmpty },
     twitter: { type: String, set: deleteEmpty },
   },
+  notifications: [
+    {
+      type: String,
+    },
+  ],
 });
 
 module.exports = mongoose.model("User", userSchema);

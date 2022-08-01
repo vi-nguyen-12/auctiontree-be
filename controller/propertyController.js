@@ -3,7 +3,7 @@ const User = require("../model/User");
 const Buyer = require("../model/Buyer");
 const Auction = require("../model/Auction");
 const axios = require("axios");
-const { sendEmail } = require("../helper");
+const { sendEmail, replaceEmailTemplate } = require("../helper");
 const Joi = require("joi").extend(require("@joi/date"));
 Joi.objectId = require("joi-objectid")(Joi);
 const { propertyObjectSchema } = require("../middleware/validateRequest");
@@ -337,12 +337,14 @@ const createOthers = async (req, res) => {
         step,
       });
       const savedProperty = await newProperty.save();
-      const { email } = await User.findOne({ _id: req.user.id }, "email");
-      sendEmail({
-        to: email,
-        subject: `Auction3-Listing  ${type} status`,
-        text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
-      });
+
+      // send email or not ??
+      // const { email } = await User.findOne({ _id: req.user.id }, "email");
+      // sendEmail({
+      //   to: email,
+      //   subject: `Auction3-Listing  ${type} status`,
+      //   text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
+      // });
       res.status(200).send(savedProperty);
     } catch (error) {
       res.status(500).send(error.message);
@@ -533,12 +535,25 @@ const editRealestate = async (req, res) => {
     property.isApproved = "pending";
     const savedProperty = await property.save();
 
-    const { email } = await User.findOne({ _id: req.user.id }, "email");
-    // sendEmail({
-    //   email,
-    //   subject: "Auction3- Updating property",
-    //   text: "Thank you for updating your property. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
-    // });
+    //send email if step is 5, means user submit
+    if (step === 5) {
+      const user = await User.findById(req.user.id).select(
+        "firstName lastName email"
+      );
+      const emailBody = await replaceEmailTemplate("property_registration", {
+        name: `${user.firstName} ${user.lastName}`,
+        property_address: `${savedProperty.details.property_address.formatted_street_address} ${savedProperty.details.property_address.zip_code} ${savedProperty.details.property_address.city} ${savedProperty.details.property_address.state} ${savedProperty.details.property_address.country}`,
+      });
+      if (emailBody.error) {
+        return res.status(200).send({ error: emailBody.error });
+      }
+      sendEmail({
+        to: user.email,
+        subject: emailBody.subject,
+        htmlText: emailBody.content,
+      });
+    }
+
     res.status(200).send(savedProperty);
   } catch (error) {
     res.status(500).send(error.message);
@@ -798,12 +813,21 @@ const editOthers = async (req, res) => {
 
     const savedProperty = await property.save();
 
-    const { email } = await User.findOne({ _id: req.user.id }, "email");
-    sendEmail({
-      to: email,
-      subject: "Auction3- Updating property",
-      text: "Thank you for updating your property. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
-    });
+    //send email if step is 5, means user submit
+    if (step === 5) {
+      const user = await User.findById(req.user.id).select(
+        "firstName lastName email"
+      );
+      const emailBody = await replaceEmailTemplate("property_registration", {
+        name: `${user.firstName} ${user.lastName}`,
+        property_address: `${savedProperty.details.property_address.formatted_street_address} ${savedProperty.details.property_address.zip_code} ${savedProperty.details.property_address.city} ${savedProperty.details.property_address.state} ${savedProperty.details.property_address.country}`,
+      });
+      sendEmail({
+        to: user.email,
+        subject: emailBody.subject,
+        htmlText: emailBody.content,
+      });
+    }
     res.status(200).send(savedProperty);
   } catch (error) {
     res.status(500).send(error.message);
@@ -953,6 +977,7 @@ const approveProperty = async (req, res) => {
         res.status(200).send({ error: "Property not found" });
       }
       const user = await User.findById(property.createdBy);
+      let emailBody = {};
 
       if (status === "success") {
         if (property.docusignId.status !== "signing_complete") {
@@ -976,10 +1001,10 @@ const approveProperty = async (req, res) => {
               .status(200)
               .send({ error: `Document ${document.name}is not verified` });
         }
-        sendEmail({
-          to: user.email,
-          subject: "Auction3- Property Application Approved",
-          text: `Congratulation, your application to sell property is approved`,
+        emailBody = await replaceEmailTemplate("property_approval", {
+          name: `${user.firstName} ${user.lastName}`,
+          property_address: `${property.details.property_address.formatted_street_address} ${property.details.property_address.zip_code} ${property.details.property_address.city} ${property.details.property_address.state} ${property.details.property_address.country}`,
+          property_id: property._id,
         });
       }
       if (status === "fail") {
@@ -989,12 +1014,23 @@ const approveProperty = async (req, res) => {
             .send({ error: "Please specify reason for reject" });
         }
         property.rejectedReason = rejectedReason;
-        sendEmail({
-          to: user.email,
-          subject: "Auction3- Property Application Rejected",
-          text: `Your application to sell property is rejected. Reason: ${rejectedReason}`,
+        emailBody = await replaceEmailTemplate("property_rejected", {
+          name: `${user.firstName} ${user.lastName}`,
+          property_address: `${property.details.property_address.formatted_street_address} ${property.details.property_address.zip_code} ${property.details.property_address.city} ${property.details.property_address.state} ${property.details.property_address.country}`,
+          property_id: property._id,
+          rejected_reason: rejectedReason,
         });
       }
+
+      if (emailBody.error) {
+        return res.status(200).send({ error: emailBody.error });
+      }
+      sendEmail({
+        to: user.email,
+        subject: emailBody.subject,
+        htmlText: emailBody.content,
+      });
+
       property.isApproved = status;
       const savedProperty = await property.save();
       const result = {
