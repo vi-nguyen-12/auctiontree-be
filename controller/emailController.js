@@ -103,7 +103,7 @@ const createEmail = async (req, res) => {
         //set email to admin
         fromEmailAddress = email;
         emailSubject = `New message from user: ${subject}`;
-        emailText = `${user.firstName} ${user.lastName} has sent a new message: "${content}"`;
+        emailText = `${firstName} ${lastName} has sent a new message: "${content}"`;
       }
       //should send email to user
 
