@@ -63,11 +63,11 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.set("trust proxy", 1);
 
-// set cron job
-remindUpcomingAuction();
-remindPendingProperties();
-deletePendingProperties();
-sendSubscriptionEmail();
+// set cron job //just comment out for temporarily
+// remindUpcomingAuction();
+// remindPendingProperties();
+// deletePendingProperties();
+// sendSubscriptionEmail();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

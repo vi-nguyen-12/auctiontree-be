@@ -83,8 +83,6 @@ const makeEnvelope = async (args) => {
   }
   const s3 = new AWS.S3();
   const keyName = document.url.split("/")[3];
-  console.log(document);
-  console.log(keyName);
   const getObject = async (bucket, objectKey) => {
     try {
       const params = {
@@ -124,22 +122,103 @@ const makeEnvelope = async (args) => {
   cc1.recipientId = "2";
 
   // Create tabs
-  let signHere1 = docusign.SignHere.constructFromObject({
-      anchorString: "Sign Here",
-      anchorYOffset: "10",
+  // let property, sign1, sign2, by1, by2, date1, date2;
+  if (docName === "selling_agreement") {
+    let property = docusign.Text.constructFromObject({
+      anchorString: "\\property\\",
+      anchorYOffset: "-5",
       anchorUnits: "pixels",
-      anchorXOffset: "60",
-    }),
-    signHere2 = docusign.SignHere.constructFromObject({
-      anchorString: "Initial",
-      anchorYOffset: "10",
-      anchorUnits: "pixels",
-      anchorXOffset: "60",
+      anchorXOffset: "0",
+      width: "176",
     });
-
-  signer1.tabs = docusign.Tabs.constructFromObject({
-    signHereTabs: [signHere1, signHere2],
-  });
+    let sign1 = docusign.SignHere.constructFromObject({
+      anchorString: "\\s1\\",
+      anchorYOffset: "-5",
+      anchorUnits: "pixels",
+      anchorXOffset: "100",
+    });
+    let by1 = docusign.Text.constructFromObject({
+      anchorString: "\\b1\\",
+      anchorYOffset: "-5",
+      anchorUnits: "pixels",
+      anchorXOffset: "50",
+      width: "100",
+    });
+    let date1 = docusign.DateSigned.constructFromObject({
+      anchorString: "\\d1\\",
+      anchorYOffset: "-5",
+      anchorUnits: "pixels",
+      anchorXOffset: "100",
+    });
+    let sign2 = docusign.SignHere.constructFromObject({
+      anchorString: "\\s2\\",
+      anchorYOffset: "-5",
+      anchorUnits: "pixels",
+      anchorXOffset: "100",
+    });
+    let by2 = docusign.Text.constructFromObject({
+      anchorString: "\\b2\\",
+      anchorYOffset: "-5",
+      anchorUnits: "pixels",
+      anchorXOffset: "50",
+      width: "100",
+    });
+    let date2 = docusign.DateSigned.constructFromObject({
+      anchorString: "\\d2\\",
+      anchorYOffset: "-5",
+      anchorUnits: "pixels",
+      anchorXOffset: "100",
+    });
+    signer1.tabs = docusign.Tabs.constructFromObject({
+      signHereTabs: [sign1],
+      textTabs: [property, by1],
+      dateSignedTabs: [date1],
+    });
+  }
+  if (docName === "buying_agreement") {
+    let sign1 = docusign.SignHere.constructFromObject({
+      anchorString: "\\s1\\",
+      anchorYOffset: "-5",
+      anchorUnits: "pixels",
+      anchorXOffset: "100",
+    });
+    let int1 = docusign.Text.constructFromObject({
+      anchorString: "\\i1\\",
+      anchorYOffset: "-5",
+      anchorUnits: "pixels",
+      anchorXOffset: "80",
+      width: "100",
+    });
+    let date1 = docusign.DateSigned.constructFromObject({
+      anchorString: "\\d1\\",
+      anchorYOffset: "-5",
+      anchorUnits: "pixels",
+      anchorXOffset: "100",
+    });
+    let sign2 = docusign.SignHere.constructFromObject({
+      anchorString: "\\s2\\",
+      anchorYOffset: "-5",
+      anchorUnits: "pixels",
+      anchorXOffset: "100",
+    });
+    let int2 = docusign.Text.constructFromObject({
+      anchorString: "\\b2\\",
+      anchorYOffset: "-5",
+      anchorUnits: "pixels",
+      anchorXOffset: "100",
+    });
+    let date2 = docusign.DateSigned.constructFromObject({
+      anchorString: "\\d2\\",
+      anchorYOffset: "-5",
+      anchorUnits: "pixels",
+      anchorXOffset: "100",
+    });
+    signer1.tabs = docusign.Tabs.constructFromObject({
+      signHereTabs: [sign1],
+      textTabs: [int1],
+      dateSignedTabs: [date1],
+    });
+  }
 
   // Add the recipients to the envelope object
   let recipients = docusign.Recipients.constructFromObject({

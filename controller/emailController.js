@@ -1,4 +1,4 @@
-const { sendEmail } = require("../helper");
+const { sendEmail, replaceEmailTemplate } = require("../helper");
 const Admin = require("../model/Admin");
 const User = require("../model/User");
 const Email = require("../model/Email");
@@ -17,6 +17,7 @@ const createEmail = async (req, res) => {
       company,
       subject,
       content,
+      template,
     } = req.body;
 
     const bodySchema = Joi.object({
@@ -53,6 +54,9 @@ const createEmail = async (req, res) => {
       }),
       subject: Joi.string().required(),
       content: Joi.string().required(),
+      template: Joi.string()
+        .valid("contact_us_reply", "partner_with_us")
+        .optional(),
     });
 
     const { error } = bodySchema.validate(req.body);
@@ -65,13 +69,14 @@ const createEmail = async (req, res) => {
       const admins = await Admin.find({ title: "general_admin" }).select(
         "email"
       );
-
+      let fromEmailAddress, toEmailAddresses, emailSubject, emailText;
+      toEmailAddresses = admins.map((item) => item.email);
       if (userId) {
         const user = await User.findById(userId);
+
         if (!user) {
           return res.status(200).send({ error: "User not found" });
         }
-
         await Email.create({
           sender: { _id: user._id },
           senderModel: "User",
@@ -81,13 +86,11 @@ const createEmail = async (req, res) => {
           recipientsModel: "Admin",
           content,
         });
-        sendEmail({
-          from: user.email,
-          to: admins.map((item) => item.email),
-          subject: `New message from user: ${subject}`,
-          text: `${user.firstName} ${user.lastName} has sent a new message: "${content}"`,
-        });
-        return res.status(200).send({ message: "Successfully sent message" });
+
+        //set email to admin
+        fromEmailAddress = user.email;
+        emailSubject = `New message from user: ${subject}`;
+        emailText = `${user.firstName} ${user.lastName} has sent a new message: "${content}"`;
       } else {
         await Email.create({
           sender: { firstName, lastName, phone, email, company },
@@ -97,14 +100,21 @@ const createEmail = async (req, res) => {
           recipientsModel: "Admin",
           content,
         });
-        sendEmail({
-          from: email,
-          to: admins.map((item) => item.email),
-          subject: `New message from user: ${subject}`,
-          text: `${firstName} ${lastName} has sent a new message: "${content}"`,
-        });
-        return res.status(200).send({ message: "Successfully sent message" });
+        //set email to admin
+        fromEmailAddress = email;
+        emailSubject = `New message from user: ${subject}`;
+        emailText = `${user.firstName} ${user.lastName} has sent a new message: "${content}"`;
       }
+      //should send email to user
+
+      //send email to admin
+      sendEmail({
+        from: fromEmailAddress,
+        to: toEmailAddresses,
+        subject: emailSubject,
+        text: emailText,
+      });
+      return res.status(200).send({ message: "Successfully sent message" });
     }
     if (type == "from_admin") {
       const admin = await Admin.findById(req.admin.id);

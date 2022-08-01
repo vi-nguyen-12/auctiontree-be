@@ -12,6 +12,7 @@ const createEmailTemplate = async (req, res) => {
         .valid(
           "registration_confirm",
           "contact_us_reply",
+          "reset_password",
           "customer_id_docs_approval",
           "customer_id_docs_rejected",
           "POF_approval",
@@ -23,6 +24,7 @@ const createEmailTemplate = async (req, res) => {
           "property_registration",
           "property_payment",
           "property_approval",
+          "property_rejected",
           "property_auction",
           "RM_to_auction",
           "property_sold_at_auction",
@@ -32,8 +34,6 @@ const createEmailTemplate = async (req, res) => {
           "register_to_bid",
           "deposited_won_property",
           "buyer_missing_document",
-          "buyer_approval",
-          "buyer_not_approved",
           "highest_bidder_notification",
           "escrow",
           "settlement_fees_and_balance",
@@ -70,6 +70,7 @@ const editEmailTemplate = async (req, res) => {
         .required()
         .valid(
           "registration_confirm",
+          "reset_password",
           "contact_us_reply",
           "customer_id_docs_approval",
           "customer_id_docs_rejected",
@@ -82,6 +83,7 @@ const editEmailTemplate = async (req, res) => {
           "property_registration",
           "property_payment",
           "property_approval",
+          "property_rejected",
           "property_auction",
           "RM_to_auction",
           "property_sold_at_auction",
@@ -91,7 +93,6 @@ const editEmailTemplate = async (req, res) => {
           "register_to_bid",
           "deposited_won_property",
           "buyer_missing_document",
-          "buyer_approval",
           "buyer_not_approved",
           "highest_bidder_notification",
           "escrow",
@@ -112,6 +113,7 @@ const editEmailTemplate = async (req, res) => {
     emailTemmplate.type = type;
     emailTemmplate.subject = subject;
     emailTemmplate.content = content;
+
     const updatedEmailTemplate = await emailTemmplate.save();
 
     return res.status(200).send(updatedEmailTemplate);

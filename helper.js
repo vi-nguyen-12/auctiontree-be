@@ -1,23 +1,51 @@
 const sgMail = require("@sendgrid/mail");
+const nodemailer = require("nodemailer");
 const EmailTemplate = require("./model/EmailTemplate");
 const Buyer = require("./model/Buyer");
 
+// const sendEmail = ({ from, to, subject, text, htmlText }) => {
+//   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+//   const msg = {
+//     to,
+//     from: from || "auction3x@gmail.com",
+//     subject,
+//     text,
+//     html: htmlText,
+//   };
+//   sgMail
+//     .send(msg, true)
+//     .then(() => {
+//       console.log("Email sent");
+//     })
+//     .catch((error) => {
+//       console.error(error);
+//     });
+// };
+
+//send email via smtp
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
+  auth: {
+    user: "auction3x@gmail.com",
+    pass: "tzygnvhxzrxncioi",
+  },
+});
+
 const sendEmail = ({ from, to, subject, text, htmlText }) => {
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-  const msg = {
-    to,
-    from: from || "auction3x@gmail.com",
-    subject,
-    text, //for html text use html instead of text
-    html: htmlText,
-  };
-  sgMail
-    .send(msg, true)
+  transporter
+    .sendMail({
+      from: from || "auction3x@gmail.com",
+      to,
+      subject,
+      html: htmlText,
+    })
     .then(() => {
       console.log("Email sent");
     })
     .catch((error) => {
-      console.error(error);
+      console.log(error);
     });
 };
 

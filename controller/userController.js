@@ -360,8 +360,8 @@ const resetForgotPassword = async (req, res) => {
       user.temp_token = undefined;
       await user.save();
       const emailBody = await replaceEmailTemplate("reset_password", {
-        name: `${savedUser.firstName} ${savedUser.lastName}`,
-        customer_id: savedUser._id,
+        name: `${user.firstName} ${user.lastName}`,
+        customer_id: user._id,
         link: `${client_url}/confirm_email?token=${token}`,
       });
       if (emailBody.error) {
