@@ -1031,6 +1031,12 @@ const approveProperty = async (req, res) => {
         htmlText: emailBody.content,
       });
 
+      //add notifications to user
+      user.notifications.push({
+        message: `Your ${property.type} status changes to ${status}`,
+      });
+      await user.save();
+
       property.isApproved = status;
       const savedProperty = await property.save();
       const result = {

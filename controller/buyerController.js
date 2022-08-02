@@ -226,6 +226,7 @@ const approveFund = async (req, res) => {
     const { status, amount } = req.body;
 
     const buyer = await Buyer.findById(buyerId).populate("userId");
+    const user = await User.findById(buyer.userId._id);
     if (!buyer) {
       return res.status(200).send({ error: "Buyer not found" });
     }
@@ -286,6 +287,12 @@ const approveFund = async (req, res) => {
       subject: emailBody.subject,
       htmlText: emailBody.content,
     });
+
+    //add notifications to user
+    user.notifications.push({
+      message: "Proof of funds are approved",
+    });
+    await user.save();
 
     res.status(200).send(result);
   } catch (err) {

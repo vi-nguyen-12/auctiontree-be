@@ -236,6 +236,7 @@ const login = async (req, res) => {
         isActive: user.isActive,
         KYC: user.KYC,
         token,
+        notifications: user.notifications,
       },
     });
   } catch (error) {
@@ -1020,6 +1021,26 @@ const getListingsOfSeller = async (req, res) => {
   }
 };
 
+//@desc  Delete a notification
+//@route DELETE /api/users/:userId/notifications/:notificationId
+const deleteNotification = async (req, res) => {
+  try {
+    const { userId, notificationId } = req.params;
+    if (req.user.id.toString() === userId) {
+      const user = await User.findById(userId);
+      user.notifications.id(notificationId).remove();
+      await user.save();
+      res.status(200).send({ message: "Notification deleted successfully" });
+    } else {
+      return res
+        .status(200)
+        .send({ error: "Not authorized to delete notification" });
+    }
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
 module.exports = {
   registerUser,
   login,
@@ -1043,4 +1064,5 @@ module.exports = {
   getListingsOfSeller,
   editProfile,
   getAuctionsOfAllBuyersGroupedByUser,
+  deleteNotification,
 };

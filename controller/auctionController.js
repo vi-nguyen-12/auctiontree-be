@@ -41,6 +41,7 @@ const createAuction = async (req, res) => {
       const property = await Property.findOne({
         _id: propertyId,
       }).populate("createdBy docusignId");
+      const user = await User.findById(property.createdBy._id);
 
       if (!property) {
         return res.status(200).send({ error: "Property not found" });
@@ -100,6 +101,10 @@ const createAuction = async (req, res) => {
         subject: emailBody.subject,
         htmlText: emailBody.content,
       });
+      user.notifications.push({
+        message: `Your ${property.type} is assigned to the auction`,
+      });
+      await user.save();
 
       return res.status(200).send(savedAuction);
     }

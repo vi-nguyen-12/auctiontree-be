@@ -27,6 +27,7 @@ const {
   getListingsOfSeller,
   editProfile,
   getAuctionsOfAllBuyersGroupedByUser,
+  deleteNotification,
 } = require("../controller/userController");
 
 router.post("/register", validateUser, registerUser);
@@ -48,6 +49,11 @@ router.get("/:id/seller/properties", getListingsOfSeller);
 //only for login user
 router.put("/:id?suspended=true", auth, suspendUserAccount);
 router.put("/:id?suspended=false", auth, suspendUserAccount);
+router.delete(
+  "/:userId/notifications/:notificationId",
+  auth,
+  deleteNotification
+);
 router.delete("/:id", auth, deleteUserAccount);
 router.put("/:id", auth, validateUpdateUser, editProfile);
 //only for admin
