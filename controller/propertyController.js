@@ -388,15 +388,25 @@ const editRealestate = async (req, res) => {
     if (!property) {
       return res.status(200).send({ error: "Property not found" });
     }
+    //check if property has been created for an auction
+    const auction = await Auction.findOne({ property: property._id });
 
     //Authentication
     if (
-      (req.user && req.user.id.toString() !== property.createdBy.toString()) ||
-      (req.admin && !req.admin.roles.includes("property_edit"))
+      !(
+        req.user?.id.toString() === property.createdBy.toString() ||
+        req.admin?.roles.includes("property_edit")
+      )
     ) {
       return res
         .status(200)
         .send({ error: "Not allowed to edit this property" });
+    }
+    //Authentication: only admin can edit property that has been created for auction
+    if (!(auction && req.admin?.roles.includes("property_edit"))) {
+      return res.status(200).send({
+        error: "Only admin can edit property that has been created for auction",
+      });
     }
 
     // Validate body
@@ -525,6 +535,7 @@ const editRealestate = async (req, res) => {
       }
     }
 
+    //if edit documents
     if (step === 4) {
       documents = documents.map((doc) => {
         let existedDoc = property.documents?.find(
@@ -571,7 +582,6 @@ const editRealestate = async (req, res) => {
         });
       }
       // deactivate auction if this property has been created for an auction
-      const auction = await Auction.find({ property: property._id });
       if (auction) {
         auction.isActive = false;
         await auction.save();
@@ -606,14 +616,25 @@ const editOthers = async (req, res) => {
       return res.status(200).send({ error: "Property not found" });
     }
 
+    //check if property has been created for an auction
+    const auction = await Auction.findOne({ property: property._id });
+
     //Authentication
     if (
-      (req.user && req.user.id.toString() !== property.createdBy.toString()) ||
-      (req.admin && !req.admin.roles.includes("property_edit"))
+      !(
+        req.user?.id.toString() === property.createdBy.toString() ||
+        req.admin?.roles.includes("property_edit")
+      )
     ) {
       return res
         .status(200)
         .send({ error: "Not allowed to edit this property" });
+    }
+    //Authentication: only admin can edit property that has been created for auction
+    if (!(auction && req.admin?.roles.includes("property_edit"))) {
+      return res.status(200).send({
+        error: "Only admin can edit property that has been created for auction",
+      });
     }
 
     // Validate body
@@ -803,24 +824,42 @@ const editOthers = async (req, res) => {
       }
     }
 
-    //if edit step 4, keep listing_agreement from step 1 ((if it exists));
-    //check if a document is already verified -> keep it as it is
-    // if (step === 4) {
-    //   const listingAgreement = property.documents.filter(
-    //     (item) => item.officialName === "listing_agreement"
-    //   );
-    //   documents = documents.map((item) => {
-    //     if (item._id) {
-    //       for (doc of property.documents) {
-    //         if (doc._id.toString() === item._id.toString()) {
-    //           return doc;
-    //         }
-    //       }
-    //     }
-    //     return { ...item, isVerified: "pending" };
-    //   });
-    //   documents = [...documents, ...listingAgreement];
-    // }
+    //if edit images/videos
+    if (step === 3) {
+      images = images.map((image) => {
+        let existedImage = property.images?.find(
+          (item) => item.url === image.url
+        );
+        if (existedImage) {
+          return { ...image, isVerified: existedImage.isVerified };
+        }
+        return { ...image, isVerified: "pending" };
+      });
+      if (videos) {
+        videos = videos.map((video) => {
+          let existedVideo = property.videos?.find(
+            (item) => item.url === video.url
+          );
+          if (existedVideo) {
+            return { ...video, isVerified: existedVideo.isVerified };
+          }
+          return { ...video, isVerified: "pending" };
+        });
+      }
+    }
+
+    //if edit documents
+    if (step === 4) {
+      documents = documents.map((doc) => {
+        let existedDoc = property.documents?.find(
+          (item) => item.url === doc.url
+        );
+        if (existedDoc) {
+          return { ...doc, isVerified: existedDoc.isVerified };
+        }
+        return { ...doc, isVerified: "pending" };
+      });
+    }
 
     property.type = type || property.type;
     property.details = property.details
@@ -857,7 +896,6 @@ const editOthers = async (req, res) => {
         });
       }
       // deactivate auction if this property has been created for an auction
-      const auction = await Auction.find({ property: property._id });
       if (auction) {
         auction.isActive = false;
         await auction.save();
