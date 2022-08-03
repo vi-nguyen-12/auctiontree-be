@@ -24,7 +24,7 @@ router.put("/:propertyId/images/:imageId/status", auth, verifyImage);
 router.put("/:propertyId/videos/:videoId/status", auth, verifyVideo);
 router.put("/:id/status", auth, approveProperty);
 
-//for all users
+//auth user and admin
 router.get("/:id", auth, getProperty);
 router.get("/", auth, getProperties);
 
