@@ -403,11 +403,13 @@ const editRealestate = async (req, res) => {
         .send({ error: "Not allowed to edit this property" });
     }
     //Authentication: only admin can edit property that has been created for auction
+    console.log(
+      auction?.auctionStartDate.getTime() < new Date().getTime() &&
+        !req.admin?.roles.includes("property_edit")
+    );
     if (
-      !(
-        auction.auctionStartDate.getTime() < new Date().getTime() &&
-        req.admin?.roles.includes("property_edit")
-      )
+      auction?.auctionStartDate.getTime() < new Date().getTime() &&
+      !req.admin?.roles.includes("property_edit")
     ) {
       return res.status(200).send({
         error: "Only admin can edit property of auction which is ongoing",
@@ -1160,6 +1162,9 @@ const verifyDocument = async (req, res) => {
     }
     document.isVerified = status;
     const savedDocument = await document.save({ suppressWarning: true });
+    if (status === "pending" || status === "fail") {
+      property.isApproved = "pending";
+    }
     const savedProperty = await property.save();
     const data = {
       _id: savedDocument._id,
@@ -1205,6 +1210,9 @@ const verifyVideo = async (req, res) => {
     }
     video.isVerified = status;
     const savedVideo = await video.save({ suppressWarning: true });
+    if (status === "pending" || status === "fail") {
+      property.isApproved = "pending";
+    }
     const savedProperty = await property.save();
     const data = {
       _id: savedVideo._id,
@@ -1249,6 +1257,9 @@ const verifyImage = async (req, res) => {
     }
     image.isVerified = status;
     const savedImage = await image.save({ suppressWarning: true });
+    if (status === "pending" || status === "fail") {
+      property.isApproved = "pending";
+    }
     const savedProperty = await property.save();
     const data = {
       _id: savedImage._id,
