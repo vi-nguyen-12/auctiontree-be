@@ -265,6 +265,7 @@ const getAllAuctions = async (req, res) => {
       max_mileage: Joi.number().optional(),
       manufacture_name: Joi.string().optional(),
       length: Joi.number().optional(),
+      isActive: Joi.boolean().optional(),
     });
 
     const {
@@ -293,6 +294,7 @@ const getAllAuctions = async (req, res) => {
       max_length,
       aircraft_builder_name,
       year_built,
+      isActive,
     } = req.query;
 
     const { error } = querySchema.validate(req.query);
@@ -328,6 +330,12 @@ const getAllAuctions = async (req, res) => {
       filter.startingBid = filter.startingBid
         ? { ...filter.startingBid, $lte: parseInt(max_price) }
         : { $lte: parseInt(max_price) };
+    }
+    if (isActive === "true") {
+      filter.isActive = true;
+    }
+    if (isActive === "false") {
+      filter.isActive = false;
     }
     if (type) {
       filterProperty["property.type"] = type;
