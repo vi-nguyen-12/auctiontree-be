@@ -81,10 +81,7 @@ const createRealestate = async (req, res) => {
     if (error) return res.status(200).send({ error: error.details[0].message });
 
     //Check if seller is a broker, require listing_agreement
-    console.log(req.body);
     if (details.broker_name) {
-      console.log(details.broker_documents);
-      console.log(documents);
       if (details.broker_documents.length < 1) {
         return res.status(200).send({ error: "Listing Agreement is required" });
       }
@@ -391,15 +388,25 @@ const editRealestate = async (req, res) => {
     if (!property) {
       return res.status(200).send({ error: "Property not found" });
     }
+    //check if property has been created for an auction
+    const auction = await Auction.findOne({ property: property._id });
 
     //Authentication
     if (
-      (req.user && req.user.id.toString() !== property.createdBy.toString()) ||
-      (req.admin && !req.admin.roles.includes("property_edit"))
+      !(
+        req.user?.id.toString() === property.createdBy.toString() ||
+        req.admin?.roles.includes("property_edit")
+      )
     ) {
       return res
         .status(200)
         .send({ error: "Not allowed to edit this property" });
+    }
+    //Authentication: only admin can edit property that has been created for auction
+    if (!(auction && req.admin?.roles.includes("property_edit"))) {
+      return res.status(200).send({
+        error: "Only admin can edit property that has been created for auction",
+      });
     }
 
     // Validate body
@@ -503,23 +510,43 @@ const editRealestate = async (req, res) => {
         property.markModified("details.description");
       }
     }
-    //if edit step 4, keep listing_agreement from step 1 ((if it exists)), if document is already verified, keep its status;
-    // if (step === 4) {
-    //   const listingAgreement = property.documents.filter(
-    //     (item) => item.officialName === "listing_agreement"
-    //   );
-    //   documents = documents.map((item) => {
-    //     if (item._id) {
-    //       for (doc of property.documents) {
-    //         if (doc._id.toString() === item._id.toString()) {
-    //           return doc;
-    //         }
-    //       }
-    //     }
-    //     return { ...item, isVerified: "pending" };
-    //   });
-    //   documents = [...documents, ...listingAgreement];
-    // }
+
+    //if edit images/videos
+    if (step === 3) {
+      images = images.map((image) => {
+        let existedImage = property.images?.find(
+          (item) => item.url === image.url
+        );
+        if (existedImage) {
+          return { ...image, isVerified: existedImage.isVerified };
+        }
+        return { ...image, isVerified: "pending" };
+      });
+      if (videos) {
+        videos = videos.map((video) => {
+          let existedVideo = property.videos?.find(
+            (item) => item.url === video.url
+          );
+          if (existedVideo) {
+            return { ...video, isVerified: existedVideo.isVerified };
+          }
+          return { ...video, isVerified: "pending" };
+        });
+      }
+    }
+
+    //if edit documents
+    if (step === 4) {
+      documents = documents.map((doc) => {
+        let existedDoc = property.documents?.find(
+          (item) => item.url === doc.url
+        );
+        if (existedDoc) {
+          return { ...doc, isVerified: existedDoc.isVerified };
+        }
+        return { ...doc, isVerified: "pending" };
+      });
+    }
 
     property.type = type || property.type;
     property.details = property.details
@@ -535,23 +562,30 @@ const editRealestate = async (req, res) => {
     property.isApproved = "pending";
     const savedProperty = await property.save();
 
-    //send email if step is 5, means user submit
     if (step === 5) {
-      const user = await User.findById(req.user.id).select(
-        "firstName lastName email"
-      );
-      const emailBody = await replaceEmailTemplate("property_registration", {
-        name: `${user.firstName} ${user.lastName}`,
-        property_address: `${savedProperty.details.property_address.formatted_street_address} ${savedProperty.details.property_address.zip_code} ${savedProperty.details.property_address.city} ${savedProperty.details.property_address.state} ${savedProperty.details.property_address.country}`,
-      });
-      if (emailBody.error) {
-        return res.status(200).send({ error: emailBody.error });
+      // user submit
+      if (property.step === 4) {
+        const user = await User.findById(req.user.id).select(
+          "firstName lastName email"
+        );
+        const emailBody = await replaceEmailTemplate("property_registration", {
+          name: `${user.firstName} ${user.lastName}`,
+          property_address: `${savedProperty.details.property_address.formatted_street_address} ${savedProperty.details.property_address.zip_code} ${savedProperty.details.property_address.city} ${savedProperty.details.property_address.state} ${savedProperty.details.property_address.country}`,
+        });
+        if (emailBody.error) {
+          return res.status(200).send({ error: emailBody.error });
+        }
+        sendEmail({
+          to: user.email,
+          subject: emailBody.subject,
+          htmlText: emailBody.content,
+        });
       }
-      sendEmail({
-        to: user.email,
-        subject: emailBody.subject,
-        htmlText: emailBody.content,
-      });
+      // deactivate auction if this property has been created for an auction
+      if (auction) {
+        auction.isActive = false;
+        await auction.save();
+      }
     }
 
     res.status(200).send(savedProperty);
@@ -582,14 +616,25 @@ const editOthers = async (req, res) => {
       return res.status(200).send({ error: "Property not found" });
     }
 
+    //check if property has been created for an auction
+    const auction = await Auction.findOne({ property: property._id });
+
     //Authentication
     if (
-      (req.user && req.user.id.toString() !== property.createdBy.toString()) ||
-      (req.admin && !req.admin.roles.includes("property_edit"))
+      !(
+        req.user?.id.toString() === property.createdBy.toString() ||
+        req.admin?.roles.includes("property_edit")
+      )
     ) {
       return res
         .status(200)
         .send({ error: "Not allowed to edit this property" });
+    }
+    //Authentication: only admin can edit property that has been created for auction
+    if (!(auction && req.admin?.roles.includes("property_edit"))) {
+      return res.status(200).send({
+        error: "Only admin can edit property that has been created for auction",
+      });
     }
 
     // Validate body
@@ -779,24 +824,42 @@ const editOthers = async (req, res) => {
       }
     }
 
-    //if edit step 4, keep listing_agreement from step 1 ((if it exists));
-    //check if a document is already verified -> keep it as it is
-    // if (step === 4) {
-    //   const listingAgreement = property.documents.filter(
-    //     (item) => item.officialName === "listing_agreement"
-    //   );
-    //   documents = documents.map((item) => {
-    //     if (item._id) {
-    //       for (doc of property.documents) {
-    //         if (doc._id.toString() === item._id.toString()) {
-    //           return doc;
-    //         }
-    //       }
-    //     }
-    //     return { ...item, isVerified: "pending" };
-    //   });
-    //   documents = [...documents, ...listingAgreement];
-    // }
+    //if edit images/videos
+    if (step === 3) {
+      images = images.map((image) => {
+        let existedImage = property.images?.find(
+          (item) => item.url === image.url
+        );
+        if (existedImage) {
+          return { ...image, isVerified: existedImage.isVerified };
+        }
+        return { ...image, isVerified: "pending" };
+      });
+      if (videos) {
+        videos = videos.map((video) => {
+          let existedVideo = property.videos?.find(
+            (item) => item.url === video.url
+          );
+          if (existedVideo) {
+            return { ...video, isVerified: existedVideo.isVerified };
+          }
+          return { ...video, isVerified: "pending" };
+        });
+      }
+    }
+
+    //if edit documents
+    if (step === 4) {
+      documents = documents.map((doc) => {
+        let existedDoc = property.documents?.find(
+          (item) => item.url === doc.url
+        );
+        if (existedDoc) {
+          return { ...doc, isVerified: existedDoc.isVerified };
+        }
+        return { ...doc, isVerified: "pending" };
+      });
+    }
 
     property.type = type || property.type;
     property.details = property.details
@@ -813,20 +876,30 @@ const editOthers = async (req, res) => {
 
     const savedProperty = await property.save();
 
-    //send email if step is 5, means user submit
     if (step === 5) {
-      const user = await User.findById(req.user.id).select(
-        "firstName lastName email"
-      );
-      const emailBody = await replaceEmailTemplate("property_registration", {
-        name: `${user.firstName} ${user.lastName}`,
-        property_address: `${savedProperty.details.property_address.formatted_street_address} ${savedProperty.details.property_address.zip_code} ${savedProperty.details.property_address.city} ${savedProperty.details.property_address.state} ${savedProperty.details.property_address.country}`,
-      });
-      sendEmail({
-        to: user.email,
-        subject: emailBody.subject,
-        htmlText: emailBody.content,
-      });
+      // user submit -> send email
+      if (property.step === 4) {
+        const user = await User.findById(req.user.id).select(
+          "firstName lastName email"
+        );
+        const emailBody = await replaceEmailTemplate("property_registration", {
+          name: `${user.firstName} ${user.lastName}`,
+          property_address: `${savedProperty.details.property_address.formatted_street_address} ${savedProperty.details.property_address.zip_code} ${savedProperty.details.property_address.city} ${savedProperty.details.property_address.state} ${savedProperty.details.property_address.country}`,
+        });
+        if (emailBody.error) {
+          return res.status(200).send({ error: emailBody.error });
+        }
+        sendEmail({
+          to: user.email,
+          subject: emailBody.subject,
+          htmlText: emailBody.content,
+        });
+      }
+      // deactivate auction if this property has been created for an auction
+      if (auction) {
+        auction.isActive = false;
+        await auction.save();
+      }
     }
     res.status(200).send(savedProperty);
   } catch (error) {

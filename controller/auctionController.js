@@ -115,7 +115,7 @@ const createAuction = async (req, res) => {
 };
 
 //@desc  Edit an auction
-//@route PUT api/auctions/:id  body:{propertyId, registerStartDate,registerEndDate,auctionStartDate,auctionEndDate,startingBid,incrementAmount}  all dates are in ISOString format
+//@route PUT api/auctions/:id  body:{ registerStartDate,registerEndDate,auctionStartDate,auctionEndDate,startingBid,incrementAmount}  all dates are in ISOString format
 
 const editAuction = async (req, res) => {
   try {
@@ -132,6 +132,7 @@ const editAuction = async (req, res) => {
       startingBid,
       incrementAmount,
       isFeatured,
+      isActive,
     } = req.body;
     const bodySchema = Joi.object({
       registerStartDate: Joi.date().iso().optional(),
@@ -141,6 +142,7 @@ const editAuction = async (req, res) => {
       startingBid: Joi.number().min(0).optional(),
       incrementAmount: Joi.number().min(0).optional(),
       isFeatured: Joi.boolean().optional(),
+      isActive: Joi.boolean().optional(),
     });
     const { error } = bodySchema.validate(req.body);
     if (error) {
@@ -159,9 +161,6 @@ const editAuction = async (req, res) => {
       ? new Date(auctionEndDateISOString)
       : auction.auctionEndDate;
 
-    if (!auction.property.isApproved) {
-      return res.status(200).send({ error: "Property is not approved" });
-    }
     if (registerStartDate.getTime() >= registerEndDate.getTime()) {
       return res.status(200).send({
         error:
@@ -179,6 +178,13 @@ const editAuction = async (req, res) => {
         error: "Auction end time is earlier than register end time",
       });
     }
+    if (isActive) {
+      if (auction.property.isApproved !== "success") {
+        return res.status(200).send({
+          error: "Property is not approved",
+        });
+      }
+    }
 
     auction.registerStartDate = registerStartDate;
     auction.registerEndDate = registerEndDate;
@@ -187,6 +193,7 @@ const editAuction = async (req, res) => {
     auction.startingBid = startingBid || auction.startingBid;
     auction.incrementAmount = incrementAmount || auction.incrementAmount;
     auction.isFeatured = isFeatured || auction.isFeatured;
+    auction.isActive = isActive || auction.isActive;
     const updatedAuction = await auction.save();
     res.status(200).send(updatedAuction);
   } catch (err) {

@@ -23,7 +23,7 @@ const auctionSchema = new Schema(
     },
     auctionStartDate: {
       type: Date,
-      required: [true, "Auction start date is required"],
+      required: [true, "Auction start da te is required"],
     },
     auctionEndDate: {
       type: Date,
@@ -45,6 +45,7 @@ const auctionSchema = new Schema(
       amount: Number,
     },
     isFeatured: { type: Boolean, default: false, required: true },
+    isActive: { type: Boolean, default: true, required: true },
   },
   { timestamp: true }
 );
