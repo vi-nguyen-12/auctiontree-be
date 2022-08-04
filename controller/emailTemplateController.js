@@ -12,6 +12,7 @@ const createEmailTemplate = async (req, res) => {
         .valid(
           "registration_confirm",
           "contact_us_reply",
+          "partner_with_us_reply",
           "reset_password",
           "customer_id_docs_approval",
           "customer_id_docs_rejected",
@@ -72,6 +73,7 @@ const editEmailTemplate = async (req, res) => {
           "registration_confirm",
           "reset_password",
           "contact_us_reply",
+          "partner_with_us_reply",
           "customer_id_docs_approval",
           "customer_id_docs_rejected",
           "POF_approval",
