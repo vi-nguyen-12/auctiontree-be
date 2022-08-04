@@ -17,7 +17,7 @@ const createEmail = async (req, res) => {
       company,
       subject,
       content,
-      template,
+      autoReply,
     } = req.body;
 
     const bodySchema = Joi.object({
@@ -54,8 +54,8 @@ const createEmail = async (req, res) => {
       }),
       subject: Joi.string().required(),
       content: Joi.string().required(),
-      template: Joi.string()
-        .valid("contact_us_reply", "partner_with_us")
+      autoReply: Joi.string()
+        .valid("contact_us_reply", "partner_with_us_reply")
         .optional(),
     });
 
@@ -69,7 +69,11 @@ const createEmail = async (req, res) => {
       const admins = await Admin.find({ title: "general_admin" }).select(
         "email"
       );
-      let fromEmailAddress, toEmailAddresses, emailSubject, emailText;
+      let fromEmailAddress,
+        toEmailAddresses,
+        emailSubject,
+        emailText,
+        senderName;
       toEmailAddresses = admins.map((item) => item.email);
       if (userId) {
         const user = await User.findById(userId);
@@ -87,9 +91,12 @@ const createEmail = async (req, res) => {
           content,
         });
 
+        //set sender information
+        senderName = `${user.firstName} ${user.lastName}`;
+
         //set email to admin
         fromEmailAddress = user.email;
-        emailSubject = `New message from user: ${subject}`;
+        emailSubject = `New message from user about: ${subject}`;
         emailText = `${user.firstName} ${user.lastName} has sent a new message: "${content}"`;
       } else {
         await Email.create({
@@ -100,16 +107,33 @@ const createEmail = async (req, res) => {
           recipientsModel: "Admin",
           content,
         });
+        //set sender information
+        senderName = `${firstName} ${lastName}`;
+
         //set email to admin
         fromEmailAddress = email;
-        emailSubject = `New message from user: ${subject}`;
+        emailSubject = `New message from user about: ${subject}`;
         emailText = `${firstName} ${lastName} has sent a new message: "${content}"`;
       }
+
       //should send email to user
+      if (autoReply) {
+        let emailBody = await replaceEmailTemplate(autoReply, {
+          name: senderName,
+        });
+        if (emailBody.error) {
+          return res.status(200).send({ error: emailBody.error });
+        }
+        sendEmail({
+          to: fromEmailAddress,
+          subject: emailBody.subject,
+          htmlText: emailBody.content,
+        });
+      }
 
       //send email to admin
       sendEmail({
-        from: fromEmailAddress,
+        // from: fromEmailAddress,
         to: toEmailAddresses,
         subject: emailSubject,
         text: emailText,

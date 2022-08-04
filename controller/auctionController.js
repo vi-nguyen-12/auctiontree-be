@@ -115,7 +115,7 @@ const createAuction = async (req, res) => {
 };
 
 //@desc  Edit an auction
-//@route PUT api/auctions/:id  body:{ registerStartDate,registerEndDate,auctionStartDate,auctionEndDate,startingBid,incrementAmount}  all dates are in ISOString format
+//@route PUT api/auctions/:id  body:{ registerStartDate,registerEndDate,auctionStartDate,auctionEndDate,startingBid,incrementAmount, isActive}  all dates are in ISOString format
 
 const editAuction = async (req, res) => {
   try {

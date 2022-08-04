@@ -9,6 +9,7 @@ const emailTemplateSchema = new Schema(
         "registration_confirm",
         "reset_password",
         "contact_us_reply",
+        "partner_with_us_reply",
         "customer_id_docs_approval",
         "customer_id_docs_rejected",
         "POF_approval",
@@ -62,6 +63,12 @@ emailTemplateSchema.pre("save", function (next) {
     this.replacedTexts = ["name", "link"];
   }
   if (this.type == "contact_us_reply") {
+    this.replacedTexts = ["name"];
+  }
+  if (this.type == "partner_with_us_reply") {
+    this.replacedTexts = ["name"];
+  }
+  if (this.type == "partner_with_us_reply") {
     this.replacedTexts = ["name"];
   }
   if (this.type == "customer_id_docs_rejected") {

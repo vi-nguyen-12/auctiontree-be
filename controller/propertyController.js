@@ -403,9 +403,14 @@ const editRealestate = async (req, res) => {
         .send({ error: "Not allowed to edit this property" });
     }
     //Authentication: only admin can edit property that has been created for auction
-    if (!(auction && req.admin?.roles.includes("property_edit"))) {
+    if (
+      !(
+        auction.auctionStartDate.getTime() < new Date().getTime() &&
+        req.admin?.roles.includes("property_edit")
+      )
+    ) {
       return res.status(200).send({
-        error: "Only admin can edit property that has been created for auction",
+        error: "Only admin can edit property of auction which is ongoing",
       });
     }
 
