@@ -150,8 +150,15 @@ const validateBuyer = (req, res, next) => {
 const validateAuction = (req, res, next) => {
   const auctionSchema = Joi.object({
     propertyId: Joi.objectId().required(),
-    startingBid: Joi.number().required().strict(),
-    incrementAmount: Joi.number().required().strict(),
+    startingBid: Joi.number()
+      .required()
+      .strict()
+      .options({ convert: false })
+      .options({ convert: false }),
+    incrementAmount: Joi.number()
+      .required()
+      .strict()
+      .options({ convert: false }),
     registerStartDate: Joi.date().iso().required(),
     registerEndDate: Joi.date().iso().required(),
     auctionStartDate: Joi.date().iso().required(),
@@ -196,7 +203,7 @@ const propertyObjectSchema = {
       }),
     }).required(),
 
-    step: Joi.number().required().valid(1),
+    step: Joi.number().required().valid(1).options({ convert: false }),
   },
   step2: {
     "real-estate": {
@@ -205,8 +212,8 @@ const propertyObjectSchema = {
       state: Joi.string().required(),
       zip_code: Joi.string().required(),
       country: Joi.string().required(),
-      lat: Joi.number().required(),
-      lng: Joi.number().required(),
+      lat: Joi.number().required().options({ convert: false }),
+      lng: Joi.number().required().options({ convert: false }),
       real_estate_type: Joi.string()
         .required()
         .valid(
@@ -228,24 +235,24 @@ const propertyObjectSchema = {
           "farm_ranch",
           "private_island"
         ),
-      year_built: Joi.number().required(),
+      year_built: Joi.number().required().options({ convert: false }),
       owner_name: Joi.string().required(),
-      beds_count: Joi.number().required(),
-      baths_count: Joi.number().required(),
-      total_value: Joi.number().required(),
-      area_sq_ft: Joi.number().required(),
-      lot_size: Joi.number().required(),
+      beds_count: Joi.number().required().options({ convert: false }),
+      baths_count: Joi.number().required().options({ convert: false }),
+      total_value: Joi.number().required().options({ convert: false }),
+      area_sq_ft: Joi.number().required().options({ convert: false }),
+      lot_size: Joi.number().required().options({ convert: false }),
       type_of_garage: Joi.string().required(),
-      number_of_stories: Joi.number().required(),
+      number_of_stories: Joi.number().required().options({ convert: false }),
       description: Joi.object({
         summary: Joi.string().required(),
         investment: Joi.string().required(),
         location: Joi.string().required(),
         market: Joi.string().required(),
       }).required(),
-      reservedAmount: Joi.number().required(),
-      discussedAmount: Joi.number().required(),
-      step: Joi.number().required().valid(2),
+      reservedAmount: Joi.number().required().options({ convert: false }),
+      discussedAmount: Joi.number().required().options({ convert: false }),
+      step: Joi.number().required().valid(2).options({ convert: false }),
     },
     car: {
       make: Joi.string().required(),
@@ -269,7 +276,7 @@ const propertyObjectSchema = {
       model: Joi.string().required(),
       year: Joi.date().format("YYYY").required(),
       gearbox: Joi.string().required(),
-      mileage: Joi.number().required(),
+      mileage: Joi.number().required().options({ convert: false }),
       car_type: Joi.string().required(),
       power: Joi.string().required(),
       color: Joi.string().required(),
@@ -277,7 +284,7 @@ const propertyObjectSchema = {
       engine: Joi.string().required(),
       fuel_type: Joi.string().required(),
       condition: Joi.string().required().valid("used", "new"),
-      market_price: Joi.number().required(),
+      market_price: Joi.number().required().options({ convert: false }),
       description: Joi.object({
         summary: Joi.string().required(),
         investment: Joi.string().required(),
@@ -290,12 +297,12 @@ const propertyObjectSchema = {
         state: Joi.string().required(),
         zip_code: Joi.string().required(),
         country: Joi.string().required(),
-        lat: Joi.number().required(),
-        lng: Joi.number().required(),
+        lat: Joi.number().required().options({ convert: false }),
+        lng: Joi.number().required().options({ convert: false }),
       }).required(),
-      reservedAmount: Joi.number().required(),
-      discussedAmount: Joi.number().required(),
-      step: Joi.number().required().valid(2),
+      reservedAmount: Joi.number().required().options({ convert: false }),
+      discussedAmount: Joi.number().required().options({ convert: false }),
+      step: Joi.number().required().valid(2).options({ convert: false }),
     },
     yacht: {
       vessel_registration_number: Joi.string().required(),
@@ -305,9 +312,18 @@ const propertyObjectSchema = {
       engine_type: Joi.string().required(),
       engine_manufacture_name: Joi.string().required(),
       engine_deck_type: Joi.string().required(),
-      running_cost: Joi.number().required(),
-      no_of_crew_required: Joi.number().required(),
-      length: Joi.number().required(),
+      running_cost: Joi.number()
+        .required()
+        .options({ convert: false })
+        .options({ convert: false }),
+      no_of_crew_required: Joi.number()
+        .required()
+        .options({ convert: false })
+        .options({ convert: false }),
+      length: Joi.number()
+        .required()
+        .options({ convert: false })
+        .options({ convert: false }),
       others: Joi.string().optional(),
       description: Joi.object({
         summary: Joi.string().required(),
@@ -321,12 +337,12 @@ const propertyObjectSchema = {
         state: Joi.string().required(),
         zip_code: Joi.string().required(),
         country: Joi.string().required(),
-        lat: Joi.number().required(),
-        lng: Joi.number().required(),
+        lat: Joi.number().required().options({ convert: false }),
+        lng: Joi.number().required().options({ convert: false }),
       }).required(),
-      reservedAmount: Joi.number().required(),
-      discussedAmount: Joi.number().required(),
-      step: Joi.number().required().valid(2),
+      reservedAmount: Joi.number().required().options({ convert: false }),
+      discussedAmount: Joi.number().required().options({ convert: false }),
+      step: Joi.number().required().valid(2).options({ convert: false }),
     },
     jet: {
       registration_mark: Joi.string().required(),
@@ -352,12 +368,12 @@ const propertyObjectSchema = {
         state: Joi.string().required(),
         zip_code: Joi.string().required(),
         country: Joi.string().required(),
-        lat: Joi.number().required(),
-        lng: Joi.number().required(),
+        lat: Joi.number().required().options({ convert: false }),
+        lng: Joi.number().required().options({ convert: false }),
       }).required(),
-      reservedAmount: Joi.number().required(),
-      discussedAmount: Joi.number().required(),
-      step: Joi.number().required().valid(2),
+      reservedAmount: Joi.number().required().options({ convert: false }),
+      discussedAmount: Joi.number().required().options({ convert: false }),
+      step: Joi.number().required().valid(2).options({ convert: false }),
     },
   },
   step3: {
@@ -380,7 +396,7 @@ const propertyObjectSchema = {
         _id: Joi.string().optional(),
       })
     ),
-    step: Joi.number().required().valid(3),
+    step: Joi.number().required().valid(3).options({ convert: false }),
   },
   step4: {
     "real-estate": {
@@ -407,7 +423,7 @@ const propertyObjectSchema = {
           })
         )
         .required(),
-      step: Joi.number().required().valid(4),
+      step: Joi.number().required().valid(4).options({ convert: false }),
     },
     car: {
       documents: Joi.array()
@@ -432,7 +448,7 @@ const propertyObjectSchema = {
           _id: Joi.string().optional(),
         })
         .required(),
-      step: Joi.number().required().valid(4),
+      step: Joi.number().required().valid(4).options({ convert: false }),
     },
     yacht: {
       documents: Joi.array()
@@ -457,7 +473,7 @@ const propertyObjectSchema = {
           _id: Joi.string().optional(),
         })
         .required(),
-      step: Joi.number().required().valid(4),
+      step: Joi.number().required().valid(4).options({ convert: false }),
     },
     jet: {
       documents: Joi.array()
@@ -486,12 +502,12 @@ const propertyObjectSchema = {
           _id: Joi.string().optional(),
         })
         .required(),
-      step: Joi.number().required().valid(4),
+      step: Joi.number().required().valid(4).options({ convert: false }),
     },
   },
   step5: {
     docusignId: Joi.objectId().required(),
-    step: Joi.number().required().valid(5),
+    step: Joi.number().required().valid(5).options({ convert: false }),
   },
 };
 module.exports = {
