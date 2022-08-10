@@ -1,4 +1,5 @@
 const Joi = require("joi");
+Joi.objectId = require("joi-objectid")(Joi);
 const Buyer = require("../model/Buyer");
 const User = require("../model/User");
 const Question = require("../model/Question");
@@ -118,39 +119,161 @@ const createBuyer = async (req, res) => {
 };
 
 //Should fix this
-//@desc  Request more funding
+//@desc  Edit buyer, can only change answers or funds
 //@route PUT /api/buyers/:id body:{documents:[{_id:...}{officialName:..., name:...,url:...}]}}
 const editBuyer = async (req, res) => {
   try {
-    let { documents } = req.body;
-    const buyer = await Buyer.findById(req.params.id).populate("userId");
+    let { documents, answers } = req.body;
+    const bodySchema = Joi.object({
+      answers: Joi.array()
+        .items(
+          Joi.object({
+            questionId: Joi.objectId().required(),
+            answer: Joi.string().valid("yes", "no").required(),
+            explanation: Joi.when("answer", {
+              is: Joi.string().valid("yes"),
+              then: Joi.string().required(),
+              otherwise: Joi.string().allow(null, ""),
+            }),
+            files: Joi.when("answer", {
+              is: Joi.string().valid("yes"),
+              then: Joi.array()
+                .required()
+                .items(
+                  Joi.object({
+                    name: Joi.string().required(),
+                    url: Joi.string().required(),
+                  })
+                ),
+              otherwise: Joi.string().allow(null, ""),
+            }),
+          })
+        )
+        .optional(),
+      documents: Joi.array()
+        .items({
+          officialName: Joi.string()
+            .valid(
+              "bank_statement",
+              "brokerage_account_statement",
+              "crypto_account_statement",
+              "line_of_credit_doc"
+            )
+            .required(),
+          url: Joi.string().required(),
+          name: Joi.string().required(),
+          validity: Joi.date().iso().optional(),
+          isSelf: Joi.boolean().required(),
+          funderName: Joi.when("isSelf", {
+            is: Joi.boolean().valid(false),
+            then: Joi.string().required(),
+            otherwise: Joi.forbidden(),
+          }),
+          providerName: Joi.when("isSelf", {
+            is: Joi.boolean().valid(false),
+            then: Joi.string().required(),
+            otherwise: Joi.forbidden(),
+          }),
+          declaration: Joi.when("isSelf", {
+            is: Joi.boolean().valid(false),
+            then: Joi.object({
+              time: Joi.date().iso().required(),
+              IPAddress: Joi.string().required(),
+            }),
+            otherwise: Joi.forbidden(),
+          }),
+          _id: Joi.string().optional(),
+        })
+        .optional(),
+    });
+
+    const { error } = bodySchema.validate(req.body);
+    if (error) return res.status(200).send({ error: error.details[0].message });
+    let buyer = await Buyer.findById(req.params.id).populate("userId");
     if (!buyer) {
       return res.status(200).send({ error: "Buyer not found" });
     }
     if (
-      req.user?.id.toString() !== buyer.userId.toString() ||
-      req.admin?.roles.includes("buyer_edit")
+      !(
+        req.user?.id.toString() === buyer.userId.toString() ||
+        req.admin?.roles.includes("buyer_edit")
+      )
     ) {
       return res.status(200).send({ error: "Not allowed to edit this buyer" });
     }
 
-    documents = documents.map((item) => {
-      if (item._id) {
-        for (let doc of buyer.documents) {
-          if (doc._id.toString() === item._id) {
-            return doc;
+    if (answers) {
+      //check if answer is changed
+      for (let item of answers) {
+        let previousAnswer = buyer.answers.filter(
+          (i) => i.questionId.toString() === item.questionId.toString()
+        )[0];
+        console.log(previousAnswer);
+        if (item.answer === "yes") {
+          //check if files upload for answer is changed
+          let isFileChanged = false;
+          console.log(item.files);
+          for (let file of item.files) {
+            if (
+              previousAnswer.files.map((e) => e.url).indexOf(file.url) === -1
+            ) {
+              isFileChanged = true;
+            }
+          }
+          if (isFileChanged) {
+            item = { ...item, isApproved: "pending" };
+          } else {
+            item = previousAnswer;
           }
         }
       }
-      return { ...item, isVerified: "pending" };
-    });
-    buyer.documents = documents;
+      buyer.answers = answers;
+      buyer = await buyer.save();
+      //check if all answers are approved:
+      let isAllAswersApproved = true;
+      for (let i of buyer.answers) {
+        if (!i.isApproved) {
+          isAllAswersApproved = false;
+          break;
+        }
+      }
+      if (!isAllAswersApproved) {
+        let fundsReset = buyer.funds.map((item) => {
+          return {
+            document: { ...item.document, isVerified: "pending" },
+            amount: 0,
+          };
+        });
+        buyer.funds = fundsReset;
+      }
+    }
+    if (documents) {
+      //check if document is changed
+      let newFunds = [];
+      for (let item of documents) {
+        let previousFund = buyer.funds.filter(
+          (i) => item.url === i.document.url
+        );
+        console.log(previousFund);
 
-    buyer.isApproved = "pending";
+        if (previousFund.length > 0) {
+          newFunds.push(previousFund[0]);
+        } else {
+          newFunds.push({
+            document: { ...item, isVerified: "pending" },
+            amount: 0,
+          });
+        }
+      }
+      console.log(newFunds);
+      buyer.funds = newFunds;
+    }
+
     const savedBuyer = await buyer.save();
     const result = {
       _id: savedBuyer._id,
-      documents: savedBuyer.documents,
+      answers: savedBuyer.answers,
+      funds: savedBuyer.funds,
     };
     sendEmail({
       to: buyer.userId.email,
@@ -161,6 +284,15 @@ const editBuyer = async (req, res) => {
     res.status(200).send(result);
   } catch (err) {
     res.status(500).send(err.message);
+  }
+};
+
+const getBuyer = async (req, res) => {
+  try {
+    const buyer = await Buyer.findById(req.params.id);
+    return res.status(200).send(buyer);
+  } catch (err) {
+    return res.status(500).send(err.message);
   }
 };
 
@@ -437,6 +569,7 @@ module.exports = {
   approveFund,
   addFund,
   editBuyer,
+  getBuyer,
   getBuyers,
   approveAnswer,
   disapproveAnswer,

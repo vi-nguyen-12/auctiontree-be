@@ -9,6 +9,7 @@ const {
   editBuyer,
   // verifyDocument,
   getBuyers,
+  getBuyer,
   approveAnswer,
   disapproveAnswer,
   deleteBuyer,
@@ -20,6 +21,7 @@ router.put("/:buyerId/funds/:fundId", auth, approveFund);
 router.put("/:id", auth, editBuyer);
 router.put("/:buyerId/answers/:questionId/approved", auth, approveAnswer);
 router.put("/:buyerId/answers/:questionId/disapproved", auth, disapproveAnswer);
+router.get("/:id", getBuyer);
 router.get("/", auth, getBuyers);
 router.delete("/:id", auth, deleteBuyer);
 module.exports = router;

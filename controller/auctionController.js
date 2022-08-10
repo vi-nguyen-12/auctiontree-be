@@ -582,7 +582,7 @@ const getUpcomingAuctions = async (req, res) => {
         path: "property",
         match: type ? { type } : {},
         select:
-          "-createdBy -discussedAmount -isApproved -step -docusignId -createdAt -updatedAt",
+          "-createdBy -isApproved -step -docusignId -createdAt -updatedAt",
       })
       .sort({ auctionStartDate: 1 });
     allAuctions = allAuctions.filter((auction) => auction.property);
@@ -612,7 +612,7 @@ const getOngoingAuctions = async (req, res) => {
         path: "property",
         match: type ? { type } : {},
         select:
-          "-createdBy -discussedAmount -isApproved -step -docusignId -createdAt -updatedAt",
+          "-createdBy -isApproved -step -docusignId -createdAt -updatedAt", // should remove isDiscussed, temporarily put here for show in admin site to edit
       });
 
     allAuctions = await Promise.all(
