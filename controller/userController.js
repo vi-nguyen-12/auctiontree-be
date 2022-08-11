@@ -702,13 +702,19 @@ const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
 const getAuctionsOfBuyer = async (req, res) => {
   try {
     //check if auth user is same with user id
-    if (req.user.id !== req.params.id) {
+    if (
+      !(
+        req.user?.id === req.params.id ||
+        req.admin?.roles.includes("buyer_read")
+      )
+    ) {
       return res
         .status(200)
         .send({ error: "Not authorized to access actions of this buyer" });
     }
+
     const auctions = await Buyer.aggregate([
-      { $match: { userId: ObjectId(req.user.id) } },
+      { $match: { userId: ObjectId(req.params.id) } },
       {
         $lookup: {
           from: "auctions",
@@ -738,7 +744,35 @@ const getAuctionsOfBuyer = async (req, res) => {
           ],
         },
       },
-      { $unwind: "$auction" },
+      {
+        $unwind: "$auction",
+      },
+      { $unwind: { path: "$answers" } },
+      {
+        $lookup: {
+          from: "questions",
+          localField: "answers.questionId",
+          foreignField: "_id",
+          as: "answer",
+          pipeline: [
+            {
+              $project: {
+                _id: "$_id",
+                questionText: "$questionText",
+              },
+            },
+          ],
+        },
+      },
+      { $unwind: "$answer" },
+      {
+        $group: {
+          _id: "_id",
+          auction: { $first: "$auction" },
+          funds: { $first: "$funds" },
+          answers: { $addToSet: "$answer" },
+        },
+      },
       {
         $project: {
           _id: "$auction._id",
@@ -754,22 +788,21 @@ const getAuctionsOfBuyer = async (req, res) => {
             _id: "$_id",
             answers: "$answers",
             funds: "$funds",
-            availableFund: "$availableFund",
           },
         },
       },
     ]);
 
-    for (let auction of auctions) {
-      let isAbleToBid = false;
-      for (let fund of auction.buyer.funds) {
-        if (fund.document.isVerified === "success") {
-          isAbleToBid = true;
-          break;
-        }
-      }
-      auction.isAbleToBid = isAbleToBid;
-    }
+    // for (let auction of auctions) {
+    //   let isAbleToBid = false;
+    //   for (let fund of auction.buyer.funds) {
+    //     if (fund.document.isVerified === "success") {
+    //       isAbleToBid = true;
+    //       break;
+    //     }
+    //   }
+    //   auction.isAbleToBid = isAbleToBid;
+    // }
 
     //should check if admin return all bidders, if just a user return only 5 highest bidders
 
