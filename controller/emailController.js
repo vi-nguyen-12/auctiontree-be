@@ -156,10 +156,10 @@ const createEmail = async (req, res) => {
         });
 
         sendEmail({
-          from: admin.email,
+          // from: admin.email,
           to: user.email,
           subject,
-          text: content,
+          htmlText: content,
         });
       } else {
         await Email.create({
