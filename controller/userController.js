@@ -774,7 +774,7 @@ const getAuctionsOfBuyer = async (req, res) => {
             questionId: "$answers.questionId",
             answer: "$answers.answer",
             files: "$answers.files",
-            explanation: "answers.explanation",
+            explanation: "$answers.explanation",
             questionText: "$question.questionText",
           },
         },
