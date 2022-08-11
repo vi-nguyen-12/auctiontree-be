@@ -780,7 +780,7 @@ const getAuctionsOfBuyer = async (req, res) => {
       },
       {
         $group: {
-          _id: "_id",
+          _id: "$_id",
           auction: { $first: "$auction" },
           funds: { $first: "$funds" },
           answers: { $addToSet: "$answer" },
