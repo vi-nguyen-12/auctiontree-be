@@ -753,18 +753,31 @@ const getAuctionsOfBuyer = async (req, res) => {
           from: "questions",
           localField: "answers.questionId",
           foreignField: "_id",
-          as: "answer",
+          as: "question",
           pipeline: [
             {
               $project: {
-                _id: "$_id",
                 questionText: "$questionText",
               },
             },
           ],
         },
       },
-      { $unwind: "$answer" },
+      { $unwind: "$question" },
+      {
+        $project: {
+          _id: "$_id",
+          auction: "$auction",
+          funds: "$funds",
+          answer: {
+            _id: "$answers._id",
+            questionId: "$answers.questionId",
+            answer: "$answers.answer",
+            files: "$answers.files",
+            questionText: "$question.questionText",
+          },
+        },
+      },
       {
         $group: {
           _id: "_id",
@@ -787,22 +800,23 @@ const getAuctionsOfBuyer = async (req, res) => {
           buyer: {
             _id: "$_id",
             answers: "$answers",
+
             funds: "$funds",
           },
         },
       },
     ]);
 
-    // for (let auction of auctions) {
-    //   let isAbleToBid = false;
-    //   for (let fund of auction.buyer.funds) {
-    //     if (fund.document.isVerified === "success") {
-    //       isAbleToBid = true;
-    //       break;
-    //     }
-    //   }
-    //   auction.isAbleToBid = isAbleToBid;
-    // }
+    for (let auction of auctions) {
+      let isAbleToBid = false;
+      for (let fund of auction.buyer.funds) {
+        if (fund.document.isVerified === "success") {
+          isAbleToBid = true;
+          break;
+        }
+      }
+      auction.isAbleToBid = isAbleToBid;
+    }
 
     //should check if admin return all bidders, if just a user return only 5 highest bidders
 
