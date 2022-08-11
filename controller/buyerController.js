@@ -195,7 +195,7 @@ const editBuyer = async (req, res) => {
     }
     if (
       !(
-        req.user?.id.toString() === buyer.userId.toString() ||
+        req.user?.id.toString() === buyer.userId._id.toString() ||
         req.admin?.roles.includes("buyer_edit")
       )
     ) {
@@ -208,11 +208,11 @@ const editBuyer = async (req, res) => {
         let previousAnswer = buyer.answers.filter(
           (i) => i.questionId.toString() === item.questionId.toString()
         )[0];
-        console.log(previousAnswer);
+
         if (item.answer === "yes") {
           //check if files upload for answer is changed
           let isFileChanged = false;
-          console.log(item.files);
+
           for (let file of item.files) {
             if (
               previousAnswer.files.map((e) => e.url).indexOf(file.url) === -1
@@ -254,7 +254,6 @@ const editBuyer = async (req, res) => {
         let previousFund = buyer.funds.filter(
           (i) => item.url === i.document.url
         );
-        console.log(previousFund);
 
         if (previousFund.length > 0) {
           newFunds.push(previousFund[0]);
@@ -265,7 +264,7 @@ const editBuyer = async (req, res) => {
           });
         }
       }
-      console.log(newFunds);
+
       buyer.funds = newFunds;
     }
 
