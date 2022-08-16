@@ -312,18 +312,9 @@ const propertyObjectSchema = {
       engine_type: Joi.string().required(),
       engine_manufacture_name: Joi.string().required(),
       engine_deck_type: Joi.string().required(),
-      running_cost: Joi.number()
-        .required()
-        .options({ convert: false })
-        .options({ convert: false }),
-      no_of_crew_required: Joi.number()
-        .required()
-        .options({ convert: false })
-        .options({ convert: false }),
-      length: Joi.number()
-        .required()
-        .options({ convert: false })
-        .options({ convert: false }),
+      running_cost: Joi.number().required().options({ convert: false }),
+      no_of_crew_required: Joi.number().required().options({ convert: false }),
+      length: Joi.number().required().options({ convert: false }),
       others: Joi.string().optional(),
       description: Joi.object({
         summary: Joi.string().required(),

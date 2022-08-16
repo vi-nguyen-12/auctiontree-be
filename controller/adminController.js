@@ -12,6 +12,7 @@ const client_url =
     : process.env.DEV_CLIENT_ADMIN_URL;
 //@desc  Create a new admin
 //@route POST /api/admins body={fullName,email,phone,location,role, department,image, designation,description}
+
 const createAdmin = async (req, res) => {
   try {
     if (req.admin || req.admin.roles.includes("admin_create")) {
