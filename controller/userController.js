@@ -603,6 +603,7 @@ const getBidAuctionsOfBuyer = async (req, res) => {
   }
 };
 
+//should authorized only admin can view
 //@desc  Get auctions of all buyers (grouped by user)
 //@route GET /api/users/buyer/auctions
 const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
@@ -694,6 +695,69 @@ const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
     res.status(200).send(result);
   } catch (error) {
     res.status(500).send(error.message);
+  }
+};
+
+const getPropertiesOfAllSellersGroupByUser = async (req, res) => {
+  try {
+    const aggregate = await Property.aggregate([
+      {
+        $group: {
+          _id: "$createdBy",
+          properties: {
+            $push: {
+              _id: "$_id",
+              type: "$type",
+              details: "$details",
+              images: "$images",
+              videos: "$videos",
+              documents: "$documents",
+              isApproved: "$isApproved",
+              step: "$step",
+              discussedAmount: "$discussedAmount",
+              reservedAmount: "$reservedAmount",
+            },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: { path: "$user" } },
+      {
+        $project: {
+          _id: "$_id",
+          properties: "$properties",
+          firstName: "$user.firstName",
+          lastName: "$user.lastName",
+        },
+      },
+    ]);
+    for (let user of aggregate) {
+      for (let property of user.properties) {
+        let auction = await Auction.findOne({ property: property._id });
+        if (auction) {
+          property.auction = {
+            _id: auction._id,
+            startingBid: auction.startingBid,
+            incrementAmount: auction.incrementAmount,
+            registerStartDate: auction.registerStartDate,
+            registerEndDate: auction.registerEndDate,
+            isFeatured: auction.isFeatured,
+            isActive: auction.isActive,
+          };
+        }
+      }
+    }
+
+    return res.status(200).send(aggregate);
+  } catch (err) {
+    return res.status(500).send(err.message);
   }
 };
 
@@ -1112,5 +1176,6 @@ module.exports = {
   getListingsOfSeller,
   editProfile,
   getAuctionsOfAllBuyersGroupedByUser,
+  getPropertiesOfAllSellersGroupByUser,
   deleteNotification,
 };

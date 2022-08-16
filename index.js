@@ -40,27 +40,31 @@ app.use(function (req, res, next) {
   }
   return next();
 });
+let allowedDomains = [];
 
-// app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
+if (process.env.NODE_ENV === "test" || process.env.NODE_ENV == "production") {
+  allowedDomains = [
+    process.env.DEV_CLIENT_URL,
+    process.env.TEST_CLIENT_URL,
+    process.env.PROD_CLIENT_URL,
+    process.env.DEV_CLIENT_ADMIN_URL,
+    process.env.TEST_CLIENT_ADMIN_URL,
+    process.env.PROD_CLIENT_ADMIN_URL,
+    "https://demo.docusign.net/restapi",
+  ];
 
-const allowedDomains = [
-  process.env.DEV_CLIENT_URL,
-  process.env.TEST_CLIENT_URL,
-  process.env.PROD_CLIENT_URL,
-  process.env.DEV_CLIENT_ADMIN_URL,
-  process.env.TEST_CLIENT_ADMIN_URL,
-  process.env.PROD_CLIENT_ADMIN_URL,
-  "https://demo.docusign.net/restapi",
-];
+  const corsOptions = {
+    credentials: true,
+    origin: (origin, callback) => {
+      if (allowedDomains.includes(origin)) return callback(null, true);
+      callback(new Error("Not allowed by CORS"));
+    },
+  };
+  app.use(cors(corsOptions));
+} else {
+  app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
+}
 
-const corsOptions = {
-  credentials: true,
-  origin: (origin, callback) => {
-    if (allowedDomains.includes(origin)) return callback(null, true);
-    callback(new Error("Not allowed by CORS"));
-  },
-};
-app.use(cors(corsOptions));
 app.set("trust proxy", 1);
 
 // set cron job //just comment out for temporarily
