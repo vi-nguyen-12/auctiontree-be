@@ -212,8 +212,8 @@ const propertyObjectSchema = {
       state: Joi.string().required(),
       zip_code: Joi.string().required(),
       country: Joi.string().required(),
-      lat: Joi.number().required().options({ convert: false }),
-      lng: Joi.number().required().options({ convert: false }),
+      lat: Joi.number().required(),
+      lng: Joi.number().required(),
       real_estate_type: Joi.string()
         .required()
         .valid(
