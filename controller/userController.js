@@ -574,7 +574,7 @@ const setUnlikedAuction = async (req, res) => {
 };
 
 //@desc  Get bid auctions of a buyer
-//@route GET /api/users/:id/buyer/auctions/bid  //should check if admin also
+//@route GET /api/users/:id/buyer/auctions/bid
 const getBidAuctionsOfBuyer = async (req, res) => {
   try {
     let id = req.params.id;
@@ -588,7 +588,7 @@ const getBidAuctionsOfBuyer = async (req, res) => {
       bidAuctions = bidAuctions.map((auction) => {
         let [highestBid] = auction.bids.slice(-1);
         let bids = auction.bids.filter(
-          (bid) => bid.userId.toString() === id.toString()
+          (bid) => bid.buyerId.toString() === id.toString()
         );
 
         auction = { ...auction.toObject(), bids, highestBid };
@@ -698,6 +698,9 @@ const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
   }
 };
 
+//should authorized only admin can view
+//@desc  Get auctions of all sellers (grouped by user)
+//@route GET /api/users/seller/auctions
 const getPropertiesOfAllSellersGroupByUser = async (req, res) => {
   try {
     const aggregate = await Property.aggregate([
