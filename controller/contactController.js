@@ -24,7 +24,7 @@ const sendEmailToAdmin = async (req, res) => {
       return res.status(200).send({ error: error.details[0].message });
     }
 
-    const generalAdmin = await Admin.findOne({ title: "general_admin" }).select(
+    const generalAdmin = await Admin.findOne({ role: "general_admin" }).select(
       "email"
     );
 

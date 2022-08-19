@@ -579,7 +579,7 @@ const getBidAuctionsOfBuyer = async (req, res) => {
   try {
     let id = req.params.id;
     if (
-      (req.admin?.id && req.roles.includes("buyer_read")) ||
+      (req.admin?.id && req.permissions.includes("buyer_read")) ||
       (req.user?.id && req.user.id === id)
     ) {
       let bidAuctions = await Auction.find({ "bids.userId": id })
@@ -738,6 +738,10 @@ const getPropertiesOfAllSellersGroupByUser = async (req, res) => {
           properties: "$properties",
           firstName: "$user.firstName",
           lastName: "$user.lastName",
+          email: "$user.email",
+          phone: "$user.phone",
+          city: "$user.city",
+          country: "$user.country",
         },
       },
     ]);
@@ -772,7 +776,7 @@ const getAuctionsOfBuyer = async (req, res) => {
     if (
       !(
         req.user?.id === req.params.id ||
-        req.admin?.roles.includes("buyer_read")
+        req.admin?.permissions.includes("buyer_read")
       )
     ) {
       return res

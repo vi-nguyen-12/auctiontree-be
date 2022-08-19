@@ -13,7 +13,7 @@ const auth = async (req, res, next) => {
     }
     if (verified.adminId) {
       const admin = await Admin.findById(verified.adminId);
-      req.admin = { id: admin._id, roles: admin.roles }; //{id:..., roles:...}
+      req.admin = { id: admin._id, permissions: admin.permissions }; //{id:..., permissions:...}
     }
 
     next();
@@ -37,7 +37,7 @@ const authNotStrict = async (req, res, next) => {
       }
       if (verified.adminId) {
         const admin = await Admin.findById(verified.adminId);
-        req.admin = { id: admin._id, roles: admin.roles };
+        req.admin = { id: admin._id, permissions: admin.permissions };
         next();
       }
     }
@@ -73,7 +73,7 @@ const authAdmin = async (req, res, next) => {
     const verified = jwt.verify(token, process.env.TOKEN_KEY);
     if (verified.adminId) {
       const admin = await Admin.findById(verified.adminId);
-      req.admin = { id: admin._id, roles: admin.roles };
+      req.admin = { id: admin._id, permissions: admin.permissions };
       next();
     } else {
       return res.status(200).send({ error: "Access Denied" });

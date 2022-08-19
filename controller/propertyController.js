@@ -395,7 +395,7 @@ const editRealestate = async (req, res) => {
     if (
       !(
         req.user?.id.toString() === property.createdBy.toString() ||
-        req.admin?.roles.includes("property_edit")
+        req.admin?.permissions.includes("property_edit")
       )
     ) {
       return res
@@ -405,7 +405,7 @@ const editRealestate = async (req, res) => {
     //Authentication: only admin can edit property that has been created for auction
     if (
       auction?.auctionStartDate.getTime() < new Date().getTime() &&
-      !req.admin?.roles.includes("property_edit")
+      !req.admin?.permissions.includes("property_edit")
     ) {
       return res.status(200).send({
         error: "Only admin can edit property of auction which is ongoing",
@@ -626,7 +626,7 @@ const editOthers = async (req, res) => {
     if (
       !(
         req.user?.id.toString() === property.createdBy.toString() ||
-        req.admin?.roles.includes("property_edit")
+        req.admin?.permissions.includes("property_edit")
       )
     ) {
       return res
@@ -636,7 +636,7 @@ const editOthers = async (req, res) => {
     //Authentication: only admin can edit property that has been created for auction
     if (
       auction?.auctionStartDate.getTime() < new Date().getTime() &&
-      !req.admin?.roles.includes("property_edit")
+      !req.admin?.permissions.includes("property_edit")
     ) {
       return res.status(200).send({
         error: "Only admin can edit property that has been created for auction",
@@ -918,7 +918,7 @@ const editOthers = async (req, res) => {
 //@route GET /api/properties
 const getProperties = async (req, res) => {
   try {
-    if (req.admin?.roles.includes("property_read")) {
+    if (req.admin?.permissions.includes("property_read")) {
       const paramsSchema = Joi.object({
         status: Joi.alternatives(
           Joi.string().valid("pending", "success", "fail"),
@@ -1002,7 +1002,7 @@ const getProperty = async (req, res) => {
     //Authenticate: only owner of property or admin with permission can view
     if (
       req.user?.id.toString() === property.createdBy.toString() ||
-      req.admin?.roles.includes("property_read")
+      req.admin?.permissions.includes("property_read")
     ) {
       return res.status(200).send(property);
     }
@@ -1019,7 +1019,7 @@ const deleteProperty = async (req, res) => {
     const property = await Property.findById(req.params.id).select("createdBy");
     if (
       req.user?.id.toString() === property.createdBy.toString() ||
-      req.admin?.roles.includes("property_delete")
+      req.admin?.permissions.includes("property_delete")
     ) {
       await Property.deleteOne({ _id: req.params.id });
       return res.status(200).send("Property deleted");
@@ -1034,7 +1034,7 @@ const deleteProperty = async (req, res) => {
 //@route PUT /api/properties/:id/status body: {status: "pending"/"success"/"fail", rejectedReason:...  }
 const approveProperty = async (req, res) => {
   try {
-    if (req.admin?.roles.includes("property_approval")) {
+    if (req.admin?.permissions.includes("property_approval")) {
       const bodySchema = Joi.object({
         status: Joi.string().valid("pending", "success", "fail"),
         rejectedReason: Joi.when("status", {
@@ -1148,7 +1148,10 @@ const verifyDocument = async (req, res) => {
   const { propertyId, documentId } = req.params;
 
   try {
-    if (!req.admin || !req.admin.roles.includes("property_document_approval")) {
+    if (
+      !req.admin ||
+      !req.admin.permissions.includes("property_document_approval")
+    ) {
       return res.status(200).send({ error: "Not allowed to verify document" });
     }
     const property = await Property.findById(propertyId);
@@ -1195,7 +1198,7 @@ const verifyVideo = async (req, res) => {
   try {
     if (
       !req.admin ||
-      !req.admin.roles.includes("property_img_video_approval")
+      !req.admin.permissions.includes("property_img_video_approval")
     ) {
       return res.status(200).send({ error: "Not allowed to verify video" });
     }
@@ -1242,7 +1245,7 @@ const verifyImage = async (req, res) => {
   try {
     if (
       !req.admin ||
-      !req.admin.roles.includes("property_img_video_approval")
+      !req.admin.permissions.includes("property_img_video_approval")
     ) {
       return res.status(200).send({ error: "Not allowed to verify image" });
     }

@@ -14,7 +14,7 @@ const {
 
 const createAuction = async (req, res) => {
   try {
-    if (req.admin?.roles.includes("auction_create")) {
+    if (req.admin?.permissions.includes("auction_create")) {
       const {
         propertyId,
         registerStartDate: registerStartDateISOString,
@@ -119,7 +119,7 @@ const createAuction = async (req, res) => {
 
 const editAuction = async (req, res) => {
   try {
-    if (!req.admin || !req.admin.roles.includes("auction_edit")) {
+    if (!req.admin || !req.admin.permissions.includes("auction_edit")) {
       return res.status(200).send({ error: "Not allowed to edit auction" });
     }
     const auction = await Auction.findById(req.params.id).populate("property");
@@ -205,7 +205,7 @@ const editAuction = async (req, res) => {
 //@route DELETE api/auctions/:id   //should check this, how about related seller and buyer info
 const deleteAuction = async (req, res) => {
   try {
-    if (req.admin && req.admin.roles.includes("auction_delete")) {
+    if (req.admin && req.admin.permissions.includes("auction_delete")) {
       await Auction.deleteOne({ _id: req.params.id });
       return res.status(204).send({ message: "Auction deleted successfully" });
     }
@@ -404,7 +404,7 @@ const getAllAuctions = async (req, res) => {
       filterProperty["property.details.year_built"] = year_built;
     }
 
-    if (req.admin?.roles.includes("auction_read")) {
+    if (req.admin?.permissions.includes("auction_read")) {
       auctions = await Auction.find(filter).populate({
         path: "property",
         select:
@@ -506,7 +506,7 @@ const getAuction = async (req, res) => {
 
     //Authenticate: admin: view everything
     // Authenticate: owner of property: view everything and add 1 field: "isOwner": true
-    if (req.admin?.roles.includes("auction_read")) {
+    if (req.admin?.permissions.includes("auction_read")) {
       return res.status(200).send(auction);
     }
     if (

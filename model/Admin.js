@@ -8,7 +8,7 @@ const adminSchema = new mongoose.Schema({
   password: { type: String, required: true },
   location: { type: String, required: true },
   IPAddress: { type: String, required: true },
-  title: {
+  role: {
     type: String,
     enum: [
       "general_admin",
@@ -45,7 +45,7 @@ const adminSchema = new mongoose.Schema({
     ],
     required: true,
   },
-  roles: [
+  permissions: [
     {
       type: String,
       enum: {
@@ -88,55 +88,55 @@ const adminSchema = new mongoose.Schema({
 
 adminSchema.pre("save", function (next) {
   if (
-    (this.title === "general_admin" || this.title === "regional_admin") &&
+    (this.role === "general_admin" || this.role === "regional_admin") &&
     this.department == "administration"
   ) {
     next();
   }
   if (
-    (this.title === "marketing_admin" ||
-      this.title === "marketing_manager" ||
-      this.title === "marketing_coordinator") &&
+    (this.role === "marketing_admin" ||
+      this.role === "marketing_manager" ||
+      this.role === "marketing_coordinator") &&
     this.department == "marketing"
   ) {
     next();
   }
   if (
-    (this.title === "business_admin" ||
-      this.title === "business_manager" ||
-      this.title === "business_coordinator") &&
+    (this.role === "business_admin" ||
+      this.role === "business_manager" ||
+      this.role === "business_coordinator") &&
     this.department == "business"
   ) {
     next();
   }
   if (
-    (this.title === "financial_admin" ||
-      this.title === "financial_manager" ||
-      this.title === "financial_coordinator") &&
+    (this.role === "financial_admin" ||
+      this.role === "financial_manager" ||
+      this.role === "financial_coordinator") &&
     this.department == "financial"
   ) {
     next();
   }
   if (
-    (this.title === "legal_admin" ||
-      this.title === "legal_manager" ||
-      this.title === "legal_coordinator") &&
+    (this.role === "legal_admin" ||
+      this.role === "legal_manager" ||
+      this.role === "legal_coordinator") &&
     this.department == "legal"
   ) {
     next();
   }
   if (
-    (this.title === "technical_admin" ||
-      this.title === "technical_manager" ||
-      this.title === "technical_coordinator") &&
+    (this.role === "technical_admin" ||
+      this.role === "technical_manager" ||
+      this.role === "technical_coordinator") &&
     this.department == "technical"
   ) {
     next();
   }
-  if (this.title === "escrow_agent" && this.department == "escrow") {
+  if (this.role === "escrow_agent" && this.department == "escrow") {
     next();
   }
-  next(new Error(`${this.title} is not in ${this.department}`));
+  next(new Error(`${this.role} is not in ${this.department}`));
 });
 
 module.exports = mongoose.model("Admin", adminSchema);

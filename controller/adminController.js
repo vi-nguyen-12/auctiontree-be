@@ -15,7 +15,7 @@ const client_url =
 
 const createAdmin = async (req, res) => {
   try {
-    if (req.admin || req.admin.roles.includes("admin_create")) {
+    if (req.admin || req.admin.permissions.includes("admin_create")) {
       const {
         fullName,
         email,
@@ -23,7 +23,7 @@ const createAdmin = async (req, res) => {
         phone,
         location,
         IPAddress,
-        title,
+        role,
         department,
         image,
         designation,
@@ -57,7 +57,7 @@ const createAdmin = async (req, res) => {
         password: hashedPassword,
         location,
         IPAddress,
-        title,
+        role,
         department,
         image,
         designation,
@@ -68,6 +68,7 @@ const createAdmin = async (req, res) => {
         subject: "Welcome to the team",
         text: `Please log in with this email ${newAdmin.email} and password ${newAdmin.password} to access your account and change your password as soon as possible. Thank you`,
       });
+
       return res.status(200).send({
         _id: newAdmin._id,
         fullName: newAdmin.fullName,
@@ -75,7 +76,7 @@ const createAdmin = async (req, res) => {
         personalEmail: newAdmin.personalEmail,
         phone: newAdmin.phone,
         location: newAdmin.location,
-        title: newAdmin.title,
+        role: newAdmin.role,
         department: newAdmin.department,
         image: newAdmin.image,
         designation: newAdmin.designation,
@@ -129,7 +130,7 @@ const checkJWT = async (req, res) => {
     const verified = jwt.verify(token, process.env.TOKEN_KEY);
     if (verified) {
       const admin = await Admin.findOne({ _id: verified.adminId }).select(
-        "fullName title department"
+        "fullName role department"
       );
       return res.status(200).send({ message: "User Logged In", admin });
     } else {
@@ -142,7 +143,7 @@ const checkJWT = async (req, res) => {
 };
 
 //@desc  Edit an admin
-//@route PUT /api/admins/:id body={fullName, personalEmail, email, phone, location,title, roles, department,image, designation,description}
+//@route PUT /api/admins/:id body={fullName, personalEmail, email, phone, location,role, permissions, department,image, designation,description}
 const editAdmin = async (req, res) => {
   try {
     //owner of this account
@@ -206,7 +207,7 @@ const editAdmin = async (req, res) => {
         personalEmail: savedAdmin.personalEmail,
         phone: savedAdmin.phone,
         location: savedAdmin.location,
-        title: savedAdmin.title,
+        role: savedAdmin.role,
         department: savedAdmin.department,
         image: savedAdmin.image,
         designation: savedAdmin.designation,
@@ -216,7 +217,7 @@ const editAdmin = async (req, res) => {
     }
 
     // admin
-    if (req.admin?.roles.includes("admin_edit")) {
+    if (req.admin?.permissions.includes("admin_edit")) {
       let {
         fullName,
         personalEmail,
@@ -224,8 +225,8 @@ const editAdmin = async (req, res) => {
         phone,
         location,
         IPAddress,
-        title,
-        roles,
+        role,
+        permissions,
         department,
         image,
         designation,
@@ -241,8 +242,8 @@ const editAdmin = async (req, res) => {
       admin.phone = phone || admin.phone;
       admin.location = location || admin.location;
       admin.IPAddress = IPAddress || admin.IPAddress;
-      admin.title = title || admin.title;
-      admin.roles = roles || admin.roles;
+      admin.role = role || admin.role;
+      admin.permissions = permissions || admin.permissions;
       admin.department = department || admin.department;
       admin.image = image || admin.image;
       admin.designation = designation || admin.designation;
@@ -261,7 +262,7 @@ const editAdmin = async (req, res) => {
 //@route DELETE /api/admins/:id
 const deleteAdmin = async (req, res) => {
   try {
-    if (req.admin?.roles.includes("admin_delete")) {
+    if (req.admin?.permissions.includes("admin_delete")) {
       await Admin.deleteOne({ _id: req.params.id });
       return res.status(200).send({ message: "Admin deleted successfully" });
     }
@@ -275,7 +276,7 @@ const deleteAdmin = async (req, res) => {
 //@route GET /api/admins
 const getAllAdmin = async (req, res) => {
   try {
-    if (req.admin?.roles.includes("admin_read")) {
+    if (req.admin?.permissions.includes("admin_read")) {
       const admins = await Admin.find().select("-password");
       return res.status(200).send(admins);
     }
@@ -291,7 +292,7 @@ const getAdmin = async (req, res) => {
   try {
     if (
       req.admin &&
-      (req.admin.roles.includes("admin_read") ||
+      (req.admin.permissions.includes("admin_read") ||
         req.admin.id.toString() === req.params.id)
     ) {
       const admin = await Admin.findById(req.params.id).select("-password");
@@ -306,15 +307,16 @@ const getAdmin = async (req, res) => {
   }
 };
 
-//@desc  Forgot password
-//@route POST /api/admins/password body: {personalEmail}
-//@route POST /api/admins/password body {token, password}
+//@desc  Forgot password/ Reset password
+//@route PUT /api/admins/password body: {personalEmail, adminId}
+//@route PUT /api/admins/password body {token, password}
 const forgotPassword = async (req, res) => {
   try {
-    const { personalEmail, token, password } = req.body;
+    //if owner of account
+    const { personalEmail, token, password, adminId } = req.body;
     if (personalEmail) {
       const admin = await Admin.findOne({
-        $or: [{ email }, { personalEmail }],
+        $or: [{ email: personalEmail }, { personalEmail }],
       });
       if (!admin) {
         return res
@@ -326,6 +328,7 @@ const forgotPassword = async (req, res) => {
       });
       admin.temp_token = token;
       await admin.save();
+      console.log(token);
 
       sendEmail({
         to: admin.personalEmail,
@@ -353,6 +356,26 @@ const forgotPassword = async (req, res) => {
       await admin.save();
       return res.status(200).send({ message: "Reset password successfully" });
     }
+    //if admin
+    if (adminId) {
+      if (req.admin?.permissions.includes("admin_edit")) {
+        const admin = await Admin.findById(adminId);
+        if (!admin) {
+          return res.status(200).send({ error: "Admin not found" });
+        }
+        const password = generateRandomString(10);
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        admin.password = hashedPassword;
+
+        await admin.save();
+        return res.status(200).send({ password });
+      }
+      return res
+        .status(200)
+        .send({ error: "Not allowed to reset admin password" });
+    }
+    return res.status(200).send("Please specify the fields of body");
   } catch (err) {
     return res.status(500).send(err.message);
   }
