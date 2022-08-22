@@ -56,7 +56,7 @@ const createRole = async (req, res) => {
       if (error)
         return res.status(200).send({ error: error.details[0].message });
 
-      const savedName = name.trim().split(" ").join("_");
+      const savedName = name.toLowerCase().trim().split(" ").join("_");
       const newRole = await Role.create({
         name: savedName,
         department,
