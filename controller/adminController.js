@@ -1,7 +1,9 @@
 const Admin = require("../model/Admin");
+const Role = require("../model/Role");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Joi = require("joi");
+Joi.objectId = require("joi-objectid")(Joi);
 const { sendEmail, generateRandomString } = require("../helper");
 
 const client_url =
@@ -24,7 +26,7 @@ const createAdmin = async (req, res) => {
         location,
         IPAddress,
         role,
-        department,
+        permissions,
         image,
         designation,
         description,
@@ -33,17 +35,21 @@ const createAdmin = async (req, res) => {
       const isEmailExist = await Admin.findOne({ email });
       const isPhoneExist = await Admin.findOne({ phone });
       const isPersonalEmailExist = await Admin.findOne({ personalEmail });
-      if (isEmailExist) {
+      const isRoleExist = await Role.findById(role);
+
+      if (isEmailExist)
         return res.status(200).send({
           error: "Email already exist",
         });
-      }
-      if (isPhoneExist) {
+
+      if (isPhoneExist)
         return res.status(200).send({ error: "Phone number already exist" });
-      }
-      if (isPersonalEmailExist) {
+
+      if (isPersonalEmailExist)
         return res.status(200).send({ error: "Personal email already exist" });
-      }
+
+      if (!isRoleExist)
+        return res.status(200).send({ error: "Role is not found" });
 
       const password = generateRandomString(10);
       const salt = await bcrypt.genSalt(10);
@@ -58,11 +64,12 @@ const createAdmin = async (req, res) => {
         location,
         IPAddress,
         role,
-        department,
+        permissions: permissions || isRoleExist.permissions,
         image,
         designation,
         description,
       });
+      console.log("test");
       sendEmail({
         to: newAdmin.personalEmail,
         subject: "Welcome to the team",
@@ -78,6 +85,7 @@ const createAdmin = async (req, res) => {
         location: newAdmin.location,
         role: newAdmin.role,
         department: newAdmin.department,
+        permissions: newAdmin.permissions,
         image: newAdmin.image,
         designation: newAdmin.designation,
         description: newAdmin.description,
@@ -147,7 +155,7 @@ const checkJWT = async (req, res) => {
 const editAdmin = async (req, res) => {
   try {
     //owner of this account
-    if (req.admin?.id === req.params.id) {
+    if (req.admin?.id.toString() === req.params.id) {
       let {
         fullName,
         phone,
@@ -183,7 +191,7 @@ const editAdmin = async (req, res) => {
       const admin = await Admin.findOne({ _id: req.admin.id });
 
       if (oldPassword) {
-        const match = await bcrypt.compare(oldPassword, newPassword);
+        const match = await bcrypt.compare(oldPassword, admin.password);
         if (!match) {
           return res
             .status(200)
@@ -208,7 +216,7 @@ const editAdmin = async (req, res) => {
         phone: savedAdmin.phone,
         location: savedAdmin.location,
         role: savedAdmin.role,
-        department: savedAdmin.department,
+        permissions: savedAdmin.permissions,
         image: savedAdmin.image,
         designation: savedAdmin.designation,
         description: savedAdmin.description,
@@ -227,11 +235,65 @@ const editAdmin = async (req, res) => {
         IPAddress,
         role,
         permissions,
-        department,
         image,
         designation,
         description,
       } = req.body;
+
+      const querySchema = Joi.object({
+        fullName: Joi.string().optional(),
+        phone: Joi.string()
+          .pattern(/^[0-9]+$/)
+          .optional(),
+        personalEmail: Joi.string().email({
+          minDomainSegments: 2,
+          tlds: { allow: ["com", "net"] },
+        }),
+        email: Joi.string().email({
+          minDomainSegments: 2,
+          tlds: { allow: ["com", "net"] },
+        }),
+        location: Joi.string().optional(),
+        IPAddress: Joi.string().optional(),
+        role: Joi.objectId().optional(),
+        permissions: Joi.array()
+          .items(
+            Joi.string().valid(
+              "admin_delete",
+              "admin_edit",
+              "admin_create",
+              "admin_read",
+              "auction_delete",
+              "auction_edit",
+              "auction_create",
+              "auction_read",
+              "auction_winner_edit",
+              "auction_winner_read",
+              "property_delete",
+              "property_edit",
+              "property_create",
+              "property_read",
+              "property_img_video_approval",
+              "property_document_approval",
+              "property_approval",
+              "buyer_delete",
+              "buyer_edit",
+              "buyer_create",
+              "buyer_read",
+              "buyer_document_approval",
+              "buyer_answer_approval",
+              "buyer_approval"
+            )
+          )
+          .optional(),
+        image: Joi.string().optional(),
+        designation: Joi.string().optional(),
+        description: Joi.string().optional(),
+      });
+      const { error } = querySchema.validate(req.body);
+      if (error)
+        return res.status(200).send({ error: error.details[0].message });
+
       let admin = await Admin.findOne({ _id: req.params.id });
       if (!admin) {
         return res.status(200).send({ error: "Admin not found" });
@@ -244,11 +306,11 @@ const editAdmin = async (req, res) => {
       admin.IPAddress = IPAddress || admin.IPAddress;
       admin.role = role || admin.role;
       admin.permissions = permissions || admin.permissions;
-      admin.department = department || admin.department;
       admin.image = image || admin.image;
       admin.designation = designation || admin.designation;
       admin.description = description || admin.description;
-      const savedAdmin = await admin.save();
+      let savedAdmin = await admin.save();
+      savedAdmin = savedAdmin.toObject();
       delete savedAdmin.password;
       return res.status(200).send(savedAdmin);
     }
@@ -328,7 +390,6 @@ const forgotPassword = async (req, res) => {
       });
       admin.temp_token = token;
       await admin.save();
-      console.log(token);
 
       sendEmail({
         to: admin.personalEmail,

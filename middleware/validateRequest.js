@@ -501,10 +501,67 @@ const propertyObjectSchema = {
     step: Joi.number().required().valid(5).options({ convert: false }),
   },
 };
+
+const validateAdmin = (req, res, next) => {
+  const adminSchema = Joi.object({
+    fullName: Joi.string().required(),
+    email: Joi.string()
+      .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
+      .required(),
+    personalEmail: Joi.string()
+      .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
+      .required(),
+    phone: Joi.string()
+      .pattern(/^[0-9]+$/)
+      .required(),
+    location: Joi.string().required(),
+    IPAddress: Joi.string().required(),
+    role: Joi.objectId().required(),
+    permissions: Joi.array()
+      .items(
+        Joi.string().valid(
+          "admin_delete",
+          "admin_edit",
+          "admin_create",
+          "admin_read",
+          "auction_delete",
+          "auction_edit",
+          "auction_create",
+          "auction_read",
+          "auction_winner_edit",
+          "auction_winner_read",
+          "property_delete",
+          "property_edit",
+          "property_create",
+          "property_read",
+          "property_img_video_approval",
+          "property_document_approval",
+          "property_approval",
+          "buyer_delete",
+          "buyer_edit",
+          "buyer_create",
+          "buyer_read",
+          "buyer_document_approval",
+          "buyer_answer_approval",
+          "buyer_approval"
+        )
+      )
+      .optional(),
+    image: Joi.string().optional(),
+    designation: Joi.string().optional(),
+    description: Joi.string().optional(),
+  });
+  const { error } = adminSchema.validate(req.body);
+  if (error) {
+    return res.status(200).send({ error: error.details[0].message });
+  }
+  next();
+};
 module.exports = {
   validateUser,
   validateUpdateUser,
   validateBuyer,
   validateAuction,
   propertyObjectSchema,
+  validateAdmin,
 };
