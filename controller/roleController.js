@@ -57,6 +57,9 @@ const createRole = async (req, res) => {
         return res.status(200).send({ error: error.details[0].message });
 
       const savedName = name.toLowerCase().trim().split(" ").join("_");
+      const isNameExist = await Role.findOne({ name: savedName });
+      if (isNameExist)
+        return res.status(200).send({ error: "Role already exists" });
       const newRole = await Role.create({
         name: savedName,
         department,
