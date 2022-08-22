@@ -2,8 +2,8 @@ const Joi = require("joi");
 Joi.objectId = require("joi-objectid")(Joi);
 const Role = require("../model/Role");
 
-//@desc  Create a buyer
-//@route POST /api/buyers body:{auctionId, docusignId,TC, answers:[{questionId, answer: "yes"/"no", explanation:"", documents:[{officialName:..., name:...,url:...}]}] } TC:{time: ISOString format, IPAddress:...}
+//@desc  Create a role
+//@route POST /api/roles body:{name, department,permissions}
 const createRole = async (req, res) => {
   try {
     if (req.admin?.permissions.includes("admin_create")) {
