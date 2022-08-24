@@ -1,18 +1,21 @@
 const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
 
-const adminSchema = new mongoose.Schema({
-  fullName: { type: String, required: true },
-  personalEmail: { type: String, required: true },
-  email: { type: String, required: true },
-  phone: { type: Number, required: true },
-  password: { type: String, required: true },
-  location: { type: String, required: true },
-  IPAddress: { type: String, required: true },
-  role: {
-    type: Schema.Types.ObjectId,
-    ref: "Role",
-    required: [true, "Role is required"],
+const roleSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  department: {
+    type: String,
+    required: true,
+    enum: {
+      values: [
+        "administration",
+        "marketing",
+        "business",
+        "financial",
+        "legal",
+        "technical",
+        "escrow",
+      ],
+    },
   },
   permissions: [
     {
@@ -49,10 +52,6 @@ const adminSchema = new mongoose.Schema({
       required: true,
     },
   ],
-  image: { type: String },
-  designation: { type: String },
-  description: { type: String },
-  temp_token: { type: String },
 });
 
-module.exports = mongoose.model("Admin", adminSchema);
+module.exports = mongoose.model("Role", roleSchema);

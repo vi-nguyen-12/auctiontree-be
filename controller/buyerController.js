@@ -118,7 +118,6 @@ const createBuyer = async (req, res) => {
   }
 };
 
-//Should fix this
 //@desc  Edit buyer, can only change answers or funds
 //@route PUT /api/buyers/:id body:{documents:[{_id:...}{officialName:..., name:...,url:...}]}}
 const editBuyer = async (req, res) => {
@@ -196,7 +195,7 @@ const editBuyer = async (req, res) => {
     if (
       !(
         req.user?.id.toString() === buyer.userId._id.toString() ||
-        req.admin?.roles.includes("buyer_edit")
+        req.admin?.permissions.includes("buyer_edit")
       )
     ) {
       return res.status(200).send({ error: "Not allowed to edit this buyer" });
@@ -307,7 +306,7 @@ const addFund = async (req, res) => {
 
     if (
       req.user?.id.toString() === buyer.userId._id.toString() ||
-      req.admin?.roles.includes("buyer_edit")
+      req.admin?.permissions.includes("buyer_edit")
     ) {
       for (document of documents) {
         buyer.funds.push({ document });
@@ -348,7 +347,7 @@ const approveFund = async (req, res) => {
     });
     const { error } = bodySchema.validate(req.body);
     if (error) return res.status(200).send({ error: error.details[0].message });
-    if (!req.admin?.roles.includes("buyer_edit")) {
+    if (!req.admin?.permissions.includes("buyer_edit")) {
       return res
         .status(200)
         .send({ error: "Not allowed to approve fund for this buyer" });
@@ -435,7 +434,7 @@ const approveFund = async (req, res) => {
 //@route PUT /api/buyers/:buyerId/answers/:questionId/approved
 const approveAnswer = async (req, res) => {
   try {
-    if (req.admin?.roles.includes("buyer_answer_approval")) {
+    if (req.admin?.permissions.includes("buyer_answer_approval")) {
       const { buyerId, questionId } = req.params;
       const buyer = await Buyer.findById(buyerId).populate("answers");
       if (!buyer) {
@@ -469,7 +468,7 @@ const approveAnswer = async (req, res) => {
 //@route PUT /api/buyers/:buyerId/answers/:questionId/disapproved
 const disapproveAnswer = async (req, res) => {
   try {
-    if (req.admin?.roles.includes("buyer_answer_approval")) {
+    if (req.admin?.permissions.includes("buyer_answer_approval")) {
       const { buyerId, questionId } = req.params;
       const buyer = await Buyer.findById(buyerId).populate("answers");
       if (!buyer) {
@@ -504,7 +503,7 @@ const disapproveAnswer = async (req, res) => {
 //@route GET /api/buyers?status=...
 const getBuyers = async (req, res) => {
   try {
-    if (req.admin?.roles.includes("buyer_read")) {
+    if (req.admin?.permissions.includes("buyer_read")) {
       let query = {};
       const buyers = await Buyer.aggregate([
         { $match: query },
@@ -553,7 +552,7 @@ const getBuyers = async (req, res) => {
 //@route DELETE /api/buyers/:id
 const deleteBuyer = async (req, res) => {
   try {
-    if (req.admin?.roles.includes("buyer_delete")) {
+    if (req.admin?.permissions.includes("buyer_delete")) {
       await Buyer.deleteOne({ _id: req.params.id });
       return res.status(200).send({ message: "Buyer deleted successfully" });
     }
