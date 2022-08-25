@@ -73,7 +73,7 @@ const createAdmin = async (req, res) => {
       sendEmail({
         to: newAdmin.personalEmail,
         subject: "Welcome to the team",
-        text: `Please log in with this email ${newAdmin.email} and password ${newAdmin.password} to access your account and change your password as soon as possible. Thank you`,
+        text: `Please log in with this email ${newAdmin.email} and password ${password} to access your account and change your password as soon as possible. Thank you`,
       });
 
       return res.status(200).send({
@@ -394,7 +394,7 @@ const forgotPassword = async (req, res) => {
       sendEmail({
         to: admin.personalEmail,
         subject: "Auction3X- Reset Password",
-        text: `Please click in this link to reset your password:${client_url}/reset-password?token=${token}`,
+        text: `Please click in this link to reset your password: ${client_url}/reset-password?token=${token}`,
       });
       return res.status(200).send({ message: "Reset link sent successfully" });
     }

@@ -704,6 +704,7 @@ const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
 const getPropertiesOfAllSellersGroupByUser = async (req, res) => {
   try {
     const aggregate = await Property.aggregate([
+      { $match: { step: 5 } },
       {
         $group: {
           _id: "$createdBy",
@@ -716,7 +717,6 @@ const getPropertiesOfAllSellersGroupByUser = async (req, res) => {
               videos: "$videos",
               documents: "$documents",
               isApproved: "$isApproved",
-              step: "$step",
               discussedAmount: "$discussedAmount",
               reservedAmount: "$reservedAmount",
             },
