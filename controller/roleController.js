@@ -85,11 +85,11 @@ const createRole = async (req, res) => {
 };
 
 //@desc  Get roles
-//@route GET/api/roles&status=activated
+//@route GET/api/roles&status=activated    //should add filter by name
 const getRoles = async (req, res) => {
   try {
     if (req.admin?.permissions.includes("admin_read")) {
-      const { department, status } = req.query;
+      const { department } = req.query;
       const bodySchema = Joi.object({
         status: Joi.string().optional().valid("activated", "deactivated"),
         department: Joi.string()
@@ -112,9 +112,7 @@ const getRoles = async (req, res) => {
       if (department) {
         filter.department = department;
       }
-      if (status) {
-        filter.status = status;
-      }
+
       const roles = await Role.find(filter);
       return res.status(200).send(roles);
     }
@@ -129,7 +127,7 @@ const getRoles = async (req, res) => {
 const editRole = async (req, res) => {
   try {
     if (req.admin?.permissions.includes("admin_edit")) {
-      const { name, department, permissions, status } = req.body;
+      const { name, department, permissions } = req.body;
       let savedName;
       const bodySchema = Joi.object({
         name: Joi.string().optional(),
@@ -174,7 +172,6 @@ const editRole = async (req, res) => {
             )
           )
           .optional(),
-        status: Joi.string().optional().valid("activated", "deactivated"),
       });
       const { error } = bodySchema.validate(req.body);
       if (error)
@@ -188,7 +185,6 @@ const editRole = async (req, res) => {
       }
       role.name = savedName || role.name;
       role.department = department || role.department;
-      role.status = status || role.status;
 
       if (permissions) {
         const newAddedPermissions = permissions.filter(
@@ -216,7 +212,7 @@ const editRole = async (req, res) => {
 };
 
 //@desc  Delete a role
-//@route DELETE /api/roles/:id //should check if anyone has this role, can only deactivate it
+//@route DELETE /api/roles/:id    //should check if anyone has this role, throw an error, and show list of admin has that roles, super admin has to change role, so that can delete
 const deleteRole = async (req, res) => {
   try {
     if (req.admin?.permissions.includes("admin_delete")) {

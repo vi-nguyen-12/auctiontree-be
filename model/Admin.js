@@ -53,6 +53,12 @@ const adminSchema = new mongoose.Schema({
   designation: { type: String },
   description: { type: String },
   temp_token: { type: String },
+  status: {
+    type: String,
+    required: true,
+    enums: ["activated", "deactivated"],
+    default: "activated",
+  },
 });
 
 module.exports = mongoose.model("Admin", adminSchema);
