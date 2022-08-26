@@ -69,7 +69,6 @@ const createAdmin = async (req, res) => {
         designation,
         description,
       });
-      console.log("test");
       sendEmail({
         to: newAdmin.personalEmail,
         subject: "Welcome to the team",

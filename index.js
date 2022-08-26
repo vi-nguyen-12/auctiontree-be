@@ -26,6 +26,7 @@ const emailTemplateRoute = require("./routes/emailTemplateRoutes");
 const pageContentRoute = require("./routes/pageContentRoutes");
 const teamMemberRoute = require("./routes/teamMemberRoutes");
 const roleRoute = require("./routes/roleRoutes");
+const permissionRoute = require("./routes/permissionRoutes");
 const {
   remindUpcomingAuction,
   remindPendingProperties,
@@ -125,6 +126,7 @@ app.use("/api/emailTemplates", emailTemplateRoute);
 app.use("/api/pageContents", pageContentRoute);
 app.use("/api/teamMembers", teamMemberRoute);
 app.use("/api/roles", roleRoute);
+app.use("/api/permissions", permissionRoute);
 
 // if (process.env.NODE_ENV === "production") {
 //   app.use();
