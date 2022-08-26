@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const Admin = require("../model/Admin");
+const Permission = require("../model/Permission");
 
 // user has to login as user or admin
 const auth = async (req, res, next) => {
@@ -12,7 +13,14 @@ const auth = async (req, res, next) => {
       req.user = { id: verified.userId }; //{id:...}
     }
     if (verified.adminId) {
-      const admin = await Admin.findById(verified.adminId);
+      let admin = await Admin.findById(verified.adminId);
+      admin.permissions = await Promise.all(
+        admin.permissions.filter(async (i) => {
+          let permission = await Permission.findOne({ name: i });
+          return permission.status === "activated";
+        })
+      );
+      //only pass activated permissions to req
       req.admin = { id: admin._id, permissions: admin.permissions }; //{id:..., permissions:...}
     }
 
@@ -37,6 +45,13 @@ const authNotStrict = async (req, res, next) => {
       }
       if (verified.adminId) {
         const admin = await Admin.findById(verified.adminId);
+        admin.permissions = await Promise.all(
+          admin.permissions.filter(async (i) => {
+            let permission = await Permission.findOne({ name: i });
+            return permission.status === "activated";
+          })
+        );
+        //only pass activated permissions to req
         req.admin = { id: admin._id, permissions: admin.permissions };
         next();
       }
@@ -72,7 +87,14 @@ const authAdmin = async (req, res, next) => {
     const token = authHeader.split(" ")[1];
     const verified = jwt.verify(token, process.env.TOKEN_KEY);
     if (verified.adminId) {
-      const admin = await Admin.findById(verified.adminId);
+      let admin = await Admin.findById(verified.adminId);
+      admin.permissions = await Promise.all(
+        admin.permissions.filter(async (i) => {
+          let permission = await Permission.findOne({ name: i });
+          return permission.status === "activated";
+        })
+      );
+      //only pass activated permissions to req
       req.admin = { id: admin._id, permissions: admin.permissions };
       next();
     } else {

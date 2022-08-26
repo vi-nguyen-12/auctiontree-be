@@ -52,6 +52,14 @@ const roleSchema = new mongoose.Schema({
       required: true,
     },
   ],
+  status: {
+    type: String,
+    required: true,
+    enums: {
+      values: ["activated", "deactivated"],
+    },
+    default: "activated",
+  },
 });
 
 module.exports = mongoose.model("Role", roleSchema);

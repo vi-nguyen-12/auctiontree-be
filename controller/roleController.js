@@ -1,6 +1,7 @@
 const Joi = require("joi");
 Joi.objectId = require("joi-objectid")(Joi);
 const Role = require("../model/Role");
+const Permission = require("../model/Permission");
 
 //@desc  Create a role
 //@route POST /api/roles body:{name, department,permissions}
@@ -56,6 +57,16 @@ const createRole = async (req, res) => {
       if (error)
         return res.status(200).send({ error: error.details[0].message });
 
+      for (let i of permissions) {
+        const permission = await Permission.findOne({ name: i });
+        if (!permission)
+          return res.status(200).send({ error: `Permission ${i} not found` });
+        if (permission.status === "deactivated")
+          return res.status(200).send({
+            error: `Permission ${i} is deactivated. Cannot assign to a role`,
+          });
+      }
+
       const savedName = name.toLowerCase().trim().split(" ").join("_");
       const isNameExist = await Role.findOne({ name: savedName });
       if (isNameExist)
@@ -74,11 +85,37 @@ const createRole = async (req, res) => {
 };
 
 //@desc  Get roles
-//@route GET/api/roles
+//@route GET/api/roles&status=activated
 const getRoles = async (req, res) => {
   try {
     if (req.admin?.permissions.includes("admin_read")) {
-      const roles = await Role.find();
+      const { department, status } = req.query;
+      const bodySchema = Joi.object({
+        status: Joi.string().optional().valid("activated", "deactivated"),
+        department: Joi.string()
+          .optional()
+          .valid(
+            "administration",
+            "marketing",
+            "business",
+            "financial",
+            "legal",
+            "technical",
+            "escrow"
+          ),
+      });
+      const { error } = bodySchema.validate(req.body);
+      if (error)
+        return res.status(200).send({ error: error.details[0].message });
+
+      let filter = {};
+      if (department) {
+        filter.department = department;
+      }
+      if (status) {
+        filter.status = status;
+      }
+      const roles = await Role.find(filter);
       return res.status(200).send(roles);
     }
     return res.status(200).send({ error: "Not allowed to get roles" });
@@ -92,8 +129,8 @@ const getRoles = async (req, res) => {
 const editRole = async (req, res) => {
   try {
     if (req.admin?.permissions.includes("admin_edit")) {
-      const { name, department, permissions } = req.body;
-      let savedname;
+      const { name, department, permissions, status } = req.body;
+      let savedName;
       const bodySchema = Joi.object({
         name: Joi.string().optional(),
         department: Joi.string()
@@ -137,6 +174,7 @@ const editRole = async (req, res) => {
             )
           )
           .optional(),
+        status: Joi.string().optional().valid("activated", "deactivated"),
       });
       const { error } = bodySchema.validate(req.body);
       if (error)
@@ -150,6 +188,22 @@ const editRole = async (req, res) => {
       }
       role.name = savedName || role.name;
       role.department = department || role.department;
+      role.status = status || role.status;
+
+      if (permissions) {
+        const newAddedPermissions = permissions.filter(
+          (i) => !role.permissions.includes(i)
+        );
+        for (let i of newAddedPermissions) {
+          const permission = await Permission.findOne({ name: i });
+          if (!permission)
+            return res.status(200).send({ error: "Permission not found" });
+          if (permission.status === "deactivated")
+            return res.status(403).send({
+              error: `Permission ${i} is deactivated. Cannot assign to a role`,
+            });
+        }
+      }
       role.permissions = permissions || role.permissions;
 
       const savedRole = await role.save();
@@ -160,8 +214,24 @@ const editRole = async (req, res) => {
     res.status(500).send(err.message);
   }
 };
+
+//@desc  Delete a role
+//@route DELETE /api/roles/:id //should check if anyone has this role, can only deactivate it
+const deleteRole = async (req, res) => {
+  try {
+    if (req.admin?.permissions.includes("admin_delete")) {
+      await Role.deleteOne({ _id: req.params.id });
+      res.status(200).send({ message: "Role deleted successfully" });
+    }
+    return res.status(200).send({ error: "Not allowed to delete role" });
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+
 module.exports = {
   createRole,
   getRoles,
   editRole,
+  deleteRole,
 };
