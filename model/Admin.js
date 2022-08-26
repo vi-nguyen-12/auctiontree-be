@@ -5,10 +5,10 @@ const adminSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
   personalEmail: { type: String, required: true },
   email: { type: String, required: true },
-  phone: { type: Number, required: true },
+  phone: { type: Number },
   password: { type: String, required: true },
-  location: { type: String, required: true },
-  IPAddress: { type: String, required: true },
+  location: { type: String },
+  IPAddress: { type: String },
   role: {
     type: Schema.Types.ObjectId,
     ref: "Role",
