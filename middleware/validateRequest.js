@@ -513,9 +513,9 @@ const validateAdmin = (req, res, next) => {
       .required(),
     phone: Joi.string()
       .pattern(/^[0-9]+$/)
-      .required(),
-    location: Joi.string().required(),
-    IPAddress: Joi.string().required(),
+      .optional(),
+    location: Joi.string().optional(),
+    IPAddress: Joi.string().optional(),
     role: Joi.objectId().required(),
     permissions: Joi.array()
       .items(
