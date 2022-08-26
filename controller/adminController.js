@@ -338,7 +338,53 @@ const deleteAdmin = async (req, res) => {
 const getAllAdmin = async (req, res) => {
   try {
     if (req.admin?.permissions.includes("admin_read")) {
-      const admins = await Admin.find().select("-password");
+      const { email, personalEmail, location, role } = req.query;
+      let filter = {};
+      if (email) {
+        filter.email = email;
+      }
+      if (personalEmail) {
+        filter.personalEmail = personalEmail;
+      }
+      if (location) {
+        filter.location = location;
+      }
+      if (role) {
+        filter.role = role;
+      }
+
+      const admins = await Admin.aggregate([
+        { $match: filter },
+        {
+          $lookup: {
+            from: "roles",
+            localField: "role",
+            foreignField: "_id",
+            as: "role",
+            pipeline: [
+              {
+                $project: {
+                  name: "$name",
+                  department: "$department",
+                },
+              },
+            ],
+          },
+        },
+        { $unwind: { path: "$role" } },
+        {
+          $project: {
+            _id: "_id",
+            fullName: "$fullName",
+            personalEmail: "$personalEmail",
+            email: "$email",
+            phone: "$phone",
+            location: "$location",
+            role: "$role.name",
+            department: "role.department",
+          },
+        },
+      ]);
       return res.status(200).send(admins);
     }
     res.status(200).send({ error: "Not allowed to view admin" });
