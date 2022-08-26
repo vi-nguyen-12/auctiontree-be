@@ -33,7 +33,7 @@ const createAdmin = async (req, res) => {
       } = req.body;
 
       const isEmailExist = await Admin.findOne({ email });
-      const isPhoneExist = await Admin.findOne({ phone });
+
       const isPersonalEmailExist = await Admin.findOne({ personalEmail });
       const isRoleExist = await Role.findById(role);
 
@@ -42,14 +42,18 @@ const createAdmin = async (req, res) => {
           error: "Email already exist",
         });
 
-      if (isPhoneExist)
-        return res.status(200).send({ error: "Phone number already exist" });
-
       if (isPersonalEmailExist)
         return res.status(200).send({ error: "Personal email already exist" });
 
       if (!isRoleExist)
         return res.status(200).send({ error: "Role is not found" });
+
+      if (phone) {
+        let isPhoneExist = await Admin.findOne({ phone });
+        if (isPhoneExist) {
+          return res.status(200).send({ error: "Phone number already exist" });
+        }
+      }
 
       const password = generateRandomString(10);
       const salt = await bcrypt.genSalt(10);
@@ -237,6 +241,7 @@ const editAdmin = async (req, res) => {
         image,
         designation,
         description,
+        status,
       } = req.body;
 
       const querySchema = Joi.object({
@@ -297,6 +302,24 @@ const editAdmin = async (req, res) => {
       if (!admin) {
         return res.status(200).send({ error: "Admin not found" });
       }
+      if (status) {
+        //send email changing status
+        if (status === "deactivated" && admin.status === "activated") {
+          sendEmail({
+            to: admin.personalEmail,
+            subject: "Auction3X- Changing status",
+            text: "Your status at Auction3X has been changed to deactivated. Please contact us for more details",
+          });
+        }
+        if (status === "activated" && admin.status === "deactivated") {
+          sendEmail({
+            to: admin.personalEmail,
+            subject: "Auction3X- Changing status",
+            text: "Your status at Auction3X has been changed to activated.",
+          });
+        }
+      }
+
       admin.fullName = fullName || admin.fullName;
       admin.personalEmail = personalEmail || admin.personalEmail;
       admin.email = email || admin.email;
@@ -308,6 +331,7 @@ const editAdmin = async (req, res) => {
       admin.image = image || admin.image;
       admin.designation = designation || admin.designation;
       admin.description = description || admin.description;
+      admin.status = status || admin.status;
       let savedAdmin = await admin.save();
       savedAdmin = savedAdmin.toObject();
       delete savedAdmin.password;
@@ -381,7 +405,9 @@ const getAllAdmin = async (req, res) => {
             phone: "$phone",
             location: "$location",
             role: "$role.name",
-            department: "role.department",
+            department: "$role.department",
+            permissions: "$permissions",
+            status: "$status",
           },
         },
       ]);

@@ -14,6 +14,10 @@ const auth = async (req, res, next) => {
     }
     if (verified.adminId) {
       let admin = await Admin.findById(verified.adminId);
+      if (admin.status === "deactivated")
+        return res
+          .status(200)
+          .send({ error: "Admin account has been deactivated" });
       admin.permissions = await Promise.all(
         admin.permissions.filter(async (i) => {
           let permission = await Permission.findOne({ name: i });
@@ -88,6 +92,10 @@ const authAdmin = async (req, res, next) => {
     const verified = jwt.verify(token, process.env.TOKEN_KEY);
     if (verified.adminId) {
       let admin = await Admin.findById(verified.adminId);
+      if (admin.status === "deactivated")
+        return res
+          .status(200)
+          .send({ error: "Admin account has been deactivated" });
       admin.permissions = await Promise.all(
         admin.permissions.filter(async (i) => {
           let permission = await Permission.findOne({ name: i });
