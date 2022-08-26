@@ -374,7 +374,7 @@ const getAllAdmin = async (req, res) => {
         { $unwind: { path: "$role" } },
         {
           $project: {
-            _id: "_id",
+            _id: "$_id",
             fullName: "$fullName",
             personalEmail: "$personalEmail",
             email: "$email",
