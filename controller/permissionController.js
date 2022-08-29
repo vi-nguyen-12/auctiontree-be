@@ -68,7 +68,6 @@ const getPermissions = async (req, res) => {
       if (status) {
         filter.status = status;
       }
-
       const permissions = await Permission.find(filter);
       return res.status(200).send(permissions);
     }

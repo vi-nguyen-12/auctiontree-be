@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const Joi = require("joi");
 Joi.objectId = require("joi-objectid")(Joi);
 const { sendEmail, generateRandomString } = require("../helper");
+const mongoose = require("mongoose");
 
 const client_url =
   process.env.NODE_ENV === "production"
@@ -116,6 +117,7 @@ const login = async (req, res) => {
     const token = jwt.sign({ adminId: admin._id }, process.env.TOKEN_KEY, {
       expiresIn: "5h",
     });
+    const role = await Role.findById(admin.role);
     res.status(200).send({
       message: "Login Successful",
       data: {
@@ -123,8 +125,9 @@ const login = async (req, res) => {
         fullName: admin.fullName,
         email: admin.email,
         phone: admin.phone,
-        role: admin.role,
-        department: admin.department,
+        role: role.name,
+        department: role.department,
+        permissions: admin.permissions,
         token,
       },
     });
@@ -148,7 +151,6 @@ const checkJWT = async (req, res) => {
       return res.status(200).send({ message: "User not logged in" });
     }
   } catch (error) {
-    console.log(error.message);
     res.status(500).send(error.message);
   }
 };
@@ -171,7 +173,6 @@ const editAdmin = async (req, res) => {
       const querySchema = Joi.object({
         fullName: Joi.string().optional(),
         phone: Joi.string()
-          .length(10)
           .pattern(/^[0-9]+$/)
           .optional(),
         personalEmail: Joi.string().email({
@@ -211,6 +212,7 @@ const editAdmin = async (req, res) => {
       admin.image = image || admin.image;
 
       const savedAdmin = await admin.save();
+      const role = await Role.findById(savedAdmin.role);
       const result = {
         _id: savedAdmin._id,
         fullName: savedAdmin.fullName,
@@ -218,8 +220,8 @@ const editAdmin = async (req, res) => {
         personalEmail: savedAdmin.personalEmail,
         phone: savedAdmin.phone,
         location: savedAdmin.location,
-        role: savedAdmin.role,
-        permissions: savedAdmin.permissions,
+        role: role.name,
+        department: role.department,
         image: savedAdmin.image,
         designation: savedAdmin.designation,
         description: savedAdmin.description,
@@ -376,6 +378,7 @@ const getAllAdmin = async (req, res) => {
       if (role) {
         filter.role = role;
       }
+      console.log(filter);
 
       const admins = await Admin.aggregate([
         { $match: filter },
@@ -428,11 +431,37 @@ const getAdmin = async (req, res) => {
       (req.admin.permissions.includes("admin_read") ||
         req.admin.id.toString() === req.params.id)
     ) {
-      const admin = await Admin.findById(req.params.id).select("-password");
-      if (!admin) {
+      const admins = await Admin.aggregate([
+        { $match: { _id: mongoose.Types.ObjectId(req.params.id) } },
+        {
+          $lookup: {
+            from: "roles",
+            localField: "role",
+            foreignField: "_id",
+            as: "role",
+          },
+        },
+        { $unwind: "$role" },
+        {
+          $project: {
+            _id: "$_id",
+            fullName: "$fullName",
+            personalEmail: "$personalEmail",
+            email: "$email",
+            phone: "$phone",
+            location: "$location",
+            role: "$role.name",
+            department: "$role.department",
+            image: "$image",
+            designation: "$designation",
+            description: "$description",
+          },
+        },
+      ]);
+      if (admins.length === 0) {
         return res.status(200).send({ error: "Admin not found" });
       }
-      return res.status(200).send(admin);
+      return res.status(200).send(admins[0]);
     }
     res.status(200).send({ error: "Not allowed to view admin" });
   } catch (err) {
