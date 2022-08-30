@@ -452,6 +452,7 @@ const getAdmin = async (req, res) => {
             location: "$location",
             role: "$role.name",
             department: "$role.department",
+            permissions: "$permissions",
             image: "$image",
             designation: "$designation",
             description: "$description",
