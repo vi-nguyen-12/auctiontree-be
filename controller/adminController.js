@@ -62,8 +62,8 @@ const createAdmin = async (req, res) => {
 
       const newAdmin = await Admin.create({
         fullName,
-        email,
-        personalEmail,
+        email: email.toLowerCase(),
+        personalEmail: personalEmail.toLowerCase(),
         phone,
         password: hashedPassword,
         location,
@@ -128,6 +128,7 @@ const login = async (req, res) => {
         role: role.name,
         department: role.department,
         permissions: admin.permissions,
+        image: admin.image,
         token,
       },
     });
@@ -143,10 +144,22 @@ const checkJWT = async (req, res) => {
     const token = req.body.authToken;
     const verified = jwt.verify(token, process.env.TOKEN_KEY);
     if (verified) {
-      const admin = await Admin.findOne({ _id: verified.adminId }).select(
-        "fullName role department"
+      let admin = await Admin.findOne({ _id: verified.adminId }).select(
+        "fullName role permissions image"
       );
-      return res.status(200).send({ message: "User Logged In", admin });
+      const role = await Role.findById(admin.role);
+      return res.status(200).send({
+        message: "User Logged In",
+        admin: {
+          _id: admin._id,
+          fullName: admin.fullName,
+          email: admin.email,
+          role: role.name,
+          department: role.department,
+          permissions: admin.permissions,
+          image: admin.image,
+        },
+      });
     } else {
       return res.status(200).send({ message: "User not logged in" });
     }
@@ -160,7 +173,10 @@ const checkJWT = async (req, res) => {
 const editAdmin = async (req, res) => {
   try {
     //owner of this account
-    if (req.admin?.id.toString() === req.params.id) {
+    if (
+      req.admin?.id.toString() ===
+      !req.admin?.permissions.includes("admin_edit")
+    ) {
       let {
         fullName,
         phone,
@@ -228,8 +244,7 @@ const editAdmin = async (req, res) => {
       };
       return res.status(200).send(result);
     }
-
-    // admin
+    // if super admin
     if (req.admin?.permissions.includes("admin_edit")) {
       let {
         fullName,
