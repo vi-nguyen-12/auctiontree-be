@@ -217,14 +217,14 @@ const editRole = async (req, res) => {
 const deleteRole = async (req, res) => {
   try {
     if (req.admin?.permissions.includes("admin_delete")) {
-      const adminRole = await Admin.find({ role: req.params.id })
-      if (adminRole.length > 0) {
+      const admin = await Admin.findOne({ role: req.params.id });
+      if (admin) {
         return res.status(200).send({
-          message: "Cannot delete as this role is assign to some admin."
-       })
+          message: "Cannot delete as this role is assign to some admin.",
+        });
       }
       await Role.deleteOne({ _id: req.params.id });
-      res.status(200).send({ message: "Role deleted successfully" });
+      return res.status(200).send({ message: "Role deleted successfully" });
     }
     return res.status(200).send({ error: "Not allowed to delete role" });
   } catch (err) {
