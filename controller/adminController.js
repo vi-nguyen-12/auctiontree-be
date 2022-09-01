@@ -62,8 +62,8 @@ const createAdmin = async (req, res) => {
 
       const newAdmin = await Admin.create({
         fullName,
-        email,
-        personalEmail,
+        email: email.toLowerCase(),
+        personalEmail: personalEmail.toLowerCase(),
         phone,
         password: hashedPassword,
         location,
@@ -128,6 +128,7 @@ const login = async (req, res) => {
         role: role.name,
         department: role.department,
         permissions: admin.permissions,
+        image: admin.image,
         token,
       },
     });
@@ -143,10 +144,22 @@ const checkJWT = async (req, res) => {
     const token = req.body.authToken;
     const verified = jwt.verify(token, process.env.TOKEN_KEY);
     if (verified) {
-      const admin = await Admin.findOne({ _id: verified.adminId }).select(
-        "fullName role department"
+      let admin = await Admin.findOne({ _id: verified.adminId }).select(
+        "fullName role permissions image"
       );
-      return res.status(200).send({ message: "User Logged In", admin });
+      const role = await Role.findById(admin.role);
+      return res.status(200).send({
+        message: "User Logged In",
+        admin: {
+          _id: admin._id,
+          fullName: admin.fullName,
+          email: admin.email,
+          role: role.name,
+          department: role.department,
+          permissions: admin.permissions,
+          image: admin.image,
+        },
+      });
     } else {
       return res.status(200).send({ message: "User not logged in" });
     }
@@ -159,18 +172,33 @@ const checkJWT = async (req, res) => {
 //@route PUT /api/admins/:id body={fullName, personalEmail, email, phone, location,role, permissions, department,image, designation,description}
 const editAdmin = async (req, res) => {
   try {
-    //owner of this account
-    if (req.admin?.id.toString() === req.params.id) {
-      let {
-        fullName,
-        phone,
-        personalEmail,
-        location,
-        image,
-        oldPassword,
-        newPassword,
-      } = req.body;
-      const querySchema = Joi.object({
+    let {
+      fullName,
+      phone,
+      location,
+      personalEmail,
+      email,
+      image,
+      oldPassword,
+      newPassword,
+      IPAddress,
+      role,
+      permissions,
+      designation,
+      description,
+      status,
+    } = req.body;
+    let querySchema;
+    let isOwner = req.admin?.id.toString() === req.params.id;
+    let isAbleToEditAdmin = req.admin?.permissions.includes("admin_edit");
+
+    // not owner or super admin
+    if (!isOwner && !isAbleToEditAdmin) {
+      return res.status(200).send({ error: "Not allowed to edit admin" });
+    }
+    //owner of this account & not super admin
+    if (isOwner && !isAbleToEditAdmin) {
+      querySchema = Joi.object({
         fullName: Joi.string().optional(),
         phone: Joi.string()
           .pattern(/^[0-9]+$/)
@@ -188,65 +216,69 @@ const editAdmin = async (req, res) => {
           otherwise: Joi.string().allow(null),
         }),
       });
-      const { error } = querySchema.validate(req.body);
-      if (error)
-        return res.status(200).send({ error: error.details[0].message });
-
-      const admin = await Admin.findOne({ _id: req.admin.id });
-
-      if (oldPassword) {
-        const match = await bcrypt.compare(oldPassword, admin.password);
-        if (!match) {
-          return res
-            .status(200)
-            .send({ error: "Wrong password! Cannot update profile" });
-        }
-        const salt = await bcrypt.genSaltSync(10);
-        const hashedPassword = await bcrypt.hash(newPassword, salt);
-        admin.password = hashedPassword;
-      }
-      admin.fullName = fullName || admin.fullName;
-      admin.phone = phone || admin.phone;
-      admin.personalEmail = personalEmail || admin.personalEmail;
-      admin.location = location || admin.location;
-      admin.image = image || admin.image;
-
-      const savedAdmin = await admin.save();
-      const role = await Role.findById(savedAdmin.role);
-      const result = {
-        _id: savedAdmin._id,
-        fullName: savedAdmin.fullName,
-        email: savedAdmin.email,
-        personalEmail: savedAdmin.personalEmail,
-        phone: savedAdmin.phone,
-        location: savedAdmin.location,
-        role: role.name,
-        department: role.department,
-        image: savedAdmin.image,
-        designation: savedAdmin.designation,
-        description: savedAdmin.description,
-      };
-      return res.status(200).send(result);
     }
-
-    // admin
-    if (req.admin?.permissions.includes("admin_edit")) {
-      let {
-        fullName,
-        personalEmail,
-        email,
-        phone,
-        location,
-        IPAddress,
-        role,
-        permissions,
-        image,
-        designation,
-        description,
-        status,
-      } = req.body;
-
-      const querySchema = Joi.object({
+    //owner of this account and super admin
+    if (isOwner && isAbleToEditAdmin) {
+      querySchema = Joi.object({
+        fullName: Joi.string().optional(),
+        phone: Joi.string()
+          .pattern(/^[0-9]+$/)
+          .optional(),
+        personalEmail: Joi.string().email({
+          minDomainSegments: 2,
+          tlds: { allow: ["com", "net"] },
+        }),
+        location: Joi.string().optional(),
+        image: Joi.string().optional(),
+        oldPassword: Joi.string().optional(),
+        newPassword: Joi.when("oldPassword", {
+          is: Joi.exist(),
+          then: Joi.string().required(),
+          otherwise: Joi.string().allow(null),
+        }),
+        email: Joi.string().email({
+          minDomainSegments: 2,
+          tlds: { allow: ["com", "net"] },
+        }),
+        IPAddress: Joi.string().optional(),
+        role: Joi.objectId().optional(),
+        permissions: Joi.array()
+          .items(
+            Joi.string().valid(
+              "admin_delete",
+              "admin_edit",
+              "admin_create",
+              "admin_read",
+              "auction_delete",
+              "auction_edit",
+              "auction_create",
+              "auction_read",
+              "auction_winner_edit",
+              "auction_winner_read",
+              "property_delete",
+              "property_edit",
+              "property_create",
+              "property_read",
+              "property_img_video_approval",
+              "property_document_approval",
+              "property_approval",
+              "buyer_delete",
+              "buyer_edit",
+              "buyer_create",
+              "buyer_read",
+              "buyer_document_approval",
+              "buyer_answer_approval",
+              "buyer_approval"
+            )
+          )
+          .optional(),
+        designation: Joi.string().optional(),
+        description: Joi.string().optional(),
+        status: Joi.string().optional().valid("activated", "deactivated"),
+      });
+    }
+    if (!isOwner && isAbleToEditAdmin) {
+      querySchema = Joi.object({
         fullName: Joi.string().optional(),
         phone: Joi.string()
           .pattern(/^[0-9]+$/)
@@ -295,51 +327,81 @@ const editAdmin = async (req, res) => {
         image: Joi.string().optional(),
         designation: Joi.string().optional(),
         description: Joi.string().optional(),
+        status: Joi.string().optional().valid("activated", "deactivated"),
       });
-      const { error } = querySchema.validate(req.body);
-      if (error)
-        return res.status(200).send({ error: error.details[0].message });
-
-      let admin = await Admin.findOne({ _id: req.params.id });
-      if (!admin) {
-        return res.status(200).send({ error: "Admin not found" });
-      }
-      if (status) {
-        //send email changing status
-        if (status === "deactivated" && admin.status === "activated") {
-          sendEmail({
-            to: admin.personalEmail,
-            subject: "Auction3X- Changing status",
-            text: "Your status at Auction3X has been changed to deactivated. Please contact us for more details",
-          });
-        }
-        if (status === "activated" && admin.status === "deactivated") {
-          sendEmail({
-            to: admin.personalEmail,
-            subject: "Auction3X- Changing status",
-            text: "Your status at Auction3X has been changed to activated.",
-          });
-        }
-      }
-
-      admin.fullName = fullName || admin.fullName;
-      admin.personalEmail = personalEmail || admin.personalEmail;
-      admin.email = email || admin.email;
-      admin.phone = phone || admin.phone;
-      admin.location = location || admin.location;
-      admin.IPAddress = IPAddress || admin.IPAddress;
-      admin.role = role || admin.role;
-      admin.permissions = permissions || admin.permissions;
-      admin.image = image || admin.image;
-      admin.designation = designation || admin.designation;
-      admin.description = description || admin.description;
-      admin.status = status || admin.status;
-      let savedAdmin = await admin.save();
-      savedAdmin = savedAdmin.toObject();
-      delete savedAdmin.password;
-      return res.status(200).send(savedAdmin);
     }
-    res.status(200).send({ error: "Not allowed to edit admin" });
+    const { error } = querySchema.validate(req.body);
+    if (error) return res.status(200).send({ error: error.details[0].message });
+
+    const admin = await Admin.findById(req.params.id);
+    if (!admin) {
+      return res.status(200).send({ error: "Admin not found" });
+    }
+
+    // edit password
+    if (oldPassword) {
+      const match = await bcrypt.compare(oldPassword, admin.password);
+      if (!match) {
+        return res
+          .status(200)
+          .send({ error: "Wrong password! Cannot update profile" });
+      }
+      const salt = await bcrypt.genSaltSync(10);
+      const hashedPassword = await bcrypt.hash(newPassword, salt);
+      admin.password = hashedPassword;
+    }
+
+    // edit status
+    if (status) {
+      //send email changing status
+      if (status === "deactivated" && admin.status === "activated") {
+        sendEmail({
+          to: admin.personalEmail,
+          subject: "Auction3X- Changing status",
+          text: "Your status at Auction3X has been changed to deactivated. Please contact us for more details",
+        });
+      }
+      if (status === "activated" && admin.status === "deactivated") {
+        sendEmail({
+          to: admin.personalEmail,
+          subject: "Auction3X- Changing status",
+          text: "Your status at Auction3X has been changed to activated.",
+        });
+      }
+    }
+
+    admin.fullName = fullName || admin.fullName;
+    admin.personalEmail = personalEmail || admin.personalEmail;
+    admin.location = location || admin.location;
+    admin.image = image || admin.image;
+    admin.phone = phone || admin.phone;
+    admin.email = email || admin.email;
+    admin.IPAddress = IPAddress || admin.IPAddress;
+    admin.role = role || admin.role;
+    admin.permissions = permissions || admin.permissions;
+    admin.designation = designation || admin.designation;
+    admin.description = description || admin.description;
+    admin.status = status || admin.status;
+    const savedAdmin = await admin.save();
+
+    role = await Role.findById(savedAdmin.role);
+
+    const result = {
+      _id: savedAdmin._id,
+      fullName: savedAdmin.fullName,
+      email: savedAdmin.email,
+      personalEmail: savedAdmin.personalEmail,
+      phone: savedAdmin.phone,
+      location: savedAdmin.location,
+      role: role.name,
+      department: role.department,
+      permissions: savedAdmin.permissions,
+      image: savedAdmin.image,
+      designation: savedAdmin.designation,
+      description: savedAdmin.description,
+      status: savedAdmin.status,
+    };
+    return res.status(200).send(result);
   } catch (err) {
     res.status(500).send(err.message);
   }
@@ -378,7 +440,6 @@ const getAllAdmin = async (req, res) => {
       if (role) {
         filter.role = role;
       }
-      console.log(filter);
 
       const admins = await Admin.aggregate([
         { $match: filter },
