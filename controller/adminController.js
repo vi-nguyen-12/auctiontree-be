@@ -222,7 +222,6 @@ const editAdmin = async (req, res) => {
       querySchema = Joi.object({
         fullName: Joi.string().optional(),
         phone: Joi.string()
-          .length(10)
           .pattern(/^[0-9]+$/)
           .optional(),
         personalEmail: Joi.string().email({
