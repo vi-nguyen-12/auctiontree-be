@@ -6,10 +6,12 @@ const {
   createRole,
   getRoles,
   editRole,
+  deleteRole,
 } = require("../controller/roleController");
 
 router.post("/", auth, createRole);
 router.get("/", auth, getRoles);
 router.put("/:id", auth, editRole);
+router.delete("/:id", auth, deleteRole);
 
 module.exports = router;
