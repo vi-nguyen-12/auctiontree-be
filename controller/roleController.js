@@ -220,7 +220,7 @@ const deleteRole = async (req, res) => {
       const admin = await Admin.findOne({ role: req.params.id });
       if (admin) {
         return res.status(200).send({
-          message: "Cannot delete as this role is assign to some admin.",
+          error: "Cannot delete this role as this role is assigned to some admin.",
         });
       }
       await Role.deleteOne({ _id: req.params.id });
