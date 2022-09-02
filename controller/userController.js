@@ -85,6 +85,31 @@ const registerUser = async (req, res) => {
   }
 };
 
+//@desc get all users
+//@route GET /api/users/get/all
+
+const getAllUsers = async (req, res) => {
+  try{
+    const users = await User.find({},
+      ['firstName',
+      'lastName',
+      'email',
+      "phone",
+      "userName",
+      "country",
+      "city",
+      "agent",
+      "isSuspended"
+    ],).lean();
+    if(users.length>0){
+      return res.status(200).send(users)
+    }
+    res.status(200).send({message: "No user found"})
+  }catch(e){
+    res.status(500).send(e);
+  }
+}
+
 // @desc  Verify token and activate user
 // @route POST /api/users/confirmation/verify body {token}
 const verify = async (req, res) => {
@@ -1185,4 +1210,5 @@ module.exports = {
   getAuctionsOfAllBuyersGroupedByUser,
   getPropertiesOfAllSellersGroupByUser,
   deleteNotification,
+  getAllUsers
 };
