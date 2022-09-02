@@ -456,7 +456,7 @@ const editProfile = async (req, res) => {
     res.status(500).send(err.message);
   }
 };
-//deactivate user account and other related data,
+//deactivate user account and other related data, //should require reason for suspension and send email to notify
 //@route PUT /api/users/:id?suspended=true
 //@route PUT /api/users/:id?suspended=false
 const suspendUserAccount = async (req, res) => {

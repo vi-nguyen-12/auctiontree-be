@@ -213,14 +213,15 @@ const editRole = async (req, res) => {
 };
 
 //@desc  Delete a role
-//@route DELETE /api/roles/:id    //should check if anyone has this role, throw an error, and show list of admin has that roles, super admin has to change role, so that can delete
+//@route DELETE /api/roles/:id
 const deleteRole = async (req, res) => {
   try {
     if (req.admin?.permissions.includes("admin_delete")) {
       const admin = await Admin.findOne({ role: req.params.id });
       if (admin) {
         return res.status(200).send({
-          error: "Cannot delete this role as this role is assigned to some admin.",
+          error:
+            "Cannot delete this role as this role is assigned to some admin.",
         });
       }
       await Role.deleteOne({ _id: req.params.id });
