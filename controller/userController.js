@@ -99,7 +99,8 @@ const getAllUsers = async (req, res) => {
       "country",
       "city",
       "agent",
-      "isSuspended"
+      "isSuspended",
+      "profileImage"
     ],).lean();
     if(users.length>0){
       return res.status(200).send(users)
