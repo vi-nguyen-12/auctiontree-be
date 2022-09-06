@@ -915,7 +915,7 @@ const editOthers = async (req, res) => {
 
 //@desc  Get properties (sorting by created date) by page and limit
 //@desc filter by: ?type=... & status=... & inAuction=true &
-// and sort by: sort_by=date.desc & sort_by=date.asc
+// and sort by updatedAt
 //@route GET /api/properties
 const getProperties = async (req, res) => {
   try {
@@ -931,8 +931,15 @@ const getProperties = async (req, res) => {
         type: Joi.string()
           .valid("real-estate", "car", "jet", "yacht")
           .optional(),
-        completed: Joi.string().valid("true", "false").optional(),
-        sort_by: Joi.string().valid("date.asc", "date.desc").optional(),
+        sort: Joi.alternatives(
+          Joi.string().valid(
+            "+updatedAt",
+            "-updatedAt",
+            "+discussedAmount",
+            "-discussedAmount"
+          ),
+          Joi.array().items(Joi.string())
+        ).optional(),
       });
       const { error } = paramsSchema.validate(req.query);
       if (error)
@@ -940,10 +947,14 @@ const getProperties = async (req, res) => {
 
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
-      const { inAuction, status: isApproved, type, sort_by } = req.query;
-      // only want get properties step 5 ==ccompleted
-      let filters = { step: 5 };
-      let sort = {};
+      const { inAuction, status: isApproved, type, sort } = req.query;
+
+      let filters = {};
+      let sorts = {};
+
+      //filter
+      // only want get properties step 5 == completed
+      filters.step = 5;
       if (isApproved) {
         filters.isApproved = isApproved;
       }
@@ -953,11 +964,14 @@ const getProperties = async (req, res) => {
 
       let properties = [];
 
-      if (sort_by === "date.asc") {
-        sort.updatedAt = 1;
-      }
-      if (sort_by === "date.desc") {
-        sort.updatedAt = -1;
+      //sort
+      if (sort) {
+        if (typeof sort === "string") {
+          sorts[sort.slice(1)] = sort.slice(0, 1) === "-" ? -1 : 1;
+        } else
+          for (let i of sort) {
+            sorts[i.slice(1)] = i.slice(0, 1) === "-" ? -1 : 1;
+          }
       }
 
       if (inAuction === "true") {
@@ -984,7 +998,7 @@ const getProperties = async (req, res) => {
         properties = await Property.find(filters, [], {
           skip: (page - 1) * limit,
           limit,
-          sort,
+          sort: sorts,
         });
       }
       return res.status(200).send(properties);
