@@ -923,7 +923,7 @@ const getProperties = async (req, res) => {
       const paramsSchema = Joi.object({
         status: Joi.alternatives(
           Joi.string().valid("pending", "success", "fail"),
-          Joi.array().items(Joi.string())
+          Joi.array().items(Joi.string().valid("pending", "success", "fail"))
         ).optional(),
         inAuction: Joi.string().valid("true", "false").optional(),
         page: Joi.string().regex(/^\d+$/).optional(),
@@ -932,13 +932,8 @@ const getProperties = async (req, res) => {
           .valid("real-estate", "car", "jet", "yacht")
           .optional(),
         sort: Joi.alternatives(
-          Joi.string().valid(
-            "+updatedAt",
-            "-updatedAt",
-            "+discussedAmount",
-            "-discussedAmount"
-          ),
-          Joi.array().items(Joi.string())
+          Joi.string().valid("+updatedAt", "-updatedAt"),
+          Joi.array().items(Joi.string().valid("+updatedAt", "-updatedAt"))
         ).optional(),
       });
       const { error } = paramsSchema.validate(req.query);
