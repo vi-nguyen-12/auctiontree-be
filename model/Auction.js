@@ -46,6 +46,7 @@ const auctionSchema = new Schema(
     },
     isFeatured: { type: Boolean, default: false, required: true },
     isActive: { type: Boolean, default: true, required: true },
+    viewCounts: { type: Number, default: 0, required: true },
   },
   { timestamp: true }
 );
