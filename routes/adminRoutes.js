@@ -6,7 +6,7 @@ const {
   createAdmin,
   editAdmin,
   deleteAdmin,
-  getAllAdmin,
+  getAllAdmins,
   getAdmin,
   login,
   checkJWT,
@@ -18,7 +18,7 @@ router.put("/password", authNotStrict, forgotPassword);
 router.post("/", auth, validateAdmin, createAdmin);
 router.put("/:id", auth, editAdmin);
 router.delete("/:id", auth, deleteAdmin);
-router.get("/", auth, getAllAdmin);
+router.get("/", auth, getAllAdmins);
 router.get("/:id", auth, getAdmin);
 router.post("/login", login);
 router.post("/checkJWT", checkJWT);
