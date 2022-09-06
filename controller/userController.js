@@ -608,7 +608,7 @@ const getBidAuctionsOfBuyer = async (req, res) => {
     ) {
       let bidAuctions = await Auction.find({ "bids.userId": id })
         .populate("property", "type details images")
-        .select("-startingBid -incrementAmount -winner");
+        .select(" -winner");
       bidAuctions = bidAuctions.map((auction) => {
         let [highestBid] = auction.bids.slice(-1);
         let bids = auction.bids.filter(
