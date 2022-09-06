@@ -423,7 +423,7 @@ const deleteAdmin = async (req, res) => {
 
 //@desc  Get all admin
 //@route GET /api/admins
-const getAllAdmin = async (req, res) => {
+const getAllAdmins = async (req, res) => {
   try {
     if (req.admin?.permissions.includes("admin_read")) {
       const { email, personalEmail, location, role } = req.query;
@@ -607,7 +607,7 @@ module.exports = {
   createAdmin,
   editAdmin,
   deleteAdmin,
-  getAllAdmin,
+  getAllAdmins,
   getAdmin,
   login,
   checkJWT,
