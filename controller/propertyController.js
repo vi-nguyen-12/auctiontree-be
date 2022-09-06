@@ -941,7 +941,7 @@ const getProperties = async (req, res) => {
         return res.status(200).send({ error: error.details[0].message });
 
       const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 10;
+      const limit = parseInt(req.query.limit) || 8;
       const { inAuction, status: isApproved, type, sort } = req.query;
 
       let filters = {};
