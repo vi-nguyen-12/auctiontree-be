@@ -913,8 +913,8 @@ const editOthers = async (req, res) => {
   }
 };
 
-//@desc  Get properties (sorting by created date) by page and limit
-//@desc filter by: ?type=... & status=... & inAuction=true &completed=true
+//@desc  Get properties (sorting by created date) by page and limit,
+//@desc filter by: ?type=... & status=... & inAuction=true & sort_by=date.desc & sort_by=date.asc
 //@route GET /api/properties
 const getProperties = async (req, res) => {
   try {
@@ -931,15 +931,18 @@ const getProperties = async (req, res) => {
           .valid("real-estate", "car", "jet", "yacht")
           .optional(),
         completed: Joi.string().valid("true", "false").optional(),
+        sort_by: Joi.string().valid("date.asc", "date.desc").optional(),
       });
       const { error } = paramsSchema.validate(req.query);
       if (error)
         return res.status(200).send({ error: error.details[0].message });
 
       const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 100;
-      const { inAuction, status: isApproved, type, completed } = req.query;
+      const limit = parseInt(req.query.limit) || 10;
+      const { inAuction, status: isApproved, type, sort_by } = req.query;
+      // only want get properties step 5 ==ccompleted
       let filters = { step: 5 };
+      let sort = {};
       if (isApproved) {
         filters.isApproved = isApproved;
       }
@@ -948,11 +951,14 @@ const getProperties = async (req, res) => {
       }
 
       let properties = [];
-      if (completed === "true") {
-        filters.step = 5;
-      } else if (completed === "false") {
-        filters.step = { $lt: 5 };
+
+      if (sort_by === "date.asc") {
+        sort.updatedAt = 1;
       }
+      if (sort_by === "date.desc") {
+        sort.updatedAt = -1;
+      }
+
       if (inAuction === "true") {
         const auctions = await Auction.find().select("property");
         const propertyIds = auctions.map((auction) => auction.property);
@@ -974,12 +980,11 @@ const getProperties = async (req, res) => {
           .skip((page - 1) * limit)
           .limit(limit);
       } else {
-        properties = await Property.find(filters)
-          .sort({
-            createdAt: -1,
-          })
-          .skip((page - 1) * limit)
-          .limit(limit);
+        properties = await Property.find(filters, [], {
+          skip: (page - 1) * limit,
+          limit,
+          sort,
+        });
       }
       return res.status(200).send(properties);
     }
