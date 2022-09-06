@@ -913,8 +913,9 @@ const editOthers = async (req, res) => {
   }
 };
 
-//@desc  Get properties (sorting by created date) by page and limit,
-//@desc filter by: ?type=... & status=... & inAuction=true & sort_by=date.desc & sort_by=date.asc
+//@desc  Get properties (sorting by created date) by page and limit
+//@desc filter by: ?type=... & status=... & inAuction=true &
+// and sort by: sort_by=date.desc & sort_by=date.asc
 //@route GET /api/properties
 const getProperties = async (req, res) => {
   try {
@@ -993,7 +994,6 @@ const getProperties = async (req, res) => {
     res.status(500).send(err.message);
   }
 };
-
 //@desc  Get a property
 //@route GET /api/properties/:id
 const getProperty = async (req, res) => {
