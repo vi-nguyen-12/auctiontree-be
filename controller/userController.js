@@ -112,7 +112,8 @@ const getAllUsers = async (req, res) => {
       "isSuspended",
       "profileImage",
     ]).lean().skip((page - 1) * limit).limit(limit);
-
+    const countUser = await User.find().count()
+    res.header({"Pagination-Count": countUser, "Pagination-Page": page, "Pagination-Limit": limit});
     res.status(200).send(users);
   } catch (e) {
     res.status(500).send(e.message);
