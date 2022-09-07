@@ -90,6 +90,8 @@ const registerUser = async (req, res) => {
 
 const getAllUsers = async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
     const users = await User.find({}, [
       "firstName",
       "lastName",
@@ -101,7 +103,7 @@ const getAllUsers = async (req, res) => {
       "agent",
       "isSuspended",
       "profileImage",
-    ]).lean();
+    ]).lean().skip((page - 1) * limit).limit(limit);
 
     res.status(200).send(users);
   } catch (e) {
