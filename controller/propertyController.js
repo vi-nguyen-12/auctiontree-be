@@ -976,9 +976,7 @@ const getProperties = async (req, res) => {
           .find(filters)
           .sort({
             createdAt: -1,
-          })
-          .skip((page - 1) * limit)
-          .limit(limit);
+          });
       } else if (inAuction === "false") {
         const auctions = await Auction.find().select("property");
         const propertyIds = auctions.map((auction) => auction.property);
@@ -986,16 +984,22 @@ const getProperties = async (req, res) => {
           .find(filters)
           .sort({
             createdAt: -1,
-          })
-          .skip((page - 1) * limit)
-          .limit(limit);
+          });
       } else {
         properties = await Property.find(filters, [], {
-          skip: (page - 1) * limit,
-          limit,
           sort: sorts,
         });
       }
+      let pagination_count = Math.ceil(properties.length / limit);
+      properties = properties.slice(
+        (page - 1) * limit,
+        (page - 1) * limit + limit
+      );
+      res.set({
+        "Pagination-Count": pagination_count,
+        "Pagination-Page": page,
+        "Pagination-Limit": limit,
+      });
       return res.status(200).send(properties);
     }
     res.status(200).send({ error: "Not allowed to view properties" });
