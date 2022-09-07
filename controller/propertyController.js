@@ -990,13 +990,13 @@ const getProperties = async (req, res) => {
           sort: sorts,
         });
       }
-      let pagination_count = Math.ceil(properties.length / limit);
+      let paginationCount = Math.ceil(properties.length / limit);
       properties = properties.slice(
         (page - 1) * limit,
         (page - 1) * limit + limit
       );
       res.set({
-        "Pagination-Count": pagination_count,
+        "Pagination-Count": paginationCount,
         "Pagination-Page": page,
         "Pagination-Limit": limit,
       });
