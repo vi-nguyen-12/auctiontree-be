@@ -486,12 +486,15 @@ const getAuction = async (req, res) => {
     } else {
       filter["property"] = req.params.propertyId;
     }
-
     auction = await Auction.findOne(filter).populate({
       path: "property",
       select: "-step -isApproved",
     });
+
     if (!auction) return res.status(200).send({ error: "Auction not found!" });
+    auction.viewCounts = auction.viewCounts + 1;
+    await auction.save();
+
     const { numberOfBids, highestBid, highestBidders } =
       await getBidsInformation(auction.bids, auction.startingBid);
     let isReservedMet =
