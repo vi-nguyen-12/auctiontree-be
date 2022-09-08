@@ -1,6 +1,7 @@
 const { sendEmail, replaceEmailTemplate } = require("../helper");
 const Admin = require("../model/Admin");
 const User = require("../model/User");
+const Role = require("../model/Role");
 const Email = require("../model/Email");
 const Joi = require("joi");
 Joi.objectId = require("joi-objectid")(Joi);
