@@ -66,9 +66,8 @@ const createEmail = async (req, res) => {
 
     if (type == "from_user") {
       //find all who is general admin for now/ might change in the future
-      const admins = await Admin.find({ role: "general_admin" }).select(
-        "email"
-      );
+      const role = await Role.findOne({ role: "general_admin" });
+      const admins = await Admin.find({ role: role._id }).select("email");
       let fromEmailAddress,
         toEmailAddresses,
         emailSubject,
