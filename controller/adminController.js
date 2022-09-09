@@ -469,6 +469,7 @@ const getAllAdmins = async (req, res) => {
             phone: "$phone",
             location: "$location",
             role: "$role.name",
+            image: "$image",
             department: "$role.department",
             permissions: "$permissions",
             status: "$status",
