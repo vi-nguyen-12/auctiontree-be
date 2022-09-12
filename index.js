@@ -104,6 +104,7 @@ app.use(function (req, res, next) {
     "Access-Control-Allow-Credentials",
     "Origin, X-Requested-With, Content-Type, Accept"
   );
+  res.header("Access-Control-Expose-Headers", "*");
   next();
 });
 

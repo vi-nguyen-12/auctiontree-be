@@ -263,7 +263,7 @@ const getAllAuctions = async (req, res) => {
       model: Joi.string().optional(),
       min_mileage: Joi.number().optional(),
       max_mileage: Joi.number().optional(),
-      manufacture_name: Joi.string().optional(),
+      manufacturer_name: Joi.string().optional(),
       length: Joi.number().optional(),
       isActive: Joi.boolean().optional(),
     });
@@ -289,7 +289,7 @@ const getAllAuctions = async (req, res) => {
       model,
       min_mileage,
       max_mileage,
-      manufacture_name,
+      manufacturer_name,
       min_length,
       max_length,
       aircraft_builder_name,
@@ -383,8 +383,8 @@ const getAllAuctions = async (req, res) => {
           }
         : { $lte: parseInt(max_mileage) };
     }
-    if (manufacture_name) {
-      filterProperty["property.details.manufacture_name"] = manufacture_name;
+    if (manufacturer_name) {
+      filterProperty["property.details.manufacturer_name"] = manufacturer_name;
     }
     if (min_length) {
       filterProperty["property.details.length"] = {
