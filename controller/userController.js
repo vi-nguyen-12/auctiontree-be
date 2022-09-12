@@ -86,7 +86,7 @@ const registerUser = async (req, res) => {
 };
 
 //@desc get all users
-//@route GET /api/users/get/all
+//@route GET /api/users
 
 const getAllUsers = async (req, res) => {
   try {
@@ -95,8 +95,7 @@ const getAllUsers = async (req, res) => {
       limit: Joi.string().regex(/^\d+$/).optional(),
     });
     const { error } = paramsSchema.validate(req.query);
-    if (error)
-      return res.status(200).send({ error: error.details[0].message });
+    if (error) return res.status(200).send({ error: error.details[0].message });
 
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -111,9 +110,18 @@ const getAllUsers = async (req, res) => {
       "agent",
       "isSuspended",
       "profileImage",
-    ]).lean().skip((page - 1) * limit).limit(limit);
-    const countUser = await User.find().count()
-    res.header({"Pagination-Count": countUser, "Pagination-Page": page, "Pagination-Limit": limit});
+    ])
+      .lean()
+      .skip((page - 1) * limit)
+      .limit(limit);
+    const countUser = await User.find().count();
+    const totalPages = Math.ceil(countUser / limit);
+    res.header({
+      "Pagination-Count": countUser,
+      "Pagination-Total-Pages": totalPages,
+      "Pagination-Page": page,
+      "Pagination-Limit": limit,
+    });
     res.status(200).send(users);
   } catch (e) {
     res.status(500).send(e.message);
