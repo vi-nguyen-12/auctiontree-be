@@ -2,6 +2,7 @@ const Joi = require("joi").extend(require("@joi/date"));
 Joi.objectId = require("joi-objectid")(Joi);
 
 const validateUser = (req, res, next) => {
+  let isAdmin = req.admin;
   const userSchema = Joi.object({
     firstName: Joi.string().required(),
     lastName: Joi.string().required(),
@@ -11,7 +12,7 @@ const validateUser = (req, res, next) => {
     phone: Joi.string()
       .pattern(/^[0-9]+$/)
       .required(),
-    password: Joi.string().required(),
+    password: isAdmin ? Joi.string().optional() : Joi.string().required(),
     userName: Joi.string().required(),
     country: Joi.string(),
     city: Joi.string(),

@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { auth, authAdmin } = require("../middleware/verifyToken");
+const { auth, authNotStrict, authAdmin } = require("../middleware/verifyToken");
 const {
   validateUser,
   validateUpdateUser,
@@ -28,10 +28,10 @@ const {
   getAuctionsOfAllBuyersGroupedByUser,
   getPropertiesOfAllSellersGroupByUser,
   deleteNotification,
-  getAllUsers
+  getAllUsers,
 } = require("../controller/userController");
 
-router.post("/register", validateUser, registerUser);
+router.post("/register", authNotStrict, validateUser, registerUser);
 router.route("/login").post(login);
 router.post("/confirmation/email", sendConfirmEmail);
 router.post("/confirmation/verify", verify);
@@ -48,7 +48,7 @@ router.get("/seller/properties", getPropertiesOfAllSellersGroupByUser);
 router.get("/buyer/auctions", getAuctionsOfAllBuyersGroupedByUser);
 router.get("/:id/seller/auctions", getAuctionsOfSeller);
 router.get("/:id/seller/properties", getListingsOfSeller);
-router.get("/", authAdmin, getAllUsers)
+router.get("/", authAdmin, getAllUsers);
 //only for login user
 router.put("/:id?suspended=true", auth, suspendUserAccount);
 router.put("/:id?suspended=false", auth, suspendUserAccount);

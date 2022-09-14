@@ -13,6 +13,7 @@ const {
   sendEmail,
   getBidsInformation,
   replaceEmailTemplate,
+  generateRandomString,
 } = require("../helper");
 
 const client_url =
@@ -26,6 +27,17 @@ const client_url =
 //@route POST /api/users/register
 const registerUser = async (req, res) => {
   try {
+    let {
+      firstName,
+      lastName,
+      email,
+      phone,
+      password,
+      userName,
+      country,
+      city,
+      agent,
+    } = req.body;
     const userExist = await User.findOne({
       $or: [
         { email: req.body.email.toLowerCase() },
@@ -38,8 +50,14 @@ const registerUser = async (req, res) => {
         .send({ error: "Email or user name is already exists" });
     }
 
+    // if admin, create random password for user and send via email
+    const admin = req.admin;
+    if (admin?.permissions.includes("user_create")) {
+      password = generateRandomString(10);
+    }
+
     const salt = await bcrypt.genSaltSync(10);
-    const hashedPassword = await bcrypt.hash(req.body.password, salt);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
     const secret = speakeasy.generateSecret();
     const token = speakeasy.totp({
@@ -49,26 +67,34 @@ const registerUser = async (req, res) => {
     });
 
     const user = new User({
-      firstName: req.body.firstName,
-      lastName: req.body.lastName,
-      email: req.body.email,
-      phone: req.body.phone,
+      firstName,
+      lastName,
+      email,
+      phone,
       password: hashedPassword,
-      userName: req.body.userName,
-      country: req.body.country,
-      city: req.body.city,
-      agent: req.body.agent,
+      userName,
+      country,
+      city,
+      agent,
       secret,
       temp_token: token,
     });
     const savedUser = await user.save();
-    const emailBody = await replaceEmailTemplate("registration_confirm", {
-      name: `${savedUser.firstName} ${savedUser.lastName}`,
-      customer_id: savedUser._id,
-      link: `${client_url}/confirm_email?token=${token}`,
-    });
-    if (emailBody.error) {
-      return res.status(200).send({ error: emailBody.error });
+    let emailBody;
+    if (admin?.permissions.includes("user_create")) {
+      emailBody = {
+        subject: "Registration Confirm",
+        content: `<p>Hello ${user.firstName} ${user.lastName}!</p><p>We are delighted to have you join us. Welcome to Auction3. Sell your property faster over the platform. Please click on the link to complete the registration process to confirm your account ${client_url}/confirm_email?token=${token}</p><p>A unique user ${user._id} will be generated, please do not share the ID with other users.</p><p>This is temporary password: <strong>${password}</strong> </p><p>Please use this password and your personal email to log in and change your password.</p><p>Thanks,</p><p>The Auction3™ Team</p>`,
+      };
+    } else {
+      emailBody = await replaceEmailTemplate("registration_confirm", {
+        name: `${savedUser.firstName} ${savedUser.lastName}`,
+        customer_id: savedUser._id,
+        link: `${client_url}/confirm_email?token=${token}`,
+      });
+      if (emailBody.error) {
+        return res.status(200).send({ error: emailBody.error });
+      }
     }
 
     sendEmail({
