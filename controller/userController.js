@@ -116,11 +116,13 @@ const registerUser = async (req, res) => {
 // should allow only super admin has permission user_read
 const getAllUsers = async (req, res) => {
   try {
-    let { page, limit, name } = req.query;
+    let { page, limit, name, sort } = req.query;
+    console.log(sort);
     const paramsSchema = Joi.object({
       page: Joi.string().regex(/^\d+$/).optional(),
       limit: Joi.string().regex(/^\d+$/).optional(),
       name: Joi.string().optional(),
+      sort: Joi.string().optional().valid(" firstName", "-firstName"),
     });
     const { error } = paramsSchema.validate(req.query);
     if (error) return res.status(200).send({ error: error.details[0].message });
@@ -129,12 +131,18 @@ const getAllUsers = async (req, res) => {
     limit = parseInt(limit) || 10;
 
     let filters = {};
+    let sorts = {};
+
     if (name) {
       filters["$or"] = [
         { firstName: { $regex: name } },
         { lastName: { $regex: name } },
         { email: { $regex: name } },
       ];
+    }
+
+    if (sort) {
+      sorts[sort.slice(1)] = sort.slice(0, 1) === "-" ? -1 : 1;
     }
 
     const users = await User.find(filters, [
@@ -150,13 +158,13 @@ const getAllUsers = async (req, res) => {
       "profileImage",
     ])
       .lean()
+      .sort(sorts)
       .skip((page - 1) * limit)
       .limit(limit);
     const countUser = await User.find().count();
-    const totalPages = Math.ceil(countUser / limit);
     res.header({
       "Pagination-Count": countUser,
-      "Pagination-Total-Pages": totalPages,
+      "Pagination-Total-Pages": Math.ceil(users.length / limit),
       "Pagination-Page": page,
       "Pagination-Limit": limit,
     });

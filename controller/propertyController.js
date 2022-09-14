@@ -932,8 +932,8 @@ const getProperties = async (req, res) => {
           .valid("real-estate", "car", "jet", "yacht")
           .optional(),
         sort: Joi.alternatives(
-          Joi.string().valid("+updatedAt", "-updatedAt"),
-          Joi.array().items(Joi.string().valid("+updatedAt", "-updatedAt"))
+          Joi.string().valid(" updatedAt", "-updatedAt"),
+          Joi.array().items(Joi.string().valid(" updatedAt", "-updatedAt"))
         ).optional(),
       });
       const { error } = paramsSchema.validate(req.query);
