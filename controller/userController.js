@@ -40,8 +40,8 @@ const registerUser = async (req, res) => {
     } = req.body;
     const userExist = await User.findOne({
       $or: [
-        { email: req.body.email.toLowerCase() },
-        { userName: req.body.userName.toLowerCase() },
+        { email: email.toLowerCase() },
+        { userName: userName.toLowerCase() },
       ],
     });
     if (userExist) {
@@ -112,20 +112,32 @@ const registerUser = async (req, res) => {
 };
 
 //@desc get all users
-//@route GET /api/users
-
+//@route GET /api/users?page=..,limit=..,name=..(by firstName, lastName,email),
+// should allow only super admin has permission user_read
 const getAllUsers = async (req, res) => {
   try {
+    let { page, limit, name } = req.query;
     const paramsSchema = Joi.object({
       page: Joi.string().regex(/^\d+$/).optional(),
       limit: Joi.string().regex(/^\d+$/).optional(),
+      name: Joi.string().optional(),
     });
     const { error } = paramsSchema.validate(req.query);
     if (error) return res.status(200).send({ error: error.details[0].message });
 
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const users = await User.find({}, [
+    page = parseInt(page) || 1;
+    limit = parseInt(limit) || 10;
+
+    let filters = {};
+    if (name) {
+      filters["$or"] = [
+        { firstName: { $regex: name } },
+        { lastName: { $regex: name } },
+        { email: { $regex: name } },
+      ];
+    }
+
+    const users = await User.find(filters, [
       "firstName",
       "lastName",
       "email",
