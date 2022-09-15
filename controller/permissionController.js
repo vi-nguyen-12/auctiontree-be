@@ -34,7 +34,11 @@ const createPermission = async (req, res) => {
           "buyer_read",
           "buyer_document_approval",
           "buyer_answer_approval",
-          "buyer_approval"
+          "buyer_approval",
+          "user_delete",
+          "user_edit",
+          "user_create",
+          "user_read"
         ),
     });
     const { error } = bodySchema.validate(req.body);
