@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { auth, authNotStrict } = require("../middleware/verifyToken");
+const { auth, authAdmin, authNotStrict } = require("../middleware/verifyToken");
 const { validateAdmin } = require("../middleware/validateRequest");
 
 const {
@@ -15,11 +15,11 @@ const {
 
 // need to check if the user is admin
 router.put("/password", authNotStrict, forgotPassword);
-router.post("/", auth, validateAdmin, createAdmin);
-router.put("/:id", auth, editAdmin);
-router.delete("/:id", auth, deleteAdmin);
-router.get("/", auth, getAllAdmins);
-router.get("/:id", auth, getAdmin);
+router.post("/", authAdmin, validateAdmin, createAdmin);
+router.put("/:id", authAdmin, editAdmin);
+router.delete("/:id", authAdmin, deleteAdmin);
+router.get("/", authAdmin, getAllAdmins);
+router.get("/:id", authAdmin, getAdmin);
 router.post("/login", login);
 router.post("/checkJWT", checkJWT);
 
