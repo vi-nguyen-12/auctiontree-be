@@ -2,6 +2,7 @@ const Property = require("../model/Property");
 const User = require("../model/User");
 const Buyer = require("../model/Buyer");
 const Auction = require("../model/Auction");
+const Docusign = require("../model/Docusign");
 const axios = require("axios");
 const { sendEmail, replaceEmailTemplate } = require("../helper");
 const Joi = require("joi").extend(require("@joi/date"));
@@ -566,7 +567,14 @@ const editRealestate = async (req, res) => {
     const savedProperty = await property.save();
 
     if (step === 5) {
-      // user submit
+      // check if docusign is signed
+      const docusign = await Docusign.findById(docusignId);
+      if (docusign.status !== "signing_complete") {
+        return res
+          .status(200)
+          .send({ error: "Docusign has not been signed yet" });
+      }
+      // if user submit, send email
       if (property.step === 4) {
         const user = await User.findById(req.user.id).select(
           "firstName lastName email"
@@ -883,6 +891,13 @@ const editOthers = async (req, res) => {
     const savedProperty = await property.save();
 
     if (step === 5) {
+      // check if docusign is signed
+      const docusign = await Docusign.findById(docusignId);
+      if (docusign.status !== "signing_complete") {
+        return res
+          .status(200)
+          .send({ error: "Docusign has not been signed yet" });
+      }
       // user submit -> send email
       if (property.step === 4) {
         const user = await User.findById(req.user.id).select(
@@ -932,8 +947,8 @@ const getProperties = async (req, res) => {
           .valid("real-estate", "car", "jet", "yacht")
           .optional(),
         sort: Joi.alternatives(
-          Joi.string().valid(" updatedAt", "-updatedAt"),
-          Joi.array().items(Joi.string().valid(" updatedAt", "-updatedAt"))
+          Joi.string().valid("+updatedAt", "-updatedAt"),
+          Joi.array().items(Joi.string().valid("+updatedAt", "-updatedAt"))
         ).optional(),
       });
       const { error } = paramsSchema.validate(req.query);
