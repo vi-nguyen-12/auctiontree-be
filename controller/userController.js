@@ -482,12 +482,13 @@ const editProfile = async (req, res) => {
       new_password,
     } = req.body;
 
+    let isOwner = req.user.id.toString() === req.params.id
     let isAbleToEditUser = req.admin?.permissions.includes("user_edit");
-    if (!isAbleToEditUser) {
+    if (!isAbleToEditUser && !isOwner) {
       return res.status(200).send({ error: "Not allowed to edit user" })
     }
 
-    let user = await User.findById(req.params.id);
+    let user = await User.findById(req.user.id);
     if (!user) {
       return res.status(200).send({ error: "User not found" });
     }
@@ -782,6 +783,12 @@ const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
 //@route GET /api/users/seller/auctions
 const getPropertiesOfAllSellersGroupByUser = async (req, res) => {
   try {
+    let isAbleToAccessAdmin = req.admin?.permissions.includes("user_read");
+
+    if(!isAbleToAccessAdmin){
+      return res.status(200).send({ error: "Not allowed to Access" });
+    }
+
     const aggregate = await Property.aggregate([
       { $match: { step: 5 } },
       {
@@ -824,23 +831,6 @@ const getPropertiesOfAllSellersGroupByUser = async (req, res) => {
         },
       },
     ]);
-    for (let user of aggregate) {
-      for (let property of user.properties) {
-        let auction = await Auction.findOne({ property: property._id });
-        if (auction) {
-          property.auction = {
-            _id: auction._id,
-            startingBid: auction.startingBid,
-            incrementAmount: auction.incrementAmount,
-            registerStartDate: auction.registerStartDate,
-            registerEndDate: auction.registerEndDate,
-            isFeatured: auction.isFeatured,
-            isActive: auction.isActive,
-          };
-        }
-      }
-    }
-
     return res.status(200).send(aggregate);
   } catch (err) {
     return res.status(500).send(err.message);
@@ -1147,6 +1137,13 @@ const getListingsOfSeller = async (req, res) => {
     });
     const { error } = querySchema.validate(req.query);
     if (error) return res.status(200).send({ error: error.details[0].message });
+
+    let isOwner = req.user.id.toString() === req.params.id;
+    let isAbleToAccessAdmin = req.admin?.permissions.includes("user_read");
+
+    if(!isOwner || !isAbleToAccessAdmin){
+      return res.status(200).send({error:"Not allowed to Access"})
+    }
 
     const user = await User.findById(req.params.id);
     const { status, inAuction, completed, sold } = req.query;

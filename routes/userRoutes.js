@@ -44,10 +44,10 @@ router.get("/:id/buyer/auctions/bid", auth, getBidAuctionsOfBuyer); //should aut
 router.get("/:id/buyer/auctions", auth, getAuctionsOfBuyer);
 router.get("/:id/buyer/funds", auth, getFundsOfBuyer);
 router.get("/:id/buyer/winAuctions", getWinAuctionsOfBuyer);
-router.get("/seller/properties", getPropertiesOfAllSellersGroupByUser);
+router.get("/seller/properties",authAdmin, getPropertiesOfAllSellersGroupByUser);
 router.get("/buyer/auctions", getAuctionsOfAllBuyersGroupedByUser);
 router.get("/:id/seller/auctions", getAuctionsOfSeller);
-router.get("/:id/seller/properties", getListingsOfSeller);
+router.get("/:id/seller/properties",authAdmin, getListingsOfSeller);
 router.get("/", authAdmin, getAllUsers);
 //only for login user
 router.put("/:id?suspended=true", auth, suspendUserAccount);
