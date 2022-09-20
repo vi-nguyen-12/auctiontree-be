@@ -20,8 +20,8 @@ const client_url =
   process.env.NODE_ENV === "production"
     ? process.env.PROD_CLIENT_URL
     : process.env.NODE_ENV === "test"
-    ? process.env.TEST_CLIENT_URL
-    : process.env.DEV_CLIENT_URL;
+      ? process.env.TEST_CLIENT_URL
+      : process.env.DEV_CLIENT_URL;
 
 //@desc  Register a new user & create secret
 //@route POST /api/users/register
@@ -468,79 +468,69 @@ const resetForgotPassword = async (req, res) => {
 //@route PUT /api/users/:id body {firstName, lastName, email, phone, userName, country, city, old_password, new_password}
 const editProfile = async (req, res) => {
   try {
-    if (req.user?.id === req.params.id) {
-      const {
-        firstName,
-        lastName,
-        email,
-        phone,
-        userName,
-        country,
-        city,
-        profileImage,
-        social_links,
-        old_password,
-        new_password,
-      } = req.body;
+    const {
+      firstName,
+      lastName,
+      email,
+      phone,
+      userName,
+      country,
+      city,
+      profileImage,
+      social_links,
+      old_password,
+      new_password,
+    } = req.body;
 
-      const user = await User.findById(req.user.id);
-      if (!user) {
-        return res.status(200).send({ error: "User not found" });
-      }
-
-      // check if email/ userName already exists
-      if (email) {
-        const emailExists = await User.findOne({ email: email.toLowerCase() });
-        if (emailExists?._id.toString() !== user._id.toString()) {
-          return res.status(200).send({ error: "Email already exists" });
-        }
-      }
-      if (userName) {
-        const userNameExists = await User.findOne({
-          userName: userName.toLowerCase(),
-        });
-        if (userNameExists?._id.toString() !== user._id.toString()) {
-          return res.status(200).send({ error: "UserName already exists" });
-        }
-      }
-      user.firstName = firstName || user.firstName;
-      user.lastName = lastName || user.lastName;
-      user.email = email.toLowerCase() || user.email;
-      user.phone = phone || user.phone;
-      user.userName = userName.toLowerCase() || user.userName;
-      user.country = country || user.country;
-      user.city = city || user.city;
-      user.profileImage = profileImage;
-      user.social_links = social_links || user.social_links;
-
-      // if change password
-      if (old_password) {
-        const match = await bcrypt.compare(old_password, user.password);
-        if (!match) {
-          return res
-            .status(200)
-            .send({ error: "Wrong password! Cannot update profile" });
-        }
-        const salt = await bcrypt.genSaltSync(10);
-        const hashedPassword = await bcrypt.hash(new_password, salt);
-        user.password = hashedPassword;
-      }
-      const savedUser = await user.save();
-      const result = {
-        _id: savedUser._id,
-        firstName: savedUser.firstName,
-        lastName: savedUser.lastName,
-        email: savedUser.email,
-        phone: savedUser.phone,
-        userName: savedUser.userName,
-        country: savedUser.country,
-        city: savedUser.city,
-        profileImage: savedUser.profileImage,
-        social_links: savedUser.social_links,
-      };
-      return res.status(200).send(result);
+    let isAbleToEditUser = req.admin?.permissions.includes("user_edit");
+    if (!isAbleToEditUser) {
+      return res.status(200).send({ error: "Not allowed to edit user" })
     }
-    res.status(200).send({ error: "Not allowed to edit profile" });
+
+    let user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(200).send({ error: "User not found" });
+    }
+
+    // check if email/ userName already exists
+    if (email) {
+      const emailExists = await User.findOne({ email: email.toLowerCase() });
+      if (emailExists?._id.toString() !== user._id.toString()) {
+        return res.status(200).send({ error: "Email already exists" });
+      }
+    }
+    if (userName) {
+      const userNameExists = await User.findOne({
+        userName: userName.toLowerCase(),
+      });
+      if (userNameExists?._id.toString() !== user._id.toString()) {
+        return res.status(200).send({ error: "UserName already exists" });
+      }
+    }
+    user.firstName = firstName || user.firstName;
+    user.lastName = lastName || user.lastName;
+    user.email = email || user.email;
+    user.phone = phone || user.phone;
+    user.userName = userName || user.userName;
+    user.country = country || user.country;
+    user.city = city || user.city;
+    user.profileImage = profileImage;
+    user.social_links = social_links || user.social_links;
+
+    const savedUser = await user.save();
+    const result = {
+      _id: savedUser._id,
+      firstName: savedUser.firstName,
+      lastName: savedUser.lastName,
+      email: savedUser.email,
+      phone: savedUser.phone,
+      userName: savedUser.userName,
+      country: savedUser.country,
+      city: savedUser.city,
+      profileImage: savedUser.profileImage,
+      social_links: savedUser.social_links,
+    };
+    return res.status(200).send(result);
   } catch (err) {
     res.status(500).send(err.message);
   }
@@ -1059,13 +1049,13 @@ const getFundsOfBuyer = async (req, res) => {
       buyer.bids =
         buyer.bids.length > 0
           ? buyer.bids
-              .filter(
-                (item) => item.buyerId.toString() === buyer._id.toString()
-              )
-              .map((item) => {
-                delete item.buyerId;
-                return item;
-              })
+            .filter(
+              (item) => item.buyerId.toString() === buyer._id.toString()
+            )
+            .map((item) => {
+              delete item.buyerId;
+              return item;
+            })
           : [];
       delete buyer.funds;
     }
