@@ -54,6 +54,7 @@ const validateUpdateUser = (req, res, next) => {
     country: Joi.string(),
     city: Joi.string(),
     profileImage: Joi.string(),
+    description: Joi.string(),
     social_links: Joi.object({
       facebook: Joi.string().allow("").allow(null),
       instagram: Joi.string().allow("").allow(null),
