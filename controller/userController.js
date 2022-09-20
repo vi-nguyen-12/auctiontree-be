@@ -117,12 +117,12 @@ const registerUser = async (req, res) => {
 const getAllUsers = async (req, res) => {
   try {
     let { page, limit, name, sort } = req.query;
-    console.log(sort);
+
     const paramsSchema = Joi.object({
       page: Joi.string().regex(/^\d+$/).optional(),
       limit: Joi.string().regex(/^\d+$/).optional(),
       name: Joi.string().optional(),
-      sort: Joi.string().optional().valid(" firstName", "-firstName"),
+      sort: Joi.string().optional().valid("+firstName", "-firstName"),
     });
     const { error } = paramsSchema.validate(req.query);
     if (error) return res.status(200).send({ error: error.details[0].message });
@@ -145,7 +145,7 @@ const getAllUsers = async (req, res) => {
       sorts[sort.slice(1)] = sort.slice(0, 1) === "-" ? -1 : 1;
     }
 
-    const users = await User.find(filters, [
+    let users = await User.find(filters, [
       "firstName",
       "lastName",
       "email",
@@ -158,13 +158,14 @@ const getAllUsers = async (req, res) => {
       "profileImage",
     ])
       .lean()
-      .sort(sorts)
-      .skip((page - 1) * limit)
-      .limit(limit);
-    const countUser = await User.find().count();
+      .sort(sorts);
+
+    const userCount = users.length;
+    users = users.slice((page - 1) * limit, (page - 1) * limit + limit);
+
     res.header({
-      "Pagination-Count": countUser,
-      "Pagination-Total-Pages": Math.ceil(users.length / limit),
+      "Pagination-Count": userCount,
+      "Pagination-Total-Pages": Math.ceil(userCount / limit),
       "Pagination-Page": page,
       "Pagination-Limit": limit,
     });
@@ -788,8 +789,8 @@ const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
 };
 
 //should authorized only admin can view
-//@desc  Get auctions of all sellers (grouped by user)
-//@route GET /api/users/seller/auctions
+//@desc  Get properties of all sellers (grouped by user)
+//@route GET /api/users/seller/properties
 const getPropertiesOfAllSellersGroupByUser = async (req, res) => {
   try {
     const aggregate = await Property.aggregate([
