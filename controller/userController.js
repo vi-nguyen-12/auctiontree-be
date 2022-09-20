@@ -156,6 +156,7 @@ const getAllUsers = async (req, res) => {
       "agent",
       "isSuspended",
       "profileImage",
+      "description",
     ])
       .lean()
       .sort(sorts);
@@ -465,6 +466,7 @@ const resetForgotPassword = async (req, res) => {
   }
 };
 
+//should check if this user has been suspended, cannot edit
 //@desc  Edit profile
 //@route PUT /api/users/:id body {firstName, lastName, email, phone, userName, country, city, old_password, new_password}
 const editProfile = async (req, res) => {
@@ -482,6 +484,7 @@ const editProfile = async (req, res) => {
         social_links,
         old_password,
         new_password,
+        description,
       } = req.body;
 
       const user = await User.findById(req.user.id);
@@ -513,6 +516,7 @@ const editProfile = async (req, res) => {
       user.city = city || user.city;
       user.profileImage = profileImage;
       user.social_links = social_links || user.social_links;
+      user.description = description || user.description;
 
       // if change password
       if (old_password) {
@@ -538,6 +542,7 @@ const editProfile = async (req, res) => {
         city: savedUser.city,
         profileImage: savedUser.profileImage,
         social_links: savedUser.social_links,
+        description: savedUser.description,
       };
       return res.status(200).send(result);
     }
