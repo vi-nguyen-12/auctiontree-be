@@ -117,12 +117,11 @@ const registerUser = async (req, res) => {
 const getAllUsers = async (req, res) => {
   try {
     let { page, limit, name, sort } = req.query;
-    console.log(sort);
     const paramsSchema = Joi.object({
       page: Joi.string().regex(/^\d+$/).optional(),
       limit: Joi.string().regex(/^\d+$/).optional(),
       name: Joi.string().optional(),
-      sort: Joi.string().optional().valid(" firstName", "-firstName"),
+      sort: Joi.string().optional().valid("+firstName", "-firstName"),
     });
     const { error } = paramsSchema.validate(req.query);
     if (error) return res.status(200).send({ error: error.details[0].message });
@@ -145,7 +144,7 @@ const getAllUsers = async (req, res) => {
       sorts[sort.slice(1)] = sort.slice(0, 1) === "-" ? -1 : 1;
     }
 
-    const users = await User.find(filters, [
+    let users = await User.find(filters, [
       "firstName",
       "lastName",
       "email",
@@ -156,15 +155,17 @@ const getAllUsers = async (req, res) => {
       "agent",
       "isSuspended",
       "profileImage",
+      "description",
     ])
       .lean()
-      .sort(sorts)
-      .skip((page - 1) * limit)
-      .limit(limit);
-    const countUser = await User.find().count();
+      .sort(sorts);
+
+    const userCount = users.length;
+    users = users.slice((page - 1) * limit, (page - 1) * limit + limit);
+
     res.header({
-      "Pagination-Count": countUser,
-      "Pagination-Total-Pages": Math.ceil(users.length / limit),
+      "Pagination-Count": userCount,
+      "Pagination-Total-Pages": Math.ceil(userCount / limit),
       "Pagination-Page": page,
       "Pagination-Limit": limit,
     });
@@ -464,95 +465,101 @@ const resetForgotPassword = async (req, res) => {
   }
 };
 
+//should check if this user has been suspended, cannot edit
 //@desc  Edit profile
 //@route PUT /api/users/:id body {firstName, lastName, email, phone, userName, country, city, old_password, new_password}
 const editProfile = async (req, res) => {
   try {
-    const {
-      firstName,
-      lastName,
-      email,
-      phone,
-      userName,
-      country,
-      city,
-      profileImage,
-      social_links,
-      old_password,
-      new_password,
-    } = req.body;
+    if (req.user?.id === req.params.id) {
+      const {
+        firstName,
+        lastName,
+        email,
+        phone,
+        userName,
+        country,
+        city,
+        profileImage,
+        social_links,
+        old_password,
+        new_password,
+        description,
+      } = req.body;
 
-    let isOwner = req.user?.id.toString() === req.params.id;
-    let isAbleToEditUser = req.admin?.permissions.includes("user_edit");
+      let isOwner = req.user?.id.toString() === req.params.id;
+      let isAbleToEditUser = req.admin?.permissions.includes("user_edit");
 
-    if (!isAbleToEditUser && !isOwner) {
-      return res.status(200).send({ error: "Not allowed to edit user" });
-    }
-
-    let user = await User.findById(req.params.id);
-    if (!user) {
-      return res.status(200).send({ error: "User not found" });
-    }
-
-    // check if email/ userName already exists
-    if (email) {
-      const emailExists = await User.findOne({ email: email.toLowerCase() });
-      if (emailExists && emailExists._id.toString() !== user._id.toString()) {
-        return res.status(200).send({ error: "Email already exists" });
+      if (!isAbleToEditUser && !isOwner) {
+        return res.status(200).send({ error: "Not allowed to edit user" });
       }
-    }
-    if (userName) {
-      const userNameExists = await User.findOne({
-        userName: userName.toLowerCase(),
-      });
-      if (
-        userNameExists &&
-        userNameExists._id.toString() !== user._id.toString()
-      ) {
-        return res.status(200).send({ error: "UserName already exists" });
-      }
-    }
-    user.firstName = firstName || user.firstName;
-    user.lastName = lastName || user.lastName;
-    user.email = email || user.email;
-    user.phone = phone || user.phone;
-    user.userName = userName || user.userName;
-    user.country = country || user.country;
-    user.city = city || user.city;
-    user.profileImage = profileImage;
-    user.social_links = social_links || user.social_links;
 
-    // if change password, only owner can change password
-    if (old_password) {
-      if (isAbleToEditUser) {
-        return res
-          .status(200)
-          .send({ error: "Admin cannot change password of user" });
+      let user = await User.findById(req.params.id);
+      if (!user) {
+        return res.status(200).send({ error: "User not found" });
       }
-      const match = await bcrypt.compare(old_password, user.password);
-      if (!match) {
-        return res
-          .status(200)
-          .send({ error: "Wrong password! Cannot update profile" });
+
+      // check if email/ userName already exists
+      if (email) {
+        const emailExists = await User.findOne({ email: email.toLowerCase() });
+        if (emailExists && emailExists._id.toString() !== user._id.toString()) {
+          return res.status(200).send({ error: "Email already exists" });
+        }
       }
-      const salt = await bcrypt.genSaltSync(10);
-      const hashedPassword = await bcrypt.hash(new_password, salt);
-      user.password = hashedPassword;
+      if (userName) {
+        const userNameExists = await User.findOne({
+          userName: userName.toLowerCase(),
+        });
+        if (
+          userNameExists &&
+          userNameExists._id.toString() !== user._id.toString()
+        ) {
+          return res.status(200).send({ error: "UserName already exists" });
+        }
+      }
+      user.firstName = firstName || user.firstName;
+      user.lastName = lastName || user.lastName;
+      user.email = email || user.email;
+      user.phone = phone || user.phone;
+      user.userName = userName || user.userName;
+      user.country = country || user.country;
+      user.city = city || user.city;
+      user.profileImage = profileImage;
+      user.social_links = social_links || user.social_links;
+      user.description = description || user.description;
+
+      // if change password, only owner can change password
+      if (old_password) {
+        if (isAbleToEditUser) {
+          return res
+            .status(200)
+            .send({ error: "Admin cannot change password of user" });
+        }
+        const match = await bcrypt.compare(old_password, user.password);
+        if (!match) {
+          return res
+            .status(200)
+            .send({ error: "Wrong password! Cannot update profile" });
+        }
+        const salt = await bcrypt.genSaltSync(10);
+        const hashedPassword = await bcrypt.hash(new_password, salt);
+        user.password = hashedPassword;
+      }
+      const savedUser = await user.save();
+      const result = {
+        _id: savedUser._id,
+        firstName: savedUser.firstName,
+        lastName: savedUser.lastName,
+        email: savedUser.email,
+        phone: savedUser.phone,
+        userName: savedUser.userName,
+        country: savedUser.country,
+        city: savedUser.city,
+        profileImage: savedUser.profileImage,
+        social_links: savedUser.social_links,
+        description: savedUser.description,
+      };
+      return res.status(200).send(result);
     }
-    const savedUser = await user.save();
-    const result = {
-      _id: savedUser._id,
-      firstName: savedUser.firstName,
-      lastName: savedUser.lastName,
-      email: savedUser.email,
-      phone: savedUser.phone,
-      userName: savedUser.userName,
-      country: savedUser.country,
-      city: savedUser.city,
-      profileImage: savedUser.profileImage,
-      social_links: savedUser.social_links,
-    };
-    return res.status(200).send(result);
   } catch (err) {
     res.status(500).send(err.message);
   }
@@ -800,13 +807,11 @@ const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
 };
 
 //should authorized only admin can view
-//@desc  Get auctions of all sellers (grouped by user)
-//@route GET /api/users/seller/auctions
+//@desc  Get properties of all sellers (grouped by user)
+//@route GET /api/users/seller/properties
 const getPropertiesOfAllSellersGroupByUser = async (req, res) => {
   try {
-    let isAbleToAccessAdmin = req.admin?.permissions.includes("user_read");
-
-    if (!isAbleToAccessAdmin) {
+    if (!req.admin?.permissions.includes("user_read")) {
       return res.status(200).send({ error: "Not allowed to Access" });
     }
 

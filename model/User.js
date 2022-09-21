@@ -55,6 +55,7 @@ const userSchema = new mongoose.Schema(
     },
     secret: { type: Object },
     profileImage: String,
+    description: String,
     isActive: { type: Boolean, required: true, default: false },
     KYC: { type: Boolean, required: true, default: true },
     temp_token: String,

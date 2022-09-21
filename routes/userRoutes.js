@@ -1,5 +1,10 @@
 const router = require("express").Router();
-const { auth, authNotStrict, authAdmin } = require("../middleware/verifyToken");
+const {
+  auth,
+  authUser,
+  authNotStrict,
+  authAdmin,
+} = require("../middleware/verifyToken");
 const {
   validateUser,
   validateUpdateUser,
@@ -40,7 +45,7 @@ router.post("/password", resetForgotPassword);
 router.put("/:id/:auctionId/liked", auth, setLikedAuction);
 router.put("/:id/:auctionId/unliked", auth, setUnlikedAuction);
 router.get("/:id/likes", auth, getLikedAuctions);
-router.get("/:id/buyer/auctions/bid", auth, getBidAuctionsOfBuyer); //should authenticate user
+router.get("/:id/buyer/auctions/bid", authUser, getBidAuctionsOfBuyer);
 router.get("/:id/buyer/auctions", auth, getAuctionsOfBuyer);
 router.get("/:id/buyer/funds", auth, getFundsOfBuyer);
 router.get("/:id/buyer/winAuctions", getWinAuctionsOfBuyer);
