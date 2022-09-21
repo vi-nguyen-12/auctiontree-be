@@ -117,7 +117,6 @@ const registerUser = async (req, res) => {
 const getAllUsers = async (req, res) => {
   try {
     let { page, limit, name, sort } = req.query;
-
     const paramsSchema = Joi.object({
       page: Joi.string().regex(/^\d+$/).optional(),
       limit: Joi.string().regex(/^\d+$/).optional(),
@@ -804,7 +803,7 @@ const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
 const getPropertiesOfAllSellersGroupByUser = async (req, res) => {
   try {
     let isAbleToAccessAdmin = req.admin?.permissions.includes("user_read");
-
+    
     if(!isAbleToAccessAdmin){
       return res.status(200).send({ error: "Not allowed to Access" });
     }
