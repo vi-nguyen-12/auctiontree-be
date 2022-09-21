@@ -576,11 +576,21 @@ const suspendUserAccount = async (req, res) => {
     if (suspended === "true") {
       user.isSuspended = true;
       await User.save(user);
+      sendEmail({
+        to: user.email,
+        subject: "Account activation",
+        text: `sorry to suspend your account, please contact our admin for details`,
+      });
       return res.status(200).send({ message: "User is now suspended" });
     }
     if (suspended === "false") {
       user.isSuspended = false;
       await User.save();
+      sendEmail({
+        to: user.email,
+        subject: "Account activation",
+        text: `Your account is activated`,
+      });
       return res.status(200).send({ message: "User is now activated" });
     }
   } catch (err) {
