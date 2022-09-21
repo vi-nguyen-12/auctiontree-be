@@ -20,8 +20,8 @@ const client_url =
   process.env.NODE_ENV === "production"
     ? process.env.PROD_CLIENT_URL
     : process.env.NODE_ENV === "test"
-      ? process.env.TEST_CLIENT_URL
-      : process.env.DEV_CLIENT_URL;
+    ? process.env.TEST_CLIENT_URL
+    : process.env.DEV_CLIENT_URL;
 
 //@desc  Register a new user & create secret
 //@route POST /api/users/register
@@ -486,41 +486,45 @@ const editProfile = async (req, res) => {
         description,
       } = req.body;
 
-    let isOwner = req.user.id.toString() === req.params.id
+    let isOwner = req.user?.id.toString() === req.params.id;
     let isAbleToEditUser = req.admin?.permissions.includes("user_edit");
+
     if (!isAbleToEditUser && !isOwner) {
-      return res.status(200).send({ error: "Not allowed to edit user" })
+      return res.status(200).send({ error: "Not allowed to edit user" });
     }
 
-    let user = await User.findById(req.user.id);
+    let user = await User.findById(req.params.id);
     if (!user) {
       return res.status(200).send({ error: "User not found" });
     }
 
-      // check if email/ userName already exists
-      if (email) {
-        const emailExists = await User.findOne({ email: email.toLowerCase() });
-        if (emailExists?._id.toString() !== user._id.toString()) {
-          return res.status(200).send({ error: "Email already exists" });
-        }
+    // check if email/ userName already exists
+    if (email) {
+      const emailExists = await User.findOne({ email: email.toLowerCase() });
+      if (emailExists && emailExists._id.toString() !== user._id.toString()) {
+        return res.status(200).send({ error: "Email already exists" });
       }
-      if (userName) {
-        const userNameExists = await User.findOne({
-          userName: userName.toLowerCase(),
-        });
-        if (userNameExists?._id.toString() !== user._id.toString()) {
-          return res.status(200).send({ error: "UserName already exists" });
-        }
+    }
+    if (userName) {
+      const userNameExists = await User.findOne({
+        userName: userName.toLowerCase(),
+      });
+      if (
+        userNameExists &&
+        userNameExists._id.toString() !== user._id.toString()
+      ) {
+        return res.status(200).send({ error: "UserName already exists" });
       }
-      user.firstName = firstName || user.firstName;
-      user.lastName = lastName || user.lastName;
-      user.email = email.toLowerCase() || user.email;
-      user.phone = phone || user.phone;
-      user.userName = userName.toLowerCase() || user.userName;
-      user.country = country || user.country;
-      user.city = city || user.city;
-      user.profileImage = profileImage;
-      user.social_links = social_links || user.social_links;
+    }
+    user.firstName = firstName || user.firstName;
+    user.lastName = lastName || user.lastName;
+    user.email = email || user.email;
+    user.phone = phone || user.phone;
+    user.userName = userName || user.userName;
+    user.country = country || user.country;
+    user.city = city || user.city;
+    user.profileImage = profileImage;
+    user.social_links = social_links || user.social_links;
 
       // if change password
       if (old_password) {
@@ -1058,13 +1062,13 @@ const getFundsOfBuyer = async (req, res) => {
       buyer.bids =
         buyer.bids.length > 0
           ? buyer.bids
-            .filter(
-              (item) => item.buyerId.toString() === buyer._id.toString()
-            )
-            .map((item) => {
-              delete item.buyerId;
-              return item;
-            })
+              .filter(
+                (item) => item.buyerId.toString() === buyer._id.toString()
+              )
+              .map((item) => {
+                delete item.buyerId;
+                return item;
+              })
           : [];
       delete buyer.funds;
     }
@@ -1160,8 +1164,8 @@ const getListingsOfSeller = async (req, res) => {
     let isOwner = req.user.id.toString() === req.params.id;
     let isAbleToAccessAdmin = req.admin?.permissions.includes("user_read");
 
-    if(!isOwner || !isAbleToAccessAdmin){
-      return res.status(200).send({error:"Not allowed to Access"})
+    if (!isOwner || !isAbleToAccessAdmin) {
+      return res.status(200).send({ error: "Not allowed to Access" });
     }
 
     const user = await User.findById(req.params.id);
