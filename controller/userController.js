@@ -518,6 +518,18 @@ const editProfile = async (req, res) => {
     user.profileImage = profileImage;
     user.social_links = social_links || user.social_links;
 
+    // if change password
+    if (old_password) {
+      const match = await bcrypt.compare(old_password, user.password);
+      if (!match) {
+        return res
+          .status(200)
+          .send({ error: "Wrong password! Cannot update profile" });
+      }
+      const salt = await bcrypt.genSaltSync(10);
+      const hashedPassword = await bcrypt.hash(new_password, salt);
+      user.password = hashedPassword;
+    }
     const savedUser = await user.save();
     const result = {
       _id: savedUser._id,
