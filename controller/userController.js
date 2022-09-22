@@ -117,7 +117,6 @@ const registerUser = async (req, res) => {
 const getAllUsers = async (req, res) => {
   try {
     let { page, limit, name, sort } = req.query;
-
     const paramsSchema = Joi.object({
       page: Joi.string().regex(/^\d+$/).optional(),
       limit: Joi.string().regex(/^\d+$/).optional(),
@@ -487,7 +486,14 @@ const editProfile = async (req, res) => {
         description,
       } = req.body;
 
-      const user = await User.findById(req.user.id);
+      let isOwner = req.user?.id.toString() === req.params.id;
+      let isAbleToEditUser = req.admin?.permissions.includes("user_edit");
+
+      if (!isAbleToEditUser && !isOwner) {
+        return res.status(200).send({ error: "Not allowed to edit user" });
+      }
+
+      let user = await User.findById(req.params.id);
       if (!user) {
         return res.status(200).send({ error: "User not found" });
       }
@@ -495,7 +501,7 @@ const editProfile = async (req, res) => {
       // check if email/ userName already exists
       if (email) {
         const emailExists = await User.findOne({ email: email.toLowerCase() });
-        if (emailExists?._id.toString() !== user._id.toString()) {
+        if (emailExists && emailExists._id.toString() !== user._id.toString()) {
           return res.status(200).send({ error: "Email already exists" });
         }
       }
@@ -503,23 +509,31 @@ const editProfile = async (req, res) => {
         const userNameExists = await User.findOne({
           userName: userName.toLowerCase(),
         });
-        if (userNameExists?._id.toString() !== user._id.toString()) {
+        if (
+          userNameExists &&
+          userNameExists._id.toString() !== user._id.toString()
+        ) {
           return res.status(200).send({ error: "UserName already exists" });
         }
       }
       user.firstName = firstName || user.firstName;
       user.lastName = lastName || user.lastName;
-      user.email = email.toLowerCase() || user.email;
+      user.email = email || user.email;
       user.phone = phone || user.phone;
-      user.userName = userName.toLowerCase() || user.userName;
+      user.userName = userName || user.userName;
       user.country = country || user.country;
       user.city = city || user.city;
       user.profileImage = profileImage;
       user.social_links = social_links || user.social_links;
       user.description = description || user.description;
 
-      // if change password
+      // if change password, only owner can change password
       if (old_password) {
+        if (isAbleToEditUser) {
+          return res
+            .status(200)
+            .send({ error: "Admin cannot change password of user" });
+        }
         const match = await bcrypt.compare(old_password, user.password);
         if (!match) {
           return res
@@ -546,7 +560,6 @@ const editProfile = async (req, res) => {
       };
       return res.status(200).send(result);
     }
-    res.status(200).send({ error: "Not allowed to edit profile" });
   } catch (err) {
     res.status(500).send(err.message);
   }
@@ -798,6 +811,10 @@ const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
 //@route GET /api/users/seller/properties
 const getPropertiesOfAllSellersGroupByUser = async (req, res) => {
   try {
+    if (!req.admin?.permissions.includes("user_read")) {
+      return res.status(200).send({ error: "Not allowed to Access" });
+    }
+
     const aggregate = await Property.aggregate([
       { $match: { step: 5 } },
       {
@@ -840,23 +857,6 @@ const getPropertiesOfAllSellersGroupByUser = async (req, res) => {
         },
       },
     ]);
-    for (let user of aggregate) {
-      for (let property of user.properties) {
-        let auction = await Auction.findOne({ property: property._id });
-        if (auction) {
-          property.auction = {
-            _id: auction._id,
-            startingBid: auction.startingBid,
-            incrementAmount: auction.incrementAmount,
-            registerStartDate: auction.registerStartDate,
-            registerEndDate: auction.registerEndDate,
-            isFeatured: auction.isFeatured,
-            isActive: auction.isActive,
-          };
-        }
-      }
-    }
-
     return res.status(200).send(aggregate);
   } catch (err) {
     return res.status(500).send(err.message);
@@ -1163,6 +1163,13 @@ const getListingsOfSeller = async (req, res) => {
     });
     const { error } = querySchema.validate(req.query);
     if (error) return res.status(200).send({ error: error.details[0].message });
+
+    let isOwner = req.user.id.toString() === req.params.id;
+    let isAbleToAccessAdmin = req.admin?.permissions.includes("user_read");
+
+    if (!isOwner || !isAbleToAccessAdmin) {
+      return res.status(200).send({ error: "Not allowed to Access" });
+    }
 
     const user = await User.findById(req.params.id);
     const { status, inAuction, completed, sold } = req.query;
