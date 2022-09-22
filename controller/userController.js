@@ -20,8 +20,8 @@ const client_url =
   process.env.NODE_ENV === "production"
     ? process.env.PROD_CLIENT_URL
     : process.env.NODE_ENV === "test"
-    ? process.env.TEST_CLIENT_URL
-    : process.env.DEV_CLIENT_URL;
+      ? process.env.TEST_CLIENT_URL
+      : process.env.DEV_CLIENT_URL;
 
 //@desc  Register a new user & create secret
 //@route POST /api/users/register
@@ -575,7 +575,12 @@ const suspendUserAccount = async (req, res) => {
     const { suspended } = req.query;
     if (suspended === "true") {
       user.isSuspended = true;
-      await User.save(user);
+      if (user.likedAuctions.length) {
+        for (let id of user.likedAuctions) {
+          await Auction.findByIdAndUpdate({ _id: id.toString() }, { isActive: "false" })
+        }
+      }
+      await user.save();
       sendEmail({
         to: user.email,
         subject: "Account activation",
@@ -585,7 +590,12 @@ const suspendUserAccount = async (req, res) => {
     }
     if (suspended === "false") {
       user.isSuspended = false;
-      await User.save();
+      if (user.likedAuctions.length) {
+        for (let id of user.likedAuctions) {
+          await Auction.findByIdAndUpdate({ _id: id.toString() }, { isActive: "true" })
+        }
+      }
+      await user.save();
       sendEmail({
         to: user.email,
         subject: "Account activation",
@@ -1082,13 +1092,13 @@ const getFundsOfBuyer = async (req, res) => {
       buyer.bids =
         buyer.bids.length > 0
           ? buyer.bids
-              .filter(
-                (item) => item.buyerId.toString() === buyer._id.toString()
-              )
-              .map((item) => {
-                delete item.buyerId;
-                return item;
-              })
+            .filter(
+              (item) => item.buyerId.toString() === buyer._id.toString()
+            )
+            .map((item) => {
+              delete item.buyerId;
+              return item;
+            })
           : [];
       delete buyer.funds;
     }

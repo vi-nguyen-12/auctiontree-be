@@ -27,7 +27,6 @@ const auth = async (req, res, next) => {
       //only pass activated permissions to req
       req.admin = { id: admin._id, permissions: admin.permissions }; //{id:..., permissions:...}
     }
-
     next();
   } catch (err) {
     res.status(200).send({ error: "Invalid Token" });
