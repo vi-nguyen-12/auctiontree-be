@@ -575,12 +575,10 @@ const suspendUserAccount = async (req, res) => {
     const { suspended } = req.query;
     if (suspended === "true") {
       user.isSuspended = true;
-      if (user) {
-        const properties = await Property.find({ createdBy: user._id.toString() })
-        properties.forEach(async (elements) => {
-          await Auction.findOneAndUpdate({ property: elements._id.toString() }, { isActive: "true" })
-        })
-      }
+      const propertyDetails = await Property.find({ createdBy: user._id.toString() })
+      propertyDetails.forEach(async (elements) => {
+        await Auction.findOneAndUpdate({ property: elements._id.toString() }, { isActive: "false" })
+      })
       await user.save();
       sendEmail({
         to: user.email,
