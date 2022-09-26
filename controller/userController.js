@@ -20,8 +20,8 @@ const client_url =
   process.env.NODE_ENV === "production"
     ? process.env.PROD_CLIENT_URL
     : process.env.NODE_ENV === "test"
-      ? process.env.TEST_CLIENT_URL
-      : process.env.DEV_CLIENT_URL;
+    ? process.env.TEST_CLIENT_URL
+    : process.env.DEV_CLIENT_URL;
 
 //@desc  Register a new user & create secret
 //@route POST /api/users/register
@@ -292,6 +292,10 @@ const login = async (req, res) => {
 
     if (!user) {
       return res.status(200).send({ error: "Email is not found" });
+    }
+
+    if (user.isSuspended) {
+      return res.status(200).send({ error: "Account has been suspended" });
     }
 
     const validPass = await bcrypt.compare(req.body.password, user.password);
@@ -575,11 +579,16 @@ const suspendUserAccount = async (req, res) => {
     const { suspended } = req.query;
     if (suspended === "true") {
       user.isSuspended = true;
-      const propertyDetails = await Property.find({ createdBy: user._id.toString() })
-      propertyDetails.forEach(async (elements) => {
-        await Auction.findOneAndUpdate({ property: elements._id.toString() }, { isActive: "false" })
-      })
       await user.save();
+      const propertyDetails = await Property.find({
+        createdBy: user._id.toString(),
+      });
+      propertyDetails.forEach(async (elements) => {
+        await Auction.findOneAndUpdate(
+          { property: elements._id.toString() },
+          { isActive: false }
+        );
+      });
       sendEmail({
         to: user.email,
         subject: "Account activation",
@@ -589,11 +598,6 @@ const suspendUserAccount = async (req, res) => {
     }
     if (suspended === "false") {
       user.isSuspended = false;
-      if (user.likedAuctions.length) {
-        for (let id of user.likedAuctions) {
-          await Auction.findByIdAndUpdate({ _id: id.toString() }, { isActive: "true" })
-        }
-      }
       await user.save();
       sendEmail({
         to: user.email,
@@ -1091,13 +1095,13 @@ const getFundsOfBuyer = async (req, res) => {
       buyer.bids =
         buyer.bids.length > 0
           ? buyer.bids
-            .filter(
-              (item) => item.buyerId.toString() === buyer._id.toString()
-            )
-            .map((item) => {
-              delete item.buyerId;
-              return item;
-            })
+              .filter(
+                (item) => item.buyerId.toString() === buyer._id.toString()
+              )
+              .map((item) => {
+                delete item.buyerId;
+                return item;
+              })
           : [];
       delete buyer.funds;
     }
