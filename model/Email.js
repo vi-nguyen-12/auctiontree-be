@@ -41,12 +41,7 @@ const emailSchema = new Schema(
     },
     recipientsModel: {
       type: String,
-      required: function () {
-        if (this.sender._id) {
-          return true;
-        }
-        return false;
-      },
+      required,
       enum: ["User", "Admin"],
     },
     content: { type: String, required: true },

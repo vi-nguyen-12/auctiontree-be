@@ -98,9 +98,24 @@ const replaceEmailTemplate = async (emailTemplateType, replacedObject) => {
   }
 };
 
+const getGeneralAdmins = async () => {
+  let role = await Role.findOne({ name: "general_admin" }).select("_id");
+  admins = await Admin.find({ role: role._id }).select("email");
+  return admins;
+};
+
+const addNotificationToAdmin = async (admins, message) => {
+  for (let admin of admins) {
+    admin.notifications.push({ message });
+    await admin.save();
+  }
+};
+
 module.exports = {
   sendEmail,
   getBidsInformation,
   generateRandomString,
   replaceEmailTemplate,
+  getGeneralAdmins,
+  addNotificationToAdmin,
 };

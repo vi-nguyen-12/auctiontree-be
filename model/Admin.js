@@ -63,6 +63,12 @@ const adminSchema = new mongoose.Schema({
     enums: ["activated", "deactivated"],
     default: "activated",
   },
+  notifications: [
+    {
+      message: String,
+      date: { type: Date, default: Date.now },
+    },
+  ],
 });
 
 module.exports = mongoose.model("Admin", adminSchema);
