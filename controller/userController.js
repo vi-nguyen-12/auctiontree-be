@@ -20,8 +20,8 @@ const client_url =
   process.env.NODE_ENV === "production"
     ? process.env.PROD_CLIENT_URL
     : process.env.NODE_ENV === "test"
-      ? process.env.TEST_CLIENT_URL
-      : process.env.DEV_CLIENT_URL;
+    ? process.env.TEST_CLIENT_URL
+    : process.env.DEV_CLIENT_URL;
 
 //@desc  Register a new user & create secret
 //@route POST /api/users/register
@@ -1100,13 +1100,13 @@ const getFundsOfBuyer = async (req, res) => {
       buyer.bids =
         buyer.bids.length > 0
           ? buyer.bids
-            .filter(
-              (item) => item.buyerId.toString() === buyer._id.toString()
-            )
-            .map((item) => {
-              delete item.buyerId;
-              return item;
-            })
+              .filter(
+                (item) => item.buyerId.toString() === buyer._id.toString()
+              )
+              .map((item) => {
+                delete item.buyerId;
+                return item;
+              })
           : [];
       delete buyer.funds;
     }
