@@ -294,6 +294,10 @@ const login = async (req, res) => {
       return res.status(200).send({ error: "Email is not found" });
     }
 
+    if (user.isSuspended) {
+      return res.status(200).send({ error: "Account has been suspended" });
+    }
+
     const validPass = await bcrypt.compare(req.body.password, user.password);
     if (!validPass) {
       return res.status(200).send({ error: "Invalid email or password" });
@@ -570,17 +574,44 @@ const editProfile = async (req, res) => {
 const suspendUserAccount = async (req, res) => {
   try {
     const { id } = req.params;
+    const { suspended } = req.body;
+
+    const bodySchema = Joi.object({
+      suspended: Joi.string().required().valid("true", "false"),
+    });
+    const { error } = bodySchema.validate(req.body);
+    if (error) return res.status(200).send({ error: error.details[0].message });
+
     const user = await User.findById(id);
     if (!user) return res.status(200).send({ error: "User not found" });
-    const { suspended } = req.query;
+
     if (suspended === "true") {
       user.isSuspended = true;
-      await User.save(user);
+      await user.save();
+      const propertyDetails = await Property.find({
+        createdBy: user._id.toString(),
+      });
+      propertyDetails.forEach(async (elements) => {
+        await Auction.findOneAndUpdate(
+          { property: elements._id.toString() },
+          { isActive: false }
+        );
+      });
+      sendEmail({
+        to: user.email,
+        subject: "Account activation",
+        text: `sorry to suspend your account, please contact our admin for details`,
+      });
       return res.status(200).send({ message: "User is now suspended" });
     }
     if (suspended === "false") {
       user.isSuspended = false;
-      await User.save();
+      await user.save();
+      sendEmail({
+        to: user.email,
+        subject: "Account activation",
+        text: `Your account is activated`,
+      });
       return res.status(200).send({ message: "User is now activated" });
     }
   } catch (err) {

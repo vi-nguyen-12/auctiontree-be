@@ -55,15 +55,14 @@ router.get("/:id/seller/auctions", getAuctionsOfSeller);
 router.get("/:id/seller/properties",authAdmin, getListingsOfSeller);
 router.get("/", authAdmin, getAllUsers);
 //only for login user
-router.put("/:id?suspended=true", auth, suspendUserAccount);
-router.put("/:id?suspended=false", auth, suspendUserAccount);
+router.put("/:id/suspended", auth, suspendUserAccount);
 router.delete(
   "/:userId/notifications/:notificationId",
   auth,
   deleteNotification
 );
-router.delete("/:id", auth, deleteUserAccount);
-router.put("/:id", auth, validateUpdateUser, editProfile);
+router.delete("/:id/delete", auth, deleteUserAccount);
+router.put("/:id/edit", auth, validateUpdateUser, editProfile);
 //only for admin
 router.get("/buyerId/:buyerId", getUserByBuyerId);
 router.get("/propertyId/:propertyId", getUserByPropertyId);
