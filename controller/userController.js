@@ -577,7 +577,7 @@ const suspendUserAccount = async (req, res) => {
     const { suspended } = req.body;
 
     const bodySchema = Joi.object({
-      suspended: Joi.string().required().valid("true", "false"),
+      suspended: Joi.boolean().required(),
     });
     const { error } = bodySchema.validate(req.body);
     if (error) return res.status(200).send({ error: error.details[0].message });
@@ -585,7 +585,7 @@ const suspendUserAccount = async (req, res) => {
     const user = await User.findById(id);
     if (!user) return res.status(200).send({ error: "User not found" });
 
-    if (suspended === "true") {
+    if (suspended) {
       user.isSuspended = true;
       await user.save();
       const propertyDetails = await Property.find({
@@ -604,16 +604,14 @@ const suspendUserAccount = async (req, res) => {
       });
       return res.status(200).send({ message: "User is now suspended" });
     }
-    if (suspended === "false") {
-      user.isSuspended = false;
-      await user.save();
-      sendEmail({
-        to: user.email,
-        subject: "Account activation",
-        text: `Your account is activated`,
-      });
-      return res.status(200).send({ message: "User is now activated" });
-    }
+    user.isSuspended = false;
+    await user.save();
+    sendEmail({
+      to: user.email,
+      subject: "Account activation",
+      text: `Your account is activated`,
+    });
+    return res.status(200).send({ message: "User is now activated" });
   } catch (err) {
     res.status(500).send(err.message);
   }
