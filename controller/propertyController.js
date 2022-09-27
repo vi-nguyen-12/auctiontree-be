@@ -3,8 +3,15 @@ const User = require("../model/User");
 const Buyer = require("../model/Buyer");
 const Auction = require("../model/Auction");
 const Docusign = require("../model/Docusign");
+const Admin = require("../model/Admin");
+const Role = require("../model/Role");
 const axios = require("axios");
-const { sendEmail, replaceEmailTemplate } = require("../helper");
+const {
+  sendEmail,
+  replaceEmailTemplate,
+  getGeneralAdmins,
+  addNotificationToAdmin,
+} = require("../helper");
 const Joi = require("joi").extend(require("@joi/date"));
 Joi.objectId = require("joi-objectid")(Joi);
 const { propertyObjectSchema } = require("../middleware/validateRequest");
@@ -81,6 +88,11 @@ const createRealestate = async (req, res) => {
     const { error } = bodySchema.validate(req.body);
     if (error) return res.status(200).send({ error: error.details[0].message });
 
+    //find admin, should fix this
+    // let admins;
+    // admins = await getGeneralAdmins();
+    // await addNotificationToAdmin(admins, "Hello");
+
     //Check if seller is a broker, require listing_agreement
     if (details.broker_name) {
       if (details.broker_documents.length < 1) {
@@ -147,6 +159,8 @@ const createRealestate = async (req, res) => {
       type,
       details,
       reservedAmount,
+
+      
       discussedAmount,
       images,
       videos,
@@ -185,6 +199,7 @@ const createOthers = async (req, res) => {
         docusignId,
         step,
       } = req.body;
+      let admin;
 
       if (
         !(step === 1 || step === 2 || step === 3 || step === 4 || step === 5)
@@ -194,6 +209,7 @@ const createOthers = async (req, res) => {
           .send({ error: "step must be a number from 1 to 5" });
       }
       let bodySchema;
+      admin;
       let objectSchema = {
         step1: propertyObjectSchema.step1,
         step2: propertyObjectSchema.step2[`${type}`],
@@ -209,6 +225,8 @@ const createOthers = async (req, res) => {
       const { error } = bodySchema.validate(req.body);
       if (error)
         return res.status(200).send({ error: error.details[0].message });
+
+      // find superadmin
 
       //Check if seller is a broker, require listing_agreement
       if (details.broker_name) {

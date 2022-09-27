@@ -592,25 +592,32 @@ const suspendUserAccount = async (req, res) => {
 //@route DELETE /api/users/:id
 const deleteUserAccount = async (req, res) => {
   try {
-    const { id: userId } = req.params;
-    const deletedUser = await User.deleteOne({ _id: userId });
-    if (deletedUser.deletedCount === 0) {
-      return res.status(200).send({ error: "User not found" });
+    if (req.user?.id === req.params.id || req.admin?.includes("user_delete")) {
+      const { id: userId } = req.params;
+      const deletedUser = await User.deleteOne({ _id: userId });
+      if (deletedUser.deletedCount === 0) {
+        return res.status(200).send({ error: "User not found" });
+      }
+      //delete Kyc
+      await Kyc.deleteOne({ userId });
+
+      //delete properties created by this user & related auctions
+      const properties = await Property.find({ createdBy: userId });
+
+      for (let property of properties) {
+        await Auction.deleteOne({ property: property.id });
+        await Property.deleteOne({ _id: property.id });
+      }
+      // should check this, how about other buyers register to buy deleted auctions, their documents
+
+      // delete buyers initiated by this user
+      await Buyer.deleteMany({ userId });
+
+      return res
+        .status(200)
+        .send({ message: "User account successfully deleted" });
     }
-    //delete Kyc
-    await Kyc.deleteOne({ userId });
-
-    //delete properties created by this user & related auctions
-    const properties = await Property.find({ createdBy: userId });
-
-    for (let property of properties) {
-      await Auction.deleteOne({ property: property.id });
-      await Property.deleteOne({ _id: property.id });
-    }
-
-    // delete buyers initiated by this user
-    await Buyer.deleteMany({ userId });
-    res.status(200).send({ message: "User account successfully deleted" });
+    res.status(200).send({ error: "Not allowed to delete user account" });
   } catch (err) {
     res.status(500).send(err.message);
   }
@@ -687,7 +694,7 @@ const getBidAuctionsOfBuyer = async (req, res) => {
   try {
     let id = req.params.id;
     if (
-      (req.admin?.id && req.permissions.includes("buyer_read")) ||
+      (req.admin?.id && req.admin?.permissions.includes("buyer_read")) ||
       (req.user?.id && req.user.id === id)
     ) {
       let bidAuctions = await Auction.find({ "bids.userId": id })

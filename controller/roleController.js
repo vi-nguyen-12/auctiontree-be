@@ -228,6 +228,15 @@ const deleteRole = async (req, res) => {
             "Cannot delete this role as this role is assigned to some admin.",
         });
       }
+
+      // cannot delete role general_admin
+      const role = await Role.findById(req.params.id);
+      if (role.name === "general_admin") {
+        return res.status(200).send({
+          error: `Role ${role.name.replace("_", " ")} cannot be deleted`,
+        });
+      }
+
       await Role.deleteOne({ _id: req.params.id });
       return res.status(200).send({ message: "Role deleted successfully" });
     }

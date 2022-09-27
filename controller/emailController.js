@@ -147,6 +147,7 @@ const createEmail = async (req, res) => {
         if (!user) {
           return res.status(200).send({ error: "User not found" });
         }
+
         await Email.create({
           sender: { _id: req.admin.id },
           senderModel: "Admin",
@@ -166,13 +167,13 @@ const createEmail = async (req, res) => {
           sender: { _id: req.admin.id },
           senderModel: "Admin",
           recipients: [{ firstName, lastName, phone, email, company }],
+          recipientsModel: "User",
           content,
         });
         sendEmail({
           to: admin.email,
-          email,
           subject,
-          text: content,
+          htmlText: content,
         });
       }
       return res.status(200).send({ message: "Successfully sent message" });
