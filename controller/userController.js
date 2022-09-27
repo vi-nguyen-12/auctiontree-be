@@ -1191,6 +1191,13 @@ const getAuctionsOfSeller = async (req, res) => {
 //@route GET /api/users/:id/seller/properties?status= pending/fail/success & inAuction=true/false & completed=true/false
 const getListingsOfSeller = async (req, res) => {
   try {
+    let isOwner = req.user.id.toString() === req.params.id;
+    let isAbleToAccessAdmin = req.admin?.permissions.includes("user_read");
+
+    if (!isOwner || !isAbleToAccessAdmin) {
+      return res.status(200).send({ error: "Not allowed to Access" });
+    }
+
     const querySchema = Joi.object({
       status: Joi.string().valid("pending", "success", "fail").optional(),
       inAuction: Joi.string().valid("true", "false").optional(),
@@ -1199,13 +1206,6 @@ const getListingsOfSeller = async (req, res) => {
     });
     const { error } = querySchema.validate(req.query);
     if (error) return res.status(200).send({ error: error.details[0].message });
-
-    let isOwner = req.user.id.toString() === req.params.id;
-    let isAbleToAccessAdmin = req.admin?.permissions.includes("user_read");
-
-    if (!isOwner || !isAbleToAccessAdmin) {
-      return res.status(200).send({ error: "Not allowed to Access" });
-    }
 
     const user = await User.findById(req.params.id);
     const { status, inAuction, completed, sold } = req.query;
