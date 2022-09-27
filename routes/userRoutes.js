@@ -55,8 +55,7 @@ router.get("/:id/seller/auctions", getAuctionsOfSeller);
 router.get("/:id/seller/properties",authAdmin, getListingsOfSeller);
 router.get("/", authAdmin, getAllUsers);
 //only for login user
-router.put("/:id", auth, suspendUserAccount);
-router.put("/:id", auth, suspendUserAccount);
+router.put("/:id/suspended", auth, suspendUserAccount);
 router.delete(
   "/:userId/notifications/:notificationId",
   auth,
