@@ -41,7 +41,7 @@ const emailSchema = new Schema(
     },
     recipientsModel: {
       type: String,
-      required,
+      required: true,
       enum: ["User", "Admin"],
     },
     content: { type: String, required: true },
