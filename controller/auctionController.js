@@ -43,6 +43,12 @@ const createAuction = async (req, res) => {
       }).populate("createdBy docusignId");
       const user = await User.findById(property.createdBy._id);
 
+      if (user.isSuspended) {
+        return res
+          .status(200)
+          .send({ error: "User has been suspended. Cannot create auction" });
+      }
+
       if (!property) {
         return res.status(200).send({ error: "Property not found" });
       }
