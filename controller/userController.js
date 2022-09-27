@@ -20,8 +20,8 @@ const client_url =
   process.env.NODE_ENV === "production"
     ? process.env.PROD_CLIENT_URL
     : process.env.NODE_ENV === "test"
-      ? process.env.TEST_CLIENT_URL
-      : process.env.DEV_CLIENT_URL;
+    ? process.env.TEST_CLIENT_URL
+    : process.env.DEV_CLIENT_URL;
 
 //@desc  Register a new user & create secret
 //@route POST /api/users/register
@@ -575,13 +575,16 @@ const suspendUserAccount = async (req, res) => {
   try {
     const { id } = req.params;
     const { suspended } = req.body;
+
     const bodySchema = Joi.object({
-      suspended: Joi.string().required()
+      suspended: Joi.string().required().valid("true", "false"),
     });
     const { error } = bodySchema.validate(req.body);
     if (error) return res.status(200).send({ error: error.details[0].message });
+
     const user = await User.findById(id);
     if (!user) return res.status(200).send({ error: "User not found" });
+
     if (suspended === "true") {
       user.isSuspended = true;
       await user.save();
@@ -1100,13 +1103,13 @@ const getFundsOfBuyer = async (req, res) => {
       buyer.bids =
         buyer.bids.length > 0
           ? buyer.bids
-            .filter(
-              (item) => item.buyerId.toString() === buyer._id.toString()
-            )
-            .map((item) => {
-              delete item.buyerId;
-              return item;
-            })
+              .filter(
+                (item) => item.buyerId.toString() === buyer._id.toString()
+              )
+              .map((item) => {
+                delete item.buyerId;
+                return item;
+              })
           : [];
       delete buyer.funds;
     }
