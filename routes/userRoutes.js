@@ -49,10 +49,14 @@ router.get("/:id/buyer/auctions/bid", authUser, getBidAuctionsOfBuyer);
 router.get("/:id/buyer/auctions", auth, getAuctionsOfBuyer);
 router.get("/:id/buyer/funds", auth, getFundsOfBuyer);
 router.get("/:id/buyer/winAuctions", getWinAuctionsOfBuyer);
-router.get("/seller/properties",authAdmin, getPropertiesOfAllSellersGroupByUser);
+router.get(
+  "/seller/properties",
+  authAdmin,
+  getPropertiesOfAllSellersGroupByUser
+);
 router.get("/buyer/auctions", getAuctionsOfAllBuyersGroupedByUser);
 router.get("/:id/seller/auctions", getAuctionsOfSeller);
-router.get("/:id/seller/properties",authAdmin, getListingsOfSeller);
+router.get("/:id/seller/properties", authAdmin, getListingsOfSeller);
 router.get("/", authAdmin, getAllUsers);
 //only for login user
 router.put("/:id/suspended", auth, suspendUserAccount);
@@ -62,7 +66,7 @@ router.delete(
   deleteNotification
 );
 router.delete("/:id/delete", auth, deleteUserAccount);
-router.put("/:id/edit", auth, validateUpdateUser, editProfile);
+router.put("/:id", auth, validateUpdateUser, editProfile);
 //only for admin
 router.get("/buyerId/:buyerId", getUserByBuyerId);
 router.get("/propertyId/:propertyId", getUserByPropertyId);
