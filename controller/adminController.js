@@ -11,8 +11,8 @@ const client_url =
   process.env.NODE_ENV === "production"
     ? process.env.PROD_CLIENT_ADMIN_URL
     : process.env.NODE_ENV === "test"
-      ? process.env.TEST_CLIENT_ADMIN_URL
-      : process.env.DEV_CLIENT_ADMIN_URL;
+    ? process.env.TEST_CLIENT_ADMIN_URL
+    : process.env.DEV_CLIENT_ADMIN_URL;
 //@desc  Create a new admin
 //@route POST /api/admins body={fullName,email,phone,location,role, department,image, designation,description}
 
@@ -446,39 +446,44 @@ const getAllAdmins = async (req, res) => {
         filter.location = location;
       }
       if (role) {
-        filter.role = role;
+        filter.role = new mongoose.Types.ObjectId(role);
       }
 
-      if (permissions.includes("admin_delete",
-        "admin_edit",
-        "admin_create",
-        "admin_read",
-        "auction_delete",
-        "auction_edit",
-        "auction_create",
-        "auction_read",
-        "auction_winner_edit",
-        "auction_winner_read",
-        "property_delete",
-        "property_edit",
-        "property_create",
-        "property_read",
-        "property_img_video_approval",
-        "property_document_approval",
-        "property_approval",
-        "buyer_delete",
-        "buyer_edit",
-        "buyer_create",
-        "buyer_read",
-        "buyer_document_approval",
-        "buyer_answer_approval",
-        "buyer_approval",
-        "user_delete",
-        "user_edit",
-        "user_create",
-        "user_read",)) {
-        filter.permissions = permissions
-      }
+      // if (
+      //   permissions.includes(
+      //     "admin_delete",
+      //     "admin_edit",
+      //     "admin_create",
+      //     "admin_read",
+      //     "auction_delete",
+      //     "auction_edit",
+      //     "auction_create",
+      //     "auction_read",
+      //     "auction_winner_edit",
+      //     "auction_winner_read",
+      //     "property_delete",
+      //     "property_edit",
+      //     "property_create",
+      //     "property_read",
+      //     "property_img_video_approval",
+      //     "property_document_approval",
+      //     "property_approval",
+      //     "buyer_delete",
+      //     "buyer_edit",
+      //     "buyer_create",
+      //     "buyer_read",
+      //     "buyer_document_approval",
+      //     "buyer_answer_approval",
+      //     "buyer_approval",
+      //     "user_delete",
+      //     "user_edit",
+      //     "user_create",
+      //     "user_read"
+      //   )
+      // ) {
+      //   filter.permissions = permissions;
+      // }
+
       const admins = await Admin.aggregate([
         { $match: filter },
         {
