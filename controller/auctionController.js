@@ -7,6 +7,8 @@ const {
   sendEmail,
   getBidsInformation,
   replaceEmailTemplate,
+  getGeneralAdmins,
+  addNotificationToAdmin,
 } = require("../helper");
 
 //@desc  Create an auction
@@ -25,6 +27,7 @@ const createAuction = async (req, res) => {
         incrementAmount,
         isFeatured,
       } = req.body;
+      let admins;
       const isPropertyInAuction = await Auction.findOne({
         property: propertyId,
       });
@@ -107,6 +110,17 @@ const createAuction = async (req, res) => {
         subject: emailBody.subject,
         htmlText: emailBody.content,
       });
+      admins = await getGeneralAdmins();
+      sendEmail({
+        to: admins.map((admin) => admin.email),
+        subject: "Auction3 - New Auction is created",
+        text: `A new auction has been created with id: ${savedAuction._id}. Please check this new auction in admin site`,
+      });
+      addNotificationToAdmin(
+        admins,
+        `New auction with id ${savedAuction._id} has been created`
+      );
+
       user.notifications.push({
         message: `Your ${property.type} is assigned to the auction`,
       });

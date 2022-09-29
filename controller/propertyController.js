@@ -1,10 +1,7 @@
 const Property = require("../model/Property");
 const User = require("../model/User");
-const Buyer = require("../model/Buyer");
 const Auction = require("../model/Auction");
 const Docusign = require("../model/Docusign");
-const Admin = require("../model/Admin");
-const Role = require("../model/Role");
 const axios = require("axios");
 const {
   sendEmail,
@@ -88,11 +85,6 @@ const createRealestate = async (req, res) => {
     const { error } = bodySchema.validate(req.body);
     if (error) return res.status(200).send({ error: error.details[0].message });
 
-    //find admin, should fix this
-    // let admins;
-    // admins = await getGeneralAdmins();
-    // await addNotificationToAdmin(admins, "Hello");
-
     //Check if seller is a broker, require listing_agreement
     if (details.broker_name) {
       if (details.broker_documents.length < 1) {
@@ -160,7 +152,6 @@ const createRealestate = async (req, res) => {
       details,
       reservedAmount,
 
-      
       discussedAmount,
       images,
       videos,
@@ -402,6 +393,7 @@ const editRealestate = async (req, res) => {
       docusignId,
       step,
     } = req.body;
+    let admins;
 
     const property = await Property.findOne({ _id: req.params.id });
     if (!property) {
@@ -465,7 +457,7 @@ const editRealestate = async (req, res) => {
     const { error } = bodySchema.validate(req.body);
     if (error) return res.status(200).send({ error: error.details[0].message });
 
-    // if edit anything in step 2 need to be proccessed reservedAmount and get info from estated API
+    // edit anything in step 2 need to be proccessed reservedAmount and get info from estated API
 
     if (isEditStep2) {
       if (discussedAmount > reservedAmount) {
@@ -533,7 +525,7 @@ const editRealestate = async (req, res) => {
       }
     }
 
-    //if edit images/videos
+    //edit images/videos
     if (step === 3) {
       images = images.map((image) => {
         let existedImage = property.images?.find(
@@ -557,7 +549,7 @@ const editRealestate = async (req, res) => {
       }
     }
 
-    //if edit documents
+    //edit documents
     if (step === 4) {
       documents = documents.map((doc) => {
         let existedDoc = property.documents?.find(
@@ -568,6 +560,50 @@ const editRealestate = async (req, res) => {
         }
         return { ...doc, isVerified: "pending" };
       });
+    }
+
+    if (step === 5) {
+      // docusign is signed
+      const docusign = await Docusign.findById(docusignId);
+      if (docusign.status !== "signing_complete") {
+        return res
+          .status(200)
+          .send({ error: "Docusign has not been signed yet" });
+      }
+      // user submit, send email to user and send email and add notifications to admins
+      if (property.step === 4) {
+        const user = await User.findById(req.user.id).select(
+          "firstName lastName email"
+        );
+        const emailBody = await replaceEmailTemplate("property_registration", {
+          name: `${user.firstName} ${user.lastName}`,
+          property_address: `${property.details.property_address.formatted_street_address} ${property.details.property_address.zip_code} ${property.details.property_address.city} ${property.details.property_address.state} ${property.details.property_address.country}`,
+        });
+        if (emailBody.error) {
+          return res.status(200).send({ error: emailBody.error });
+        }
+        sendEmail({
+          to: user.email,
+          subject: emailBody.subject,
+          htmlText: emailBody.content,
+        });
+
+        admins = await getGeneralAdmins();
+        sendEmail({
+          to: admins.map((admin) => admin.email),
+          subject: "Auction3 - New property is created",
+          text: `A new property has been created with id: ${property._id}. Please check this new property in admin site`,
+        });
+        addNotificationToAdmin(
+          admins,
+          `New property id ${property._id} has been created`
+        );
+      }
+      // deactivate auction if this property has been created for an auction
+      if (auction) {
+        auction.isActive = false;
+        await auction.save();
+      }
     }
 
     property.type = type || property.type;
@@ -583,39 +619,6 @@ const editRealestate = async (req, res) => {
     property.step = step >= property.step ? step : property.step;
     property.isApproved = "pending";
     const savedProperty = await property.save();
-
-    if (step === 5) {
-      // check if docusign is signed
-      const docusign = await Docusign.findById(docusignId);
-      if (docusign.status !== "signing_complete") {
-        return res
-          .status(200)
-          .send({ error: "Docusign has not been signed yet" });
-      }
-      // if user submit, send email
-      if (property.step === 4) {
-        const user = await User.findById(req.user.id).select(
-          "firstName lastName email"
-        );
-        const emailBody = await replaceEmailTemplate("property_registration", {
-          name: `${user.firstName} ${user.lastName}`,
-          property_address: `${savedProperty.details.property_address.formatted_street_address} ${savedProperty.details.property_address.zip_code} ${savedProperty.details.property_address.city} ${savedProperty.details.property_address.state} ${savedProperty.details.property_address.country}`,
-        });
-        if (emailBody.error) {
-          return res.status(200).send({ error: emailBody.error });
-        }
-        sendEmail({
-          to: user.email,
-          subject: emailBody.subject,
-          htmlText: emailBody.content,
-        });
-      }
-      // deactivate auction if this property has been created for an auction
-      if (auction) {
-        auction.isActive = false;
-        await auction.save();
-      }
-    }
 
     res.status(200).send(savedProperty);
   } catch (error) {
@@ -638,6 +641,7 @@ const editOthers = async (req, res) => {
       docusignId,
       step,
     } = req.body;
+    let admins;
 
     const property = await Property.findOne({ _id: req.params.id });
 
@@ -916,7 +920,7 @@ const editOthers = async (req, res) => {
           .status(200)
           .send({ error: "Docusign has not been signed yet" });
       }
-      // user submit -> send email
+      // user submit, send email to user and send email and add notifications to admins
       if (property.step === 4) {
         const user = await User.findById(req.user.id).select(
           "firstName lastName email"
@@ -933,6 +937,17 @@ const editOthers = async (req, res) => {
           subject: emailBody.subject,
           htmlText: emailBody.content,
         });
+
+        admins = await getGeneralAdmins();
+        sendEmail({
+          to: admins.map((admin) => admin.email),
+          subject: "Auction3 - New property is created",
+          text: `A new property has been created with id: ${property._id}. Please check this new property in admin site`,
+        });
+        addNotificationToAdmin(
+          admins,
+          `New property id ${property._id} has been created`
+        );
       }
       // deactivate auction if this property has been created for an auction
       if (auction) {

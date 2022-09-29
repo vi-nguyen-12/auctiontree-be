@@ -353,7 +353,6 @@ const getSellerAgreementUIViews = async (req, res) => {
 // @desc: callback after user has has signed
 // @route: GET api/docusign/callback/:envelopeId
 const callback = async (req, res) => {
-  console.log("callback !!");
   try {
     const { envelopeId } = req.params;
     const { state, event } = req.query;
@@ -361,7 +360,6 @@ const callback = async (req, res) => {
     envelope.status = event;
     await envelope.save();
     res.status(200).send(envelope.status);
-    // res.redirect(`${process.env.CLIENT_HOST}?docusign=true&event=${event}`);
   } catch (err) {
     res.status(500).send(err.message);
   }

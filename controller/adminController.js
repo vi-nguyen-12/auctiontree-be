@@ -4,7 +4,12 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Joi = require("joi");
 Joi.objectId = require("joi-objectid")(Joi);
-const { sendEmail, generateRandomString } = require("../helper");
+const {
+  sendEmail,
+  generateRandomString,
+  getGeneralAdmins,
+  addNotificationToAdmin,
+} = require("../helper");
 const mongoose = require("mongoose");
 
 const client_url =
@@ -32,11 +37,12 @@ const createAdmin = async (req, res) => {
         designation,
         description,
       } = req.body;
-
       const isEmailExist = await Admin.findOne({ email });
 
       const isPersonalEmailExist = await Admin.findOne({ personalEmail });
       const isRoleExist = await Role.findById(role);
+
+      let admins;
 
       if (isEmailExist)
         return res.status(200).send({
@@ -79,6 +85,17 @@ const createAdmin = async (req, res) => {
         subject: "Welcome to the team",
         text: `Please log in with this email ${newAdmin.email} and password ${password} to access your account and change your password as soon as possible. Thank you`,
       });
+
+      admins = await getGeneralAdmins();
+      sendEmail({
+        to: admins.map((admin) => admin.email),
+        subject: "Auction3 - New employee is created",
+        text: `A new employee has been created with id: ${newAdmin._id}. Please check this new employee in admin site`,
+      });
+      addNotificationToAdmin(
+        admins,
+        `New employee with id ${newAdmin._id} has been created`
+      );
 
       return res.status(200).send({
         _id: newAdmin._id,
