@@ -2,6 +2,8 @@ const sgMail = require("@sendgrid/mail");
 const nodemailer = require("nodemailer");
 const EmailTemplate = require("./model/EmailTemplate");
 const Buyer = require("./model/Buyer");
+const Role = require("./model/Role");
+const Admin = require("./model/Admin");
 
 const sendEmail = ({ from, to, subject, text, htmlText }) => {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -100,11 +102,15 @@ const replaceEmailTemplate = async (emailTemplateType, replacedObject) => {
 
 const getGeneralAdmins = async () => {
   let role = await Role.findOne({ name: "general_admin" }).select("_id");
-  admins = await Admin.find({ role: role._id }).select("email");
+  let admins = await Admin.find({ role: role._id }).select(
+    "email notifications"
+  );
   return admins;
 };
 
 const addNotificationToAdmin = async (admins, message) => {
+  console.log("add noti to admins");
+  console.log(admins);
   for (let admin of admins) {
     admin.notifications.push({ message });
     await admin.save();
