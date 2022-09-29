@@ -434,8 +434,9 @@ const deleteAdmin = async (req, res) => {
 const getAllAdmins = async (req, res) => {
   try {
     if (req.admin?.permissions.includes("admin_read")) {
-      const { email, personalEmail, location, role, permissions } = req.query;
+      let { email, personalEmail, location, role, permissions } = req.query;
       let filter = {};
+      let filterPermission = {}
       if (email) {
         filter.email = email;
       }
@@ -448,41 +449,17 @@ const getAllAdmins = async (req, res) => {
       if (role) {
         filter.role = new mongoose.Types.ObjectId(role);
       }
+      if ( permissions ) {
+        if (!Array.isArray(permissions)){
+          permissions = [permissions]
+        }
+          filter = {
+            "permissions": {
+              $in: permissions
+            }
+          }
 
-      // if (
-      //   permissions.includes(
-      //     "admin_delete",
-      //     "admin_edit",
-      //     "admin_create",
-      //     "admin_read",
-      //     "auction_delete",
-      //     "auction_edit",
-      //     "auction_create",
-      //     "auction_read",
-      //     "auction_winner_edit",
-      //     "auction_winner_read",
-      //     "property_delete",
-      //     "property_edit",
-      //     "property_create",
-      //     "property_read",
-      //     "property_img_video_approval",
-      //     "property_document_approval",
-      //     "property_approval",
-      //     "buyer_delete",
-      //     "buyer_edit",
-      //     "buyer_create",
-      //     "buyer_read",
-      //     "buyer_document_approval",
-      //     "buyer_answer_approval",
-      //     "buyer_approval",
-      //     "user_delete",
-      //     "user_edit",
-      //     "user_create",
-      //     "user_read"
-      //   )
-      // ) {
-      //   filter.permissions = permissions;
-      // }
+      }
 
       const admins = await Admin.aggregate([
         { $match: filter },
