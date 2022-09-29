@@ -451,8 +451,9 @@ const deleteAdmin = async (req, res) => {
 const getAllAdmins = async (req, res) => {
   try {
     if (req.admin?.permissions.includes("admin_read")) {
-      const { email, personalEmail, location, role } = req.query;
+      let { email, personalEmail, location, role, permissions } = req.query;
       let filter = {};
+      let filterPermission = {}
       if (email) {
         filter.email = email;
       }
@@ -463,7 +464,18 @@ const getAllAdmins = async (req, res) => {
         filter.location = location;
       }
       if (role) {
-        filter.role = role;
+        filter.role = new mongoose.Types.ObjectId(role);
+      }
+      if ( permissions ) {
+        if (!Array.isArray(permissions)){
+          permissions = [permissions]
+        }
+          filter = {
+            "permissions": {
+              $in: permissions
+            }
+          }
+
       }
 
       const admins = await Admin.aggregate([
