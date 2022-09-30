@@ -629,6 +629,26 @@ const forgotPassword = async (req, res) => {
     return res.status(500).send(err.message);
   }
 };
+//@desc  Delete a notification
+//@route DELETE /api/admins/:adminId/notifications/:notificationId
+const deleteNotification = async (req, res) => {
+  try {
+    const { adminId, notificationId } = req.params;
+    if (req.admin.id.toString() === adminId) {
+      const admin = await Admin.findById(adminId);
+      admin.notifications.id(notificationId).remove();
+      await admin.save();
+      res.status(200).send({ message: "Notification deleted successfully" });
+    } else {
+      return res
+        .status(200)
+        .send({ error: "Not authorized to delete notification" });
+    }
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
 module.exports = {
   createAdmin,
   editAdmin,
@@ -638,4 +658,5 @@ module.exports = {
   login,
   checkJWT,
   forgotPassword,
+  deleteNotification,
 };

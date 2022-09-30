@@ -60,13 +60,13 @@ router.get("/:id/seller/properties", auth, getListingsOfSeller);
 router.get("/", authAdmin, getAllUsers);
 //only for login user
 router.put("/:id/suspended", auth, suspendUserAccount);
+router.put("/:id", auth, validateUpdateUser, editProfile);
 router.delete(
   "/:userId/notifications/:notificationId",
   auth,
   deleteNotification
 );
-router.delete("/:id/delete", auth, deleteUserAccount);
-router.put("/:id", auth, validateUpdateUser, editProfile);
+router.delete("/:id", auth, deleteUserAccount);
 //only for admin
 router.get("/buyerId/:buyerId", getUserByBuyerId);
 router.get("/propertyId/:propertyId", getUserByPropertyId);
