@@ -726,15 +726,22 @@ const getBidAuctionsOfBuyer = async (req, res) => {
       (req.admin?.id && req.admin?.permissions.includes("buyer_read")) ||
       (req.user?.id && req.user.id === id)
     ) {
-      let bidAuctions = await Auction.find({ "bids.userId": id })
+      let buyers = await Buyer.find({ userId: id });
+      buyers.forEach((buyer, idx) => {
+        buyers[idx] = buyer._id.toString();
+      });
+
+      let bidAuctions = await Auction.find({
+        "bids.buyerId": { $in: buyers },
+      })
         .populate("property", "type details images")
         .select(" -winner");
-      bidAuctions = bidAuctions.map((auction) => {
-        let [highestBid] = auction.bids.slice(-1);
-        let bids = auction.bids.filter(
-          (bid) => bid.buyerId.toString() === id.toString()
-        );
 
+      bidAuctions = bidAuctions.map((auction) => {
+        let highestBid = auction.bids.at(-1);
+        let bids = auction.bids.filter((bid) =>
+          buyers.includes(bid.buyerId.toString())
+        );
         auction = { ...auction.toObject(), bids, highestBid };
         return auction;
       });
