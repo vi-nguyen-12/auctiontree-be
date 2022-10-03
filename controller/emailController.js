@@ -20,24 +20,35 @@ const createEmail = async (req, res) => {
       content,
       autoReply,
     } = req.body;
-
     const bodySchema = Joi.object({
       type: Joi.string().required().valid("from_admin", "from_user"),
       userId: Joi.objectId(),
-      firstName: Joi.when("userId", {
-        is: Joi.exist(),
-        then: Joi.string().allow(null),
-        otherwise: Joi.string().required(),
+      firstName: Joi.when("type", {
+        is: "from_user",
+        then: Joi.when("userId", {
+          is: Joi.exist(),
+          then: Joi.string().allow(null),
+          otherwise: Joi.string().required(),
+        }),
+        otherwise: Joi.string().allow(null),
       }),
-      lastName: Joi.when("userId", {
-        is: Joi.exist(),
-        then: Joi.string().allow(null),
-        otherwise: Joi.string().required(),
+      lastName: Joi.when("type", {
+        is: "from_user",
+        then: Joi.when("userId", {
+          is: Joi.exist(),
+          then: Joi.string().allow(null),
+          otherwise: Joi.string().required(),
+        }),
+        otherwise: Joi.string().allow(null),
       }),
-      company: Joi.when("userId", {
-        is: Joi.exist(),
-        then: Joi.string().allow(null),
-        otherwise: Joi.string().optional(),
+      company: Joi.when("type", {
+        is: "from_user",
+        then: Joi.when("userId", {
+          is: Joi.exist(),
+          then: Joi.string().allow(null),
+          otherwise: Joi.string().optional(),
+        }),
+        otherwise: Joi.string().allow(null),
       }),
       email: Joi.when("userId", {
         is: Joi.exist(),
@@ -46,12 +57,16 @@ const createEmail = async (req, res) => {
           .required()
           .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } }),
       }),
-      phone: Joi.when("userId", {
-        is: Joi.exist(),
-        then: Joi.string().allow(null),
-        otherwise: Joi.string()
-          .pattern(/^[0-9]+$/)
-          .optional(),
+      phone: Joi.when("type", {
+        is: "from_admin",
+        then: Joi.when("userId", {
+          is: Joi.exist(),
+          then: Joi.string().allow(null),
+          otherwise: Joi.string()
+            .pattern(/^[0-9]+$/)
+            .optional(),
+        }),
+        otherwise: Joi.string().allow(null),
       }),
       subject: Joi.string().required(),
       content: Joi.string().required(),
@@ -166,7 +181,7 @@ const createEmail = async (req, res) => {
         await Email.create({
           sender: { _id: req.admin.id },
           senderModel: "Admin",
-          recipients: [{ firstName, lastName, phone, email, company }],
+          recipients: [{ email }],
           recipientsModel: "User",
           content,
         });

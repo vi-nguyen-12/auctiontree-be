@@ -31,11 +31,7 @@ const emailSchema = new Schema(
             type: Schema.Types.ObjectId,
             refPath: "recipientsModel",
           },
-          firstName: { type: String },
-          lastName: { type: String },
-          company: { type: String },
           email: { type: String },
-          phone: { type: String },
         },
       ],
     },
@@ -68,20 +64,12 @@ emailSchema.pre("save", function (next) {
   }
   for (let recipient of this.recipients) {
     if (recipient._id) {
-      if (
-        recipient.firstName ||
-        recipient.lastName ||
-        recipient.company ||
-        recipient.email ||
-        recipient.phone
-      ) {
-        next(
-          new Error("First name or last name or email or phone is no required")
-        );
+      if (recipient.email) {
+        next(new Error("Email is no required"));
       }
     } else {
-      if (!recipient.firstName || !recipient.lastName || !recipient.email) {
-        new Error("First name and last name and email is required");
+      if (!recipient.email) {
+        new Error(" Email is required");
       }
     }
   }

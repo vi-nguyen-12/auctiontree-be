@@ -147,6 +147,7 @@ const login = async (req, res) => {
         permissions: admin.permissions,
         image: admin.image,
         token,
+        notifications: admin.notifications,
       },
     });
   } catch (err) {
@@ -162,7 +163,7 @@ const checkJWT = async (req, res) => {
     const verified = jwt.verify(token, process.env.TOKEN_KEY);
     if (verified) {
       let admin = await Admin.findOne({ _id: verified.adminId }).select(
-        "fullName role permissions image"
+        "fullName role permissions image notifications"
       );
       const role = await Role.findById(admin.role);
       return res.status(200).send({
@@ -175,6 +176,7 @@ const checkJWT = async (req, res) => {
           department: role.department,
           permissions: admin.permissions,
           image: admin.image,
+          notifications: admin.notifications,
         },
       });
     } else {
@@ -453,7 +455,7 @@ const getAllAdmins = async (req, res) => {
     if (req.admin?.permissions.includes("admin_read")) {
       let { email, personalEmail, location, role, permissions } = req.query;
       let filter = {};
-      let filterPermission = {}
+      let filterPermission = {};
       if (email) {
         filter.email = email;
       }
@@ -466,16 +468,15 @@ const getAllAdmins = async (req, res) => {
       if (role) {
         filter.role = new mongoose.Types.ObjectId(role);
       }
-      if ( permissions ) {
-        if (!Array.isArray(permissions)){
-          permissions = [permissions]
+      if (permissions) {
+        if (!Array.isArray(permissions)) {
+          permissions = [permissions];
         }
-          filter = {
-            "permissions": {
-              $in: permissions
-            }
-          }
-
+        filter = {
+          permissions: {
+            $in: permissions,
+          },
+        };
       }
 
       const admins = await Admin.aggregate([
