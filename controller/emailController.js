@@ -81,7 +81,7 @@ const createEmail = async (req, res) => {
     }
 
     if (type == "from_user") {
-      //find all who is general admin for now/ might change in the future
+      //find all who is general admin for now/ might change in thefuture
       const role = await Role.findOne({ name: "general_admin" });
       const admins = await Admin.find({ role: role._id }).select("email");
       let fromEmailAddress,
@@ -156,7 +156,6 @@ const createEmail = async (req, res) => {
       return res.status(200).send({ message: "Successfully sent message" });
     }
     if (type == "from_admin") {
-      const admin = await Admin.findById(req.admin.id);
       if (userId) {
         const user = await User.findById(userId);
         if (!user) {
@@ -185,8 +184,9 @@ const createEmail = async (req, res) => {
           recipientsModel: "User",
           content,
         });
+
         sendEmail({
-          to: admin.email,
+          to: email,
           subject,
           htmlText: content,
         });
