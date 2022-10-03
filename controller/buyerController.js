@@ -420,6 +420,7 @@ const approveFund = async (req, res) => {
 
     //add notifications to user
     user.notifications.push({
+      buyerId: buyer._id,
       message: "Proof of funds are approved",
     });
     await user.save();

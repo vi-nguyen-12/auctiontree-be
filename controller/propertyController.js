@@ -594,10 +594,10 @@ const editRealestate = async (req, res) => {
           subject: "Auction3 - New property is created",
           text: `A new property has been created with id: ${property._id}. Please check this new property in admin site`,
         });
-        addNotificationToAdmin(
-          admins,
-          `New property id ${property._id} has been created`
-        );
+        addNotificationToAdmin(admins, {
+          propertyId: property._id,
+          message: "New property created",
+        });
       }
       // deactivate auction if this property has been created for an auction
       if (auction) {
@@ -944,10 +944,10 @@ const editOthers = async (req, res) => {
           subject: "Auction3 - New property is created",
           text: `A new property has been created with id: ${property._id}. Please check this new property in admin site`,
         });
-        addNotificationToAdmin(
-          admins,
-          `New property id ${property._id} has been created`
-        );
+        addNotificationToAdmin(admins, {
+          propertyId: property._id,
+          message: "New property created",
+        });
       }
       // deactivate auction if this property has been created for an auction
       if (auction) {
@@ -1181,7 +1181,8 @@ const approveProperty = async (req, res) => {
 
       //add notifications to user
       user.notifications.push({
-        message: `Your ${property.type} status changes to ${status}`,
+        propertyId: property._id,
+        message: `Status changed to ${status}`,
       });
       await user.save();
 

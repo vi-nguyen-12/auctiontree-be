@@ -92,10 +92,10 @@ const createAdmin = async (req, res) => {
         subject: "Auction3 - New employee is created",
         text: `A new employee has been created with id: ${newAdmin._id}. Please check this new employee in admin site`,
       });
-      addNotificationToAdmin(
-        admins,
-        `New employee with id ${newAdmin._id} has been created`
-      );
+      addNotificationToAdmin(admins, {
+        adminId: newAdmin._id,
+        message: "New admin created",
+      });
 
       return res.status(200).send({
         _id: newAdmin._id,

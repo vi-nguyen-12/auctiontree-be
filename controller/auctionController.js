@@ -116,13 +116,14 @@ const createAuction = async (req, res) => {
         subject: "Auction3 - New Auction is created",
         text: `A new auction has been created with id: ${savedAuction._id}. Please check this new auction in admin site`,
       });
-      addNotificationToAdmin(
-        admins,
-        `New auction with id ${savedAuction._id} has been created`
-      );
+      addNotificationToAdmin(admins, {
+        propertyId,
+        message: `Property assigned to auction`,
+      });
 
       user.notifications.push({
-        message: `Your ${property.type} is assigned to the auction`,
+        propertyId,
+        message: `Property assigned to auction`,
       });
       await user.save();
 

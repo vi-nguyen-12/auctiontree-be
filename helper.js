@@ -108,11 +108,9 @@ const getGeneralAdmins = async () => {
   return admins;
 };
 
-const addNotificationToAdmin = async (admins, message) => {
-  console.log("add noti to admins");
-  console.log(admins);
+const addNotificationToAdmin = async (admins, notification) => {
   for (let admin of admins) {
-    admin.notifications.push({ message });
+    admin.notifications.push(notification);
     await admin.save();
   }
 };

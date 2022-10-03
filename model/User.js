@@ -68,6 +68,9 @@ const userSchema = new mongoose.Schema(
     },
     notifications: [
       {
+        propertyId: [{ type: Schema.Types.ObjectId, ref: "Property" }],
+        auctionId: [{ type: Schema.Types.ObjectId, ref: "Auction" }],
+        buyerId: [{ type: Schema.Types.ObjectId, ref: "Buyer" }],
         message: String,
         date: { type: Date, default: Date.now },
       },
