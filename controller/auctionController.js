@@ -118,11 +118,13 @@ const createAuction = async (req, res) => {
       });
       addNotificationToAdmin(admins, {
         propertyId,
+        auctionId: savedAuction._id,
         message: `Property assigned to auction`,
       });
 
       user.notifications.push({
         propertyId,
+        auctionId: savedAuction._id,
         message: `Property assigned to auction`,
       });
       await user.save();
