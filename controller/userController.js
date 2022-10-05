@@ -39,10 +39,7 @@ const registerUser = async (req, res) => {
       agent,
     } = req.body;
     const userExist = await User.findOne({
-      $or: [
-        { email: email.toLowerCase() },
-        { userName: userName.toLowerCase() },
-      ],
+      $or: [{ email: email.toLowerCase() }, { userName }],
     });
     if (userExist) {
       return res
@@ -286,7 +283,7 @@ const login = async (req, res) => {
     const user = await User.findOne({
       $or: [
         { email: req.body.userName.toLowerCase() },
-        { userName: req.body.userName.toLowerCase() },
+        { userName: req.body.userName },
       ],
     });
 
@@ -510,7 +507,7 @@ const editProfile = async (req, res) => {
     }
     if (userName) {
       const userNameExists = await User.findOne({
-        userName: userName.toLowerCase(),
+        userName,
       });
       if (
         userNameExists &&

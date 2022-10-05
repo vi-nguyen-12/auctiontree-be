@@ -26,7 +26,7 @@ const userSchema = new mongoose.Schema(
     userName: {
       type: String,
       trim: true,
-      lowercase: true,
+      // lowercase: true,
       required: [true, "User name is required"],
     },
     country: { type: String, trim: true },
