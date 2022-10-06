@@ -979,6 +979,10 @@ const getProperties = async (req, res) => {
         type: Joi.string()
           .valid("real-estate", "car", "jet", "yacht")
           .optional(),
+        property_zip_code: Joi.string().optional(),
+        property_city: Joi.string().optional(),
+        property_state: Joi.string().optional(),
+        property_country: Joi.string().optional(),
         sort: Joi.alternatives(
           Joi.string().valid("+updatedAt", "-updatedAt"),
           Joi.array().items(Joi.string().valid("+updatedAt", "-updatedAt"))
@@ -990,7 +994,16 @@ const getProperties = async (req, res) => {
 
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 8;
-      const { inAuction, status: isApproved, type, sort } = req.query;
+      const {
+        inAuction,
+        status: isApproved,
+        type,
+        sort,
+        property_zip_code,
+        property_city,
+        property_state,
+        property_country,
+      } = req.query;
 
       let filters = {};
       let sorts = {};
@@ -1003,6 +1016,18 @@ const getProperties = async (req, res) => {
       }
       if (type) {
         filters.type = type;
+      }
+      if (property_zip_code) {
+        filters["details.property_address.zip_code"] = property_zip_code;
+      }
+      if (property_city) {
+        filters["details.property_address.city"] = property_city;
+      }
+      if (property_state) {
+        filters["details.property_address.state"] = property_state;
+      }
+      if (property_country) {
+        filters["details.property_address.country"] = property_country;
       }
 
       let properties = [];
