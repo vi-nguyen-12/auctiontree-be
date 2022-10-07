@@ -241,7 +241,7 @@ const deleteAuction = async (req, res) => {
 //@desc  Get all auctions
 //@route GET /api/auctions?isFeatured=..& isSold=..& time=... type=... &real_estate_type=...&min_price=...&max_price=...&condition=..
 // &min_mileage=.. & max_mileage=..
-const getAllAuctions = async (req, res) => {
+const getAuctions = async (req, res) => {
   try {
     const querySchema = Joi.object({
       registerStartDate: Joi.date().iso().optional(),
@@ -728,7 +728,6 @@ const placeBidding = async (req, res) => {
   try {
     let email, subject, text;
     const buyer = await Buyer.findOne({ userId: req.user.id, auctionId });
-    console.log(buyer);
     const user = await User.findById(req.user.id);
     if (!buyer) {
       return res.status(200).send({ error: "User did not register to buy" });
@@ -776,7 +775,6 @@ const placeBidding = async (req, res) => {
     let emailBody;
 
     if (highestBidder) {
-      console.log(highestBidder);
       let highestBuyer = await Buyer.findById(highestBidder.buyerId).populate(
         "userId"
       );
@@ -950,6 +948,82 @@ const getAuctionResult = async (req, res) => {
   }
 };
 
+//@desc Set winner of auction
+//@route PUT /api/auctions/:id/winner body {buyerId, amount}
+const setWinner = async (req, res) => {
+  try {
+    const auction = await Auction.findById(req.params.id).populate({
+      path: "property",
+      select: "_id type details images reservedAmount",
+    });
+    let time = new Date();
+    let buyer, amount;
+    if (!auction.isActive) {
+      return res.status(200).send({ error: "Auction is not active" });
+    }
+
+    if (time.getTime() < auction.auctionEndDate.getTime()) {
+      return res.status(200).send({ error: "Auction has not ended yet" });
+    }
+
+    if (req.admin?.permissions.includes("auction_edit")) {
+      buyer = await Buyer.findById(req.body.buyerId).populate({
+        path: "userId",
+        select: "_id firstName lastName email",
+      });
+      if (buyer.auctionId.toString() !== req.params.id) {
+        return res
+          .status(200)
+          .send({ error: "This buyer not register to buy this property" });
+      }
+      amount = req.body.amount;
+    } else {
+      let lastBidder = auction.bids.slice(-1)[0];
+      if (!lastBidder || lastBidder.amount < auction.property.reservedAmount) {
+        return res.status(200).send(auction);
+      }
+      buyer = await Buyer.findById(lastBidder.buyerId).populate({
+        path: "userId",
+        select: "_id firstName lastName email",
+      });
+      amount = lastBidder.amount;
+    }
+
+    auction.winner.buyerId = buyer._id;
+    auction.winner.amount = amount;
+
+    await auction.save();
+
+    let emailBody = await replaceEmailTemplate("winner_of_auction", {
+      name: `${buyer.userId.firstName} ${buyer.userId.lastName}`,
+      property_type: `${auction.property.type}`,
+      property_address: `${auction.property.details.property_address.formatted_street_address} ${auction.property.details.property_address.zip_code} ${auction.property.details.property_address.city} ${auction.property.details.property_address.state} ${auction.property.details.property_address.country}`,
+    });
+    sendEmail({
+      to: buyer.userId.email,
+      subject: emailBody.subject,
+      htmlText: emailBody.content,
+    });
+
+    return res.status(200).send({
+      ...auction.toObject(),
+      winner: {
+        winner: {
+          buyerId: buyer._id,
+          userId: buyer.userId._id,
+          amount,
+          time,
+          firstName: buyer.userId.firstName,
+          lastName: buyer.userId.lastName,
+          email: buyer.userId.email,
+        },
+      },
+    });
+  } catch (err) {
+    return res.status(500).send(err.message);
+  }
+};
+
 module.exports = {
   createAuction,
   getAuction,
@@ -960,5 +1034,6 @@ module.exports = {
   getAuctionResult,
   editAuction,
   deleteAuction,
-  getAllAuctions,
+  getAuctions,
+  setWinner,
 };
