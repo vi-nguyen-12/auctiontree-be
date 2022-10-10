@@ -106,6 +106,7 @@ app.use(function (req, res, next) {
     "Origin, X-Requested-With, Content-Type, Accept"
   );
   res.header("Access-Control-Expose-Headers", "*");
+  res.header("Cache-Control", "max-age=31536000");
   next();
 });
 
