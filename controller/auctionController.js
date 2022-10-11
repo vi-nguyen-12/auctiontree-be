@@ -303,6 +303,7 @@ const getAuctions = async (req, res) => {
       max_price,
       type,
       real_estate_type,
+      property_formatted_street_address,
       property_zip_code,
       property_city,
       property_state,
@@ -366,6 +367,13 @@ const getAuctions = async (req, res) => {
     if (real_estate_type) {
       filterProperty["property.details.real_estate_type"] = real_estate_type;
     }
+
+    if (property_) {
+      filterProperty[
+        "property.details.property_address.formatted_street_address"
+      ] = property_formatted_street_address;
+    }
+
     if (property_zip_code) {
       filterProperty["property.details.property_address.zip_code"] =
         property_zip_code;
