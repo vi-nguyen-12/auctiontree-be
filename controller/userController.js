@@ -1168,21 +1168,35 @@ const getWinAuctionsOfBuyer = async (req, res) => {
 };
 
 //@desc  Get auctions of a seller
-//@route GET /api/users/:id/seller/auctions
+//@route GET /api/users/:id/seller/auctions?isSold=true
 const getAuctionsOfSeller = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(200).send("User not found");
 
+    const { isSold } = req.query;
+    let filter = {};
+
     const approvedPropertyList = await Property.find({
       createdBy: user._id,
       isApproved: "success",
     }).select("_id");
+    filter.property = { $in: approvedPropertyList };
+
+    if (isSold) {
+      if (isSold === "true") {
+        filter["winner.buyerId"] = { $ne: null };
+      } else {
+        filter["winner.buyerId"] = null;
+      }
+    }
+
     let auctions = [];
     if (approvedPropertyList.length !== 0) {
-      auctions = await Auction.find({
-        property: { $in: approvedPropertyList },
-      }).populate({ path: "property", select: "type details images" });
+      auctions = await Auction.find(filter).populate({
+        path: "property",
+        select: "type details images",
+      });
     }
     res.status(200).send(auctions);
   } catch (error) {
