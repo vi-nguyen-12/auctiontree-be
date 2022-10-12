@@ -1128,10 +1128,11 @@ const getWinAuctionsOfBuyer = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(200).send("User not found");
-
+    const buyers = await Buyer.find({ userId: user._id }).select("_id");
+    const buyerIds = buyers.map((item) => item._id);
     const result = await Auction.aggregate([
       {
-        $match: { "winner.userId": user._id },
+        $match: { "winner.buyerId": { $in: buyerIds } },
       },
       {
         $lookup: {
