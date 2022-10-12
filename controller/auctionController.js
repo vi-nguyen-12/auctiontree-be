@@ -369,7 +369,7 @@ const getAuctions = async (req, res) => {
       filterProperty["property.details.real_estate_type"] = real_estate_type;
     }
 
-    if (property_) {
+    if (property_formatted_street_address) {
       filterProperty[
         "property.details.property_address.formatted_street_address"
       ] = property_formatted_street_address;
@@ -810,6 +810,7 @@ const placeBidding = async (req, res) => {
     if (otherNotHighestBidder?.length > 0) {
       otherNotHighestBidder = await Promise.all(
         otherNotHighestBidder.map(async (i) => {
+          let user = await User.findById(i);
           let bidder = await Buyer.findBuyId(i.buyerId).populate({
             path: "userId",
             select: "email",
@@ -825,13 +826,17 @@ const placeBidding = async (req, res) => {
 
     // deduct money from new bidder
     buyer.availableFund = buyer.availableFund - biddingPrice;
-
     await buyer.save();
 
     //send email to this bidder, and their total available fund
     email = user.email;
     subject = "Auction3- Bidding completed successfully";
     text = `Hi ${user.firstName} ${user.lastName} Thank you for your bid. Your price is highest with ${biddingPrice} at ${biddingTime}`;
+    user.notifications.push({
+      auctionId: auction._id,
+      message: `New bidding price ${biddingPrice} at ${biddingTime}`,
+    });
+    await user.save();
     sendEmail({ to: email, subject, text });
 
     //send email and notification to owner
@@ -842,6 +847,8 @@ const placeBidding = async (req, res) => {
       auctionId: auction._id,
       message: `New bidding price ${biddingPrice} at ${biddingTime}`,
     });
+    await owner.save();
+    sendEmail({ to: email, subject, text });
 
     //send email and notification to admins
     // const admins=
