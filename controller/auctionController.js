@@ -277,6 +277,7 @@ const getAuctions = async (req, res) => {
           "farm_ranch",
           "private_island"
         ),
+      property_formatted_street_address: Joi.string().optional(),
       property_zip_code: Joi.string().optional(),
       property_city: Joi.string().optional(),
       property_state: Joi.string().optional(),
@@ -746,7 +747,8 @@ const placeBidding = async (req, res) => {
       return res.status(200).send({ error: "Auction not found" });
     }
 
-    const property = await Property.findOne({ _id: auction.property });
+    const property = await Property.findById(auction.property);
+    const owner = await User.findById(property.createdBy);
 
     //check if has enough funds for that property
     if (buyer.availableFund < biddingPrice) {
@@ -789,20 +791,40 @@ const placeBidding = async (req, res) => {
       highestBuyer.availableFund =
         highestBuyer.availableFund + highestBidder.amount;
 
-      await buyer.save();
+      await highestBuyer.save();
 
       email = highestBuyer.userId.email;
       subject = "Auction3- You bid is not highest anymore";
       text = `Hi ${highestBuyer.firstName} ${highestBuyer.lastName} Your bid is not highest anymore, and your avaible fund for this property is now ${highestBuyer.availableFund}`;
+      sendEmail({
+        to: email,
+        subject,
+        text,
+      });
     }
 
-    // deduct money from this bidder
-    if (highestBidder?.buyerId.toString() === buyer._id.toString()) {
-      buyer.availableFund =
-        buyer.availableFund + highestBidder.amount - biddingPrice;
-    } else {
-      buyer.availableFund = buyer.availableFund - biddingPrice;
+    //send email to others not highest bidders.
+    let otherNotHighestBidder =
+      auction.bids.length > 0 ? auction.bids.splice(-1) : null;
+
+    if (otherNotHighestBidder?.length > 0) {
+      otherNotHighestBidder = await Promise.all(
+        otherNotHighestBidder.map(async (i) => {
+          let bidder = await Buyer.findBuyId(i.buyerId).populate({
+            path: "userId",
+            select: "email",
+          });
+          return bidder.userId.email;
+        })
+      );
     }
+    email = otherNotHighestBidder;
+    subject = "Auction3 -New bidding price";
+    text = `Notice- New bidding price for auction id ${auctionId} is $${biddingPrice}`;
+    sendEmail({ to: email, subject, text });
+
+    // deduct money from new bidder
+    buyer.availableFund = buyer.availableFund - biddingPrice;
 
     await buyer.save();
 
@@ -812,6 +834,17 @@ const placeBidding = async (req, res) => {
     text = `Hi ${user.firstName} ${user.lastName} Thank you for your bid. Your price is highest with ${biddingPrice} at ${biddingTime}`;
     sendEmail({ to: email, subject, text });
 
+    //send email and notification to owner
+    email = owner.email;
+    subject = "Auction3 - New bidding price";
+    text = `Hi ${owner.firstName} ${owner.lastName},new bidder ${buyer._id} bids your property ${auction._id} at $${biddingPrice} at ${biddingTime}`;
+    owner.notifications.push({
+      auctionId: auction._id,
+      message: `New bidding price ${biddingPrice} at ${biddingTime}`,
+    });
+
+    //send email and notification to admins
+    // const admins=
     const newBidder = {
       buyerId: buyer._id,
       amount: biddingPrice,
@@ -820,6 +853,7 @@ const placeBidding = async (req, res) => {
     auction.bids.push(newBidder);
 
     const savedAuction = await auction.save();
+
     let numberOfBids, highestBidders;
     ({ numberOfBids, highestBid, highestBidders } = await getBidsInformation(
       savedAuction.bids,
