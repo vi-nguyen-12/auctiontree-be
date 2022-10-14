@@ -1018,7 +1018,7 @@ const setWinner = async (req, res) => {
   try {
     const auction = await Auction.findById(req.params.id).populate({
       path: "property",
-      select: "_id type details images reservedAmount",
+      select: "_id type details images reservedAmount createdBy",
     });
     let time = new Date();
     let buyer, amount;
@@ -1058,6 +1058,8 @@ const setWinner = async (req, res) => {
 
     await auction.save();
 
+    //send email to winner
+    const user = await User.findById(buyer.userId);
     let emailBody = await replaceEmailTemplate("winner_of_auction", {
       name: `${buyer.userId.firstName} ${buyer.userId.lastName}`,
       property_type: `${auction.property.type}`,
@@ -1068,7 +1070,28 @@ const setWinner = async (req, res) => {
       subject: emailBody.subject,
       htmlText: emailBody.content,
     });
+    console.log(user);
+    user.notifications.push({
+      auctionId: auction._id,
+      message: "Congratulation- winner of the auction",
+    });
+    await user.save();
 
+    //send emails to seller
+    const seller = await User.findById(auction.property.createdBy);
+    console.log(seller);
+    sendEmail({
+      to: seller.email,
+      subject: "Auction3 - A winner is set for your auction property",
+      text: `A buyer with id ${buyer._id} is the winner of your property ${auction.property.type} at ${auction.property.details.property_address.formatted_street_address}  ${auction.property.details.property_address.zip_code} ${auction.property.details.property_address.city} ${auction.property.details.property_address.state} ${auction.property.details.property_address.country} with highest bidding price of $${amount}`,
+    });
+    seller.notifications.push({
+      auctionId: auction._id,
+      winner: buyer._id,
+      message: "Congratulation- a winner for auction has been set",
+    });
+
+    //send email to admins
     const admins = await getGeneralAdmins();
     sendEmail({
       to: admins.map((admin) => admin.email),
@@ -1084,15 +1107,13 @@ const setWinner = async (req, res) => {
     return res.status(200).send({
       ...auction.toObject(),
       winner: {
-        winner: {
-          buyerId: buyer._id,
-          userId: buyer.userId._id,
-          amount,
-          time,
-          firstName: buyer.userId.firstName,
-          lastName: buyer.userId.lastName,
-          email: buyer.userId.email,
-        },
+        buyerId: buyer._id,
+        userId: buyer.userId._id,
+        amount,
+        time,
+        firstName: buyer.userId.firstName,
+        lastName: buyer.userId.lastName,
+        email: buyer.userId.email,
       },
     });
   } catch (err) {
