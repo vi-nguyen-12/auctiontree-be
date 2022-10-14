@@ -667,7 +667,6 @@ const getOngoingAuctions = async (req, res) => {
             isReservedMet,
           };
           delete auction.bids;
-          delete auction.property.reservedAmount;
           return auction;
         })
     );
