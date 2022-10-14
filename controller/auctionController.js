@@ -568,6 +568,7 @@ const getAuction = async (req, res) => {
       auctionId: auction._id,
       userId,
     });
+
     let isApprovedToBid = false;
 
     if (isRegisteredToBuy) {
@@ -582,13 +583,13 @@ const getAuction = async (req, res) => {
     if (isRegisteredToBuy && isApprovedToBid) {
       return res.status(200).send(auction);
     }
+    //Authenticate: registered buyer not approved cannot see highestBidders and if reserved is met
     if (isRegisteredToBuy && !isApprovedToBid) {
       delete auction.highestBidders;
       delete auction.isReservedMet;
       return res.status(200).send(auction);
     }
 
-    //Authenticate: registered buyer not approved cannot see highestBidders and if reserved is met
     //Authenticate: normal user, cannot see number of bids and highest bid: the same and add 1 field: "isNotRegisteredToBuy": true
     auction.isNotRegisteredToBuy = true;
     delete auction.highestBidders;
@@ -785,36 +786,40 @@ const placeBidding = async (req, res) => {
     let emailBody;
 
     if (highestBidder) {
-      let highestBuyer = await Buyer.findById(highestBidder.buyerId).populate(
-        "userId"
-      );
+      let highestBuyer = await Buyer.findById(highestBidder.buyerId);
+      const highestUser = await User.findById(highestBuyer.userId);
       highestBuyer.availableFund =
         highestBuyer.availableFund + highestBidder.amount;
 
       await highestBuyer.save();
 
-      email = highestBuyer.userId.email;
+      email = highestUser.email;
       subject = "Auction3- You bid is not highest anymore";
-      text = `Hi ${highestBuyer.firstName} ${highestBuyer.lastName} Your bid is not highest anymore, and your avaible fund for this property is now ${highestBuyer.availableFund}`;
+      text = `Hi ${highestUser.firstName} ${highestUser.lastName} Your bid is not highest anymore, and your avaible fund for this property is now ${highestBuyer.availableFund}`;
       sendEmail({
         to: email,
         subject,
         text,
       });
+      highestUser.notifications.push({
+        auctionId: auction._id,
+        message: `New bidding price $${biddingPrice}`,
+      });
     }
 
     //send email to others not highest bidders.
     let otherNotHighestBidder =
-      auction.bids.length > 0 ? auction.bids.splice(-1) : null;
+      auction.bids.length > 1 ? auction.bids.splice(-1) : null;
 
-    if (otherNotHighestBidder?.length > 0) {
+    if (otherNotHighestBidder) {
       otherNotHighestBidder = await Promise.all(
         otherNotHighestBidder.map(async (i) => {
-          let user = await User.findById(i);
-          let bidder = await Buyer.findBuyId(i.buyerId).populate({
-            path: "userId",
-            select: "email",
-          });
+          let bidder = await Buyer.findById(i.buyerId);
+
+          // let bidder = await Buyer.findBuyId(i.buyerId).populate({
+          //   path: "userId",
+          //   select: "email",
+          // });
           return bidder.userId.email;
         })
       );
@@ -851,7 +856,18 @@ const placeBidding = async (req, res) => {
     sendEmail({ to: email, subject, text });
 
     //send email and notification to admins
-    // const admins=
+    const admins = await getGeneralAdmins();
+    sendEmail({
+      to: admins.map((admin) => admin.email),
+      subject: "Auction3 - New bidding is placed",
+      text: `A new bidding has been placed for this auction ${auction._id}. Please check this new bidding in admin site`,
+    });
+    addNotificationToAdmin(admins, {
+      auctionId: auction._id,
+      buyerId: buyer._id,
+      message: `New bidding price $${biddingPrice} is placed`,
+    });
+
     const newBidder = {
       buyerId: buyer._id,
       amount: biddingPrice,
@@ -1052,6 +1068,18 @@ const setWinner = async (req, res) => {
       to: buyer.userId.email,
       subject: emailBody.subject,
       htmlText: emailBody.content,
+    });
+
+    const admins = await getGeneralAdmins();
+    sendEmail({
+      to: admins.map((admin) => admin.email),
+      subject: "Auction3 - Winner for Auction",
+      text: `A winner for auction  ${auction._id} has been set. Please check this winner in admin site`,
+    });
+    addNotificationToAdmin(admins, {
+      auctionId: auction._id,
+      winner: buyer._id,
+      message: "Winner for auction has been set",
     });
 
     return res.status(200).send({

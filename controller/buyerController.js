@@ -95,6 +95,18 @@ const createBuyer = async (req, res) => {
       htmlText: emailBody.content,
     });
 
+    const admins = await getGeneralAdmins();
+    sendEmail({
+      to: admins.map((admin) => admin.email),
+      subject: "Auction3 - New Buyer is created",
+      text: `A new buyer has been created with id: ${savedBuyer._id}. Please check this new buyer in admin site`,
+    });
+    addNotificationToAdmin(admins, {
+      buyerId: savedBuyer._id,
+      auctionId: savedBuyer.auctionId,
+      message: "New buyer created",
+    });
+
     const result = {
       _id: savedBuyer._id,
       funds: savedBuyer.funds,
