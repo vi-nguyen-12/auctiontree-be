@@ -806,7 +806,7 @@ const placeBidding = async (req, res) => {
       });
     }
 
-    //send email to others not highest bidders.
+    //send email to others not highest bidders
     let otherNotHighestBidder =
       auction.bids.length > 1 ? auction.bids.splice(-1) : null;
 
@@ -814,19 +814,20 @@ const placeBidding = async (req, res) => {
       otherNotHighestBidder = await Promise.all(
         otherNotHighestBidder.map(async (i) => {
           let bidder = await Buyer.findById(i.buyerId);
-
-          // let bidder = await Buyer.findBuyId(i.buyerId).populate({
-          //   path: "userId",
-          //   select: "email",
-          // });
+          let user = await User.findById(bidder.userId);
+          user.notifications.push({
+            auctionId: auction._id,
+            message: `New bidding price $${biddingPrice}`,
+          });
+          await user.save();
           return bidder.userId.email;
         })
       );
+      email = otherNotHighestBidder;
+      subject = "Auction3 -New bidding price";
+      text = `Notice- New bidding price for auction id ${auctionId} is $${biddingPrice}`;
+      sendEmail({ to: email, subject, text });
     }
-    email = otherNotHighestBidder;
-    subject = "Auction3 -New bidding price";
-    text = `Notice- New bidding price for auction id ${auctionId} is $${biddingPrice}`;
-    sendEmail({ to: email, subject, text });
 
     // deduct money from new bidder
     buyer.availableFund = buyer.availableFund - biddingPrice;
@@ -843,7 +844,7 @@ const placeBidding = async (req, res) => {
     await user.save();
     sendEmail({ to: email, subject, text });
 
-    //send email and notification to owner
+    //send email to owner
     email = owner.email;
     subject = "Auction3 - New bidding price";
     text = `Hi ${owner.firstName} ${owner.lastName},new bidder ${buyer._id} bids your property ${auction._id} at $${biddingPrice} at ${biddingTime}`;
@@ -854,7 +855,7 @@ const placeBidding = async (req, res) => {
     await owner.save();
     sendEmail({ to: email, subject, text });
 
-    //send email and notification to admins
+    //send email to admins
     const admins = await getGeneralAdmins();
     sendEmail({
       to: admins.map((admin) => admin.email),
@@ -1079,7 +1080,6 @@ const setWinner = async (req, res) => {
 
     //send emails to seller
     const seller = await User.findById(auction.property.createdBy);
-    console.log(seller);
     sendEmail({
       to: seller.email,
       subject: "Auction3 - A winner is set for your auction property",

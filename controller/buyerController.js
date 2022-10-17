@@ -95,6 +95,7 @@ const createBuyer = async (req, res) => {
       htmlText: emailBody.content,
     });
 
+    // send email to admins
     const admins = await getGeneralAdmins();
     sendEmail({
       to: admins.map((admin) => admin.email),
@@ -333,6 +334,19 @@ const addFund = async (req, res) => {
         to: buyer.userId.email,
         subject: "Auction3- Request to change funding",
         text: `Your request to add more funding has been sent to the admin`,
+      });
+
+      // send email to admins
+      const admins = await getGeneralAdmins();
+      sendEmail({
+        to: admins.map((admin) => admin.email),
+        subject: "Auction3 - A buyer request more funds",
+        text: `A buyer with id ${buyer._id} has requested more fund. Please check this in admin site`,
+      });
+      addNotificationToAdmin(admins, {
+        buyerId: buyer._id,
+        auctionId: buyer.auctionId,
+        message: "Request more funds",
       });
       return res.status(200).send(result);
     } else {
