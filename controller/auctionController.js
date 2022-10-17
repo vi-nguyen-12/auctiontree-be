@@ -446,11 +446,15 @@ const getAuctions = async (req, res) => {
 
       if (isSold === "true") {
         auctions = auctions.filter((auction) => {
-          return auction.winner.userId;
+          return auction.winner.buyerId;
         });
+        console.log(auctions);
         auctions = await Promise.all(
           auctions.map(async (auction) => {
-            const user = await User.findById(auction.winner.userId);
+            const buyer = await Buyer.findById(auction.winner.buyerId);
+            console.log(buyer);
+            const user = await User.findById(buyer.userId);
+            console.log(user);
             return {
               ...auction.toObject(),
               winner: {
