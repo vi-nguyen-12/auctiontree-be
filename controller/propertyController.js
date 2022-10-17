@@ -979,6 +979,7 @@ const getProperties = async (req, res) => {
         type: Joi.string()
           .valid("real-estate", "car", "jet", "yacht")
           .optional(),
+        property_formatted_street_address: Joi.string().optional(),
         property_zip_code: Joi.string().optional(),
         property_city: Joi.string().optional(),
         property_state: Joi.string().optional(),
@@ -999,6 +1000,7 @@ const getProperties = async (req, res) => {
         status: isApproved,
         type,
         sort,
+        property_formatted_street_address,
         property_zip_code,
         property_city,
         property_state,
@@ -1016,6 +1018,10 @@ const getProperties = async (req, res) => {
       }
       if (type) {
         filters.type = type;
+      }
+      if (property_formatted_street_address) {
+        filters["details.property_address.formatted_street_address"] =
+          property_formatted_street_address;
       }
       if (property_zip_code) {
         filters["details.property_address.zip_code"] = property_zip_code;
