@@ -1073,6 +1073,7 @@ const getFundsOfBuyer = async (req, res) => {
         },
       },
       { $unwind: "$auction" },
+      { $match: { "auction.auctionEndDate": { $gte: new Date() } } },
       {
         $project: {
           _id: "$_id",
