@@ -735,7 +735,9 @@ const getBidAuctionsOfBuyer = async (req, res) => {
         let bids = auction.bids.filter((bid) =>
           buyers.includes(bid.buyerId.toString())
         );
-        auction = { ...auction.toObject(), bids, highestBid };
+        let isReservedMet =
+          highestBid.amount >= auction.property.reservedAmount;
+        auction = { ...auction.toObject(), bids, highestBid, isReservedMet };
         return auction;
       });
       return res.status(200).send(bidAuctions);
