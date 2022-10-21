@@ -147,6 +147,7 @@ const editAuction = async (req, res) => {
     }
     const auction = await Auction.findById(req.params.id).populate("property");
     if (!auction) return res.status(200).send({ error: "Auction not found!" });
+
     const {
       registerStartDate: registerStartDateISOString,
       registerEndDate: registerEndDateISOString,
@@ -451,9 +452,7 @@ const getAuctions = async (req, res) => {
         auctions = await Promise.all(
           auctions.map(async (auction) => {
             const buyer = await Buyer.findById(auction.winner.buyerId);
-            console.log(buyer);
             const user = await User.findById(buyer.userId);
-            console.log(user);
             return {
               ...auction.toObject(),
               winner: {
@@ -494,12 +493,35 @@ const getAuctions = async (req, res) => {
       { $unwind: { path: "$property" } },
       { $match: filterProperty },
       {
-        $unset:
-          time === "completed"
-            ? ["incrementAmount", "bids"]
-            : ["incrementAmount", "winner", "bids"],
+        $unset: ["incrementAmount", "bids"],
+        // time === "completed"
+        //   ? ["incrementAmount", "bids"]
+        //   : ["incrementAmount", "winner", "bids"],
       },
     ]);
+
+    if (isSold === "true") {
+      auctions = auctions.filter((auction) => {
+        return auction.winner?.buyerId;
+      });
+      auctions = await Promise.all(
+        auctions.map(async (auction) => {
+          const buyer = await Buyer.findById(auction.winner.buyerId);
+          const user = await User.findById(buyer.userId);
+          return {
+            ...auction,
+            winner: {
+              userId: user._id,
+              amount: auction.winner.amount,
+              time: auction.winner.time,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              email: user.email,
+            },
+          };
+        })
+      );
+    }
 
     return res.status(200).send(auctions);
   } catch (err) {
@@ -509,11 +531,13 @@ const getAuctions = async (req, res) => {
 
 //@desc  Get information of auction
 //@route GET /api/auctions/:id
-//@route GET /api/auction/propertyId/:propertyId
+//@route GET /api/auction/propertyId/:propertyId?fields=bidders
 const getAuction = async (req, res) => {
   try {
     const url = req.originalUrl;
     let auction;
+    let { fields } = req.query;
+    console.log(fields);
 
     let filter = {};
     if (!url.includes("propertyId")) {
@@ -1059,7 +1083,6 @@ const setWinner = async (req, res) => {
 
     auction.winner.buyerId = buyer._id;
     auction.winner.amount = amount;
-
     await auction.save();
 
     //send email to winner
@@ -1074,7 +1097,7 @@ const setWinner = async (req, res) => {
       subject: emailBody.subject,
       htmlText: emailBody.content,
     });
-    console.log(user);
+
     user.notifications.push({
       auctionId: auction._id,
       message: "Congratulation- winner of the auction",
