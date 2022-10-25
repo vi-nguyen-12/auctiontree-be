@@ -241,7 +241,7 @@ const deleteAuction = async (req, res) => {
 
 //@desc  Get all auctions
 //@route GET /api/auctions?isFeatured=..& isSold=..& time=... type=... &real_estate_type=...&min_price=...&max_price=...&condition=..
-// &min_mileage=.. & max_mileage=..
+// &min_mileage=.. & max_mileage=.. &page=...
 const getAuctions = async (req, res) => {
   try {
     const querySchema = Joi.object({
@@ -291,9 +291,14 @@ const getAuctions = async (req, res) => {
       manufacturer_name: Joi.string().optional(),
       length: Joi.number().optional(),
       isActive: Joi.boolean().optional(),
+      page: Joi.string().regex(/^\d+$/).optional(),
+      limit: Joi.string().regex(/^\d+$/).optional(),
     });
 
-    const {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 8;
+
+    let {
       // registerStartDate,
       // registerEndDate,
       // auctionStartDate,
@@ -467,6 +472,15 @@ const getAuctions = async (req, res) => {
           })
         );
       }
+      const auctionCount = auctions.length;
+      const totalPages = Math.ceil(auctionCount / limit);
+      auctions = auctions.slice((page - 1) * limit, (page - 1) * limit + limit);
+      res.header({
+        "Pagination-Count": auctionCount,
+        "Pagination-Total-Pages": totalPages,
+        "Pagination-Page": page,
+        "Pagination-Limit": limit,
+      });
       return res.status(200).send(auctions);
     }
 
@@ -504,6 +518,7 @@ const getAuctions = async (req, res) => {
       auctions = auctions.filter((auction) => {
         return auction.winner?.buyerId;
       });
+      console.log("test");
       auctions = await Promise.all(
         auctions.map(async (auction) => {
           const buyer = await Buyer.findById(auction.winner.buyerId);
@@ -523,6 +538,17 @@ const getAuctions = async (req, res) => {
       );
     }
 
+    const auctionCount = auctions.length;
+    const totalPages = Math.ceil(auctionCount / limit);
+    auctions = auctions.slice((page - 1) * limit, (page - 1) * limit + limit);
+    res.header({
+      "Pagination-Count": auctionCount,
+      "Pagination-Total-Pages": totalPages,
+      "Pagination-Page": page,
+      "Pagination-Limit": limit,
+    });
+
+    console.log(auctions);
     return res.status(200).send(auctions);
   } catch (err) {
     res.status(500).send(err);
