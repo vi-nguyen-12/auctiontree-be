@@ -248,7 +248,7 @@ const propertyObjectSchema = {
       number_of_stories: Joi.number().required().options({ convert: false }),
       description: Joi.object({
         summary: Joi.string().required(),
-        investment: Joi.string().required(),
+        investment: Joi.string().optional(),
         location: Joi.string().required(),
         market: Joi.string().required(),
       }).required(),
@@ -289,7 +289,7 @@ const propertyObjectSchema = {
       market_price: Joi.number().required().options({ convert: false }),
       description: Joi.object({
         summary: Joi.string().required(),
-        investment: Joi.string().required(),
+        investment: Joi.string().optional(),
         location: Joi.string().required(),
         market: Joi.string().required(),
       }).required(),
@@ -320,7 +320,7 @@ const propertyObjectSchema = {
       others: Joi.string().optional(),
       description: Joi.object({
         summary: Joi.string().required(),
-        investment: Joi.string().required(),
+        investment: Joi.string().optional(),
         location: Joi.string().required(),
         market: Joi.string().required(),
       }).required(),
@@ -351,7 +351,7 @@ const propertyObjectSchema = {
       year_built: Joi.date().format("YYYY").required(),
       description: Joi.object({
         summary: Joi.string().required(),
-        investment: Joi.string().required(),
+        investment: Joi.string().optional(),
         location: Joi.string().required(),
         market: Joi.string().required(),
       }).required(),
