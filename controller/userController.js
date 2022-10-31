@@ -852,8 +852,7 @@ const getPropertiesOfAllSellersGroupByUser = async (req, res) => {
     if (!req.admin?.permissions.includes("user_read")) {
       return res.status(200).send({ error: "Not allowed to Access" });
     }
-
-    const aggregate = await Property.aggregate([
+    let aggQuery = [
       { $match: { step: 5 } },
       {
         $group: {
@@ -882,19 +881,28 @@ const getPropertiesOfAllSellersGroupByUser = async (req, res) => {
         },
       },
       { $unwind: { path: "$user" } },
-      {
-        $project: {
-          _id: "$_id",
-          properties: "$properties",
-          firstName: "$user.firstName",
-          lastName: "$user.lastName",
-          email: "$user.email",
-          phone: "$user.phone",
-          city: "$user.city",
-          country: "$user.country",
-        },
-      },
-    ]);
+    ];
+
+    if(req.query.firstName){
+      aggQuery.push(
+      {$match: {"user.firstName": {$regex:  req.query.firstName}, "user.email": {$regex:  req.query.email ? req.query.email : ""}}}
+      )
+    }
+
+    aggQuery.push({
+      $project: {
+        _id: "$_id",
+        properties: "$properties",
+        firstName: "$user.firstName",
+        lastName: "$user.lastName",
+        email: "$user.email",
+        phone: "$user.phone",
+        city: "$user.city",
+        country: "$user.country",
+      }
+    })
+
+    const aggregate = await Property.aggregate(aggQuery);
     return res.status(200).send(aggregate);
   } catch (err) {
     return res.status(500).send(err.message);

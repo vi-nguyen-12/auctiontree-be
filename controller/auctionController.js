@@ -618,7 +618,6 @@ const getAuction = async (req, res) => {
       auctionId: auction._id,
       userId,
     });
-
     let isApprovedToBid = false;
 
     if (isRegisteredToBuy) {

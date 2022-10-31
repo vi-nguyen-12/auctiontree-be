@@ -453,9 +453,14 @@ const deleteAdmin = async (req, res) => {
 const getAllAdmins = async (req, res) => {
   try {
     if (req.admin?.permissions.includes("admin_read")) {
-      let { email, personalEmail, location, role, permissions } = req.query;
+      let {fullName, email, personalEmail, location, role, permissions } = req.query;
       let filter = {};
-      let filterPermission = {};
+      if (fullName){
+        filter["$or"] = [
+          { fullName: { $regex: fullName } },
+          { email: { $regex: fullName } },
+        ];
+      }
       if (email) {
         filter.email = email;
       }
@@ -478,7 +483,6 @@ const getAllAdmins = async (req, res) => {
           },
         };
       }
-
       const admins = await Admin.aggregate([
         { $match: filter },
         {
