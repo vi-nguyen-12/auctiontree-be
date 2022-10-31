@@ -518,7 +518,6 @@ const getAuctions = async (req, res) => {
       auctions = auctions.filter((auction) => {
         return auction.winner?.buyerId;
       });
-      console.log("test");
       auctions = await Promise.all(
         auctions.map(async (auction) => {
           const buyer = await Buyer.findById(auction.winner.buyerId);
@@ -548,7 +547,6 @@ const getAuctions = async (req, res) => {
       "Pagination-Limit": limit,
     });
 
-    console.log(auctions);
     return res.status(200).send(auctions);
   } catch (err) {
     res.status(500).send(err);
@@ -563,7 +561,6 @@ const getAuction = async (req, res) => {
     const url = req.originalUrl;
     let auction;
     let { fields } = req.query;
-    console.log(fields);
 
     let filter = {};
     if (!url.includes("propertyId")) {

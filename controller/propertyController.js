@@ -86,11 +86,18 @@ const createRealestate = async (req, res) => {
     if (error) return res.status(200).send({ error: error.details[0].message });
 
     //Check if seller is a broker, require listing_agreement
+    let isHavingListingAgreement = false;
     if (details.broker_name) {
-      if (details.broker_documents.length < 1) {
+      for (let i in details.broker_documents) {
+        if (i.officialName === "listing_agreement") {
+          isHavingListingAgreement = true;
+        }
+      }
+      if (!isHavingListingAgreement) {
         return res.status(200).send({ error: "Listing Agreement is required" });
       }
     }
+
     //From step 2: check reservedAmount and disscussedAmount
     //From step 2: get details of real-estate from Estated and from input and add to details field;
     if (step !== 1) {
@@ -563,13 +570,27 @@ const editRealestate = async (req, res) => {
     }
 
     if (step === 5) {
-      // docusign is signed
-      const docusign = await Docusign.findById(docusignId);
-      if (docusign.status !== "signing_complete") {
-        return res
-          .status(200)
-          .send({ error: "Docusign has not been signed yet" });
+      // docusign is signed or send
+      let isBroker = property.details.broker_name;
+      let isHavingPowerOfAttorney = false;
+      if (isBroker) {
+        for (let document of property.details.broker_documents) {
+          if (document.officialName === "power_of_attorney") {
+            isHavingPowerOfAttorney = true;
+          }
+        }
       }
+      if (!isBroker || (isBroker && isHavingPowerOfAttorney)) {
+        const docusign = await Docusign.findById(docusignId);
+        if (docusign.status !== "signing_complete") {
+          return res
+            .status(200)
+            .send({ error: "Docusign has not been signed yet" });
+        }
+      } else {
+        // should send docusign via email to owner
+      }
+
       // user submit, send email to user and send email and add notifications to admins
       if (property.step === 4) {
         const user = await User.findById(req.user.id).select(
@@ -913,13 +934,27 @@ const editOthers = async (req, res) => {
     const savedProperty = await property.save();
 
     if (step === 5) {
-      // check if docusign is signed
-      const docusign = await Docusign.findById(docusignId);
-      if (docusign.status !== "signing_complete") {
-        return res
-          .status(200)
-          .send({ error: "Docusign has not been signed yet" });
+      // docusign is signed or send
+      let isBroker = property.details.broker_name;
+      let isHavingPowerOfAttorney = false;
+      if (isBroker) {
+        for (let document of property.details.broker_documents) {
+          if (document.officialName === "power_of_attorney") {
+            isHavingPowerOfAttorney = true;
+          }
+        }
       }
+      if (!isBroker || (isBroker && isHavingPowerOfAttorney)) {
+        const docusign = await Docusign.findById(docusignId);
+        if (docusign.status !== "signing_complete") {
+          return res
+            .status(200)
+            .send({ error: "Docusign has not been signed yet" });
+        }
+      } else {
+        // should send docusign via email to owner
+      }
+
       // user submit, send email to user and send email and add notifications to admins
       if (property.step === 4) {
         const user = await User.findById(req.user.id).select(
