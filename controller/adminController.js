@@ -456,24 +456,21 @@ const getAllAdmins = async (req, res) => {
       // let {fullName, email, personalEmail, location, role, permissions } = req.query;
       let { name, location, role, permissions } = req.query;
       let filter = {};
-      // if (fullName){
-      //   filter["$or"] = [
-      //     { fullName: { $regex: fullName } },
-      //     { email: { $regex: fullName } },
-      //   ];
-      // }
-      // if (email) {
-      //   filter.email = email;
-      // }
-      // if (personalEmail) {
-      //   filter.personalEmail = personalEmail;
-      // }
-      if (name) {
+      let filterPermission = {};
+
+      if (fullName){
         filter["$or"] = [
           { fullName: { $regex: name } },
           { email: { $regex: name } },
           { personalEmail: { $regex: name } },
         ];
+      }
+
+      if (email) {
+        filter.email = email;
+      }
+      if (personalEmail) {
+        filter.personalEmail = personalEmail;
       }
       if (location) {
         filter.location = location;
@@ -491,6 +488,7 @@ const getAllAdmins = async (req, res) => {
           },
         };
       }
+
       const admins = await Admin.aggregate([
         { $match: filter },
         {
