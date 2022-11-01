@@ -498,6 +498,9 @@ const sendUIViews = (req, res) => {
 // @route: GET api/docusign/signature/:docName/:propertyId/email
 const sendUIURLByEmail = (req, res) => {
   try {
+    if (!res.locals.propertyDetails.owner_email) {
+      return res.status(500).send({ message: "No email address provided" });
+    }
     sendEmail({
       to: res.locals.propertyDetails.owner_email,
       subject: "Auction3- Request for signature of selling agreement",
