@@ -38,6 +38,7 @@
     "socket.io": "^4.4.0",
     "speakeasy": "^2.0.0",
     "stripe": "^8.218.0",
+    "twilio": "^3.83.0",
     "uuid": "^3.3.2"
   },
   "devDependencies": {

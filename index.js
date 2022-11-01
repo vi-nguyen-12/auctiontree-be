@@ -28,6 +28,7 @@ const teamMemberRoute = require("./routes/teamMemberRoutes");
 const roleRoute = require("./routes/roleRoutes");
 const siteRoute = require("./routes/siteRoutes");
 const permissionRoute = require("./routes/permissionRoutes");
+// const chatRoute = require("./routes/chatRoutes");
 const {
   remindUpcomingAuction,
   remindPendingProperties,
@@ -155,6 +156,7 @@ app.use(function (req, res, next) {
 });
 
 app.use("/api/auctions", auctionRoute);
+// app.use("/api/chats", chatRoute);
 
 // io.on("connection", (socket) => {
 //   console.log("a new user is connected");

@@ -1,10 +1,10 @@
 const router = require("express").Router();
 const { auth } = require("../middleware/verifyToken");
 const {
-  createUIURL,
+  createSellingAgreementURL,
+  createBuyingAgreementURL,
   callback,
   getEnvelopeStatus,
-  sendEnvelope,
   sendUIViews,
   sendUIURLByEmail,
   getEnvelopeInfo,
@@ -12,19 +12,27 @@ const {
 
 //how many docusigns are there in process??
 router.get(
-  "/signature/:docName/:propertyId/uiviews",
+  "/signature/buying_agreement/:auctionId/uiviews",
   auth,
-  createUIURL,
+  createBuyingAgreementURL,
   sendUIViews
 );
+
 router.get(
-  "/signature/:docName/:propertyId/email",
+  "/signature/selling_agreement/:propertyId/uiviews",
   auth,
-  createUIURL,
+  createSellingAgreementURL,
+  sendUIViews
+);
+
+router.get(
+  "/signature/selling_agreement/:propertyId/email",
+  auth,
+  createSellingAgreementURL,
   sendUIURLByEmail
 );
 router.get("/callback/:envelopeId", callback);
 router.get("/envelopes/:envelopeId/status", getEnvelopeStatus);
-router.get("/envelopes/:envelopeId", getEnvelopeInfo);
+router.get("/envelopes/:id", getEnvelopeInfo);
 
 module.exports = router;
