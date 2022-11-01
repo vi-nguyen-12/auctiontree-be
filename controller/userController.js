@@ -837,7 +837,14 @@ const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
         return { ...item, auctions };
       })
     );
-
+    if(req.query.firstName || req.query.email){
+      let resp = result.filter((each) => {
+        if(each.firstName === req.query.firstName || each.email === req.query.email){
+          return each
+        }
+      })
+      res.status(200).send(resp);
+    }
     res.status(200).send(result);
   } catch (error) {
     res.status(500).send(error.message);
