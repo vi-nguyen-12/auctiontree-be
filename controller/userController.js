@@ -754,8 +754,51 @@ const getBidAuctionsOfBuyer = async (req, res) => {
 //@route GET /api/users/buyer/auctions
 const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
   try {
+    const { name } = req.query;
+    let userFilter = {};
+    if (name) {
+      userFilter["$or"] = [
+        { firstName: { $regex: name } },
+        { email: { $regex: name } },
+      ];
+    }
+
     const aggregate = await Buyer.aggregate([
       { $group: { _id: "$userId" } },
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "user",
+          pipeline: [
+            {
+              $project: {
+                firstName: "$firstName",
+                lastName: "$lastName",
+                userName: "$userName",
+                phone: "$phone",
+                email: "$email",
+                city: "$city",
+                country: "$country",
+              },
+            },
+          ],
+        },
+      },
+      { $unwind: "$user" },
+      {
+        $project: {
+          _id: "$_id",
+          firstName: "$user.firstName",
+          lastName: "$user.lastName",
+          email: "$user.email",
+          phone: "$user.phone",
+          city: "$user.city",
+          country: "$user.country",
+        },
+      },
+      { $match: userFilter },
       {
         $lookup: {
           from: "buyers",
@@ -811,11 +854,6 @@ const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
 
     const result = await Promise.all(
       aggregate.map(async (item) => {
-        const user = await User.findById(item._id).select(
-          "firstName lastName userName phone email city country"
-        );
-
-        item = { ...item, ...user.toObject() };
         const auctions = await Promise.all(
           item.auctions.map(async (item) => {
             const auction = await Auction.findById(item._id).select(
@@ -837,14 +875,17 @@ const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
         return { ...item, auctions };
       })
     );
-    if(req.query.firstName || req.query.email){
-      let resp = result.filter((each) => {
-        if(each.firstName === req.query.firstName || each.email === req.query.email){
-          return each
-        }
-      })
-      res.status(200).send(resp);
-    }
+    // if (req.query.firstName || req.query.email) {
+    //   let resp = result.filter((each) => {
+    //     if (
+    //       each.firstName === req.query.firstName ||
+    //       each.email === req.query.email
+    //     ) {
+    //       return each;
+    //     }
+    //   });
+    //   res.status(200).send(resp);
+    // }
     res.status(200).send(result);
   } catch (error) {
     res.status(500).send(error.message);
@@ -890,10 +931,13 @@ const getPropertiesOfAllSellersGroupByUser = async (req, res) => {
       { $unwind: { path: "$user" } },
     ];
 
-    if(req.query.firstName){
-      aggQuery.push(
-      {$match: {"user.firstName": {$regex:  req.query.firstName}, "user.email": {$regex:  req.query.email ? req.query.email : ""}}}
-      )
+    if (req.query.firstName) {
+      aggQuery.push({
+        $match: {
+          "user.firstName": { $regex: req.query.firstName },
+          "user.email": { $regex: req.query.email ? req.query.email : "" },
+        },
+      });
     }
 
     aggQuery.push({
@@ -906,8 +950,8 @@ const getPropertiesOfAllSellersGroupByUser = async (req, res) => {
         phone: "$user.phone",
         city: "$user.city",
         country: "$user.country",
-      }
-    })
+      },
+    });
 
     const aggregate = await Property.aggregate(aggQuery);
     return res.status(200).send(aggregate);
