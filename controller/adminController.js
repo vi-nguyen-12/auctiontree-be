@@ -453,19 +453,27 @@ const deleteAdmin = async (req, res) => {
 const getAllAdmins = async (req, res) => {
   try {
     if (req.admin?.permissions.includes("admin_read")) {
-      let {fullName, email, personalEmail, location, role, permissions } = req.query;
+      // let {fullName, email, personalEmail, location, role, permissions } = req.query;
+      let { name, location, role, permissions } = req.query;
       let filter = {};
-      if (fullName){
+      // if (fullName){
+      //   filter["$or"] = [
+      //     { fullName: { $regex: fullName } },
+      //     { email: { $regex: fullName } },
+      //   ];
+      // }
+      // if (email) {
+      //   filter.email = email;
+      // }
+      // if (personalEmail) {
+      //   filter.personalEmail = personalEmail;
+      // }
+      if (name) {
         filter["$or"] = [
-          { fullName: { $regex: fullName } },
-          { email: { $regex: fullName } },
+          { fullName: { $regex: name } },
+          { email: { $regex: name } },
+          { personalEmail: { $regex: name } },
         ];
-      }
-      if (email) {
-        filter.email = email;
-      }
-      if (personalEmail) {
-        filter.personalEmail = personalEmail;
       }
       if (location) {
         filter.location = location;
