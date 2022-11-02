@@ -903,6 +903,13 @@ const getPropertiesOfAllSellersGroupByUser = async (req, res) => {
     if (!req.admin?.permissions.includes("user_read")) {
       return res.status(200).send({ error: "Not allowed to Access" });
     }
+    let userFilter = {};
+    if (req.query.name) {
+      userFilter["$or"] = [
+        { "user.firstName": { $regex: req.query.name } },
+        { "user.email": { $regex: req.query.name } },
+      ];
+    }
     let aggQuery = [
       { $match: { step: 5 } },
       {
@@ -934,12 +941,9 @@ const getPropertiesOfAllSellersGroupByUser = async (req, res) => {
       { $unwind: { path: "$user" } },
     ];
 
-    if (req.query.firstName) {
+    if (req.query.name) {
       aggQuery.push({
-        $match: {
-          "user.firstName": { $regex: req.query.firstName },
-          "user.email": { $regex: req.query.email ? req.query.email : "" },
-        },
+        $match: userFilter,
       });
     }
 
