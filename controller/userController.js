@@ -140,7 +140,6 @@ const getAllUsers = async (req, res) => {
     if (sort) {
       sorts[sort.slice(1)] = sort.slice(0, 1) === "-" ? -1 : 1;
     }
-
     let users = await User.find(filters, [
       "firstName",
       "lastName",
@@ -754,8 +753,51 @@ const getBidAuctionsOfBuyer = async (req, res) => {
 //@route GET /api/users/buyer/auctions
 const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
   try {
+    const { name } = req.query;
+    let userFilter = {};
+    if (name) {
+      userFilter["$or"] = [
+        { firstName: { $regex: name } },
+        { email: { $regex: name } },
+      ];
+    }
+
     const aggregate = await Buyer.aggregate([
       { $group: { _id: "$userId" } },
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "user",
+          pipeline: [
+            {
+              $project: {
+                firstName: "$firstName",
+                lastName: "$lastName",
+                userName: "$userName",
+                phone: "$phone",
+                email: "$email",
+                city: "$city",
+                country: "$country",
+              },
+            },
+          ],
+        },
+      },
+      { $unwind: "$user" },
+      {
+        $project: {
+          _id: "$_id",
+          firstName: "$user.firstName",
+          lastName: "$user.lastName",
+          email: "$user.email",
+          phone: "$user.phone",
+          city: "$user.city",
+          country: "$user.country",
+        },
+      },
+      { $match: userFilter },
       {
         $lookup: {
           from: "buyers",
@@ -814,7 +856,6 @@ const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
         const user = await User.findById(item._id).select(
           "firstName lastName userName phone email city country"
         );
-
         item = { ...item, ...user.toObject() };
         const auctions = await Promise.all(
           item.auctions.map(async (item) => {
@@ -837,7 +878,17 @@ const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
         return { ...item, auctions };
       })
     );
-
+    // if (req.query.firstName || req.query.email) {
+    //   let resp = result.filter((each) => {
+    //     if (
+    //       each.firstName === req.query.firstName ||
+    //       each.email === req.query.email
+    //     ) {
+    //       return each;
+    //     }
+    //   });
+    //   res.status(200).send(resp);
+    // }
     res.status(200).send(result);
   } catch (error) {
     res.status(500).send(error.message);
@@ -852,8 +903,14 @@ const getPropertiesOfAllSellersGroupByUser = async (req, res) => {
     if (!req.admin?.permissions.includes("user_read")) {
       return res.status(200).send({ error: "Not allowed to Access" });
     }
-
-    const aggregate = await Property.aggregate([
+    let userFilter = {};
+    if (req.query.name) {
+      userFilter["$or"] = [
+        { "user.firstName": { $regex: req.query.name } },
+        { "user.email": { $regex: req.query.name } },
+      ];
+    }
+    let aggQuery = [
       { $match: { step: 5 } },
       {
         $group: {
@@ -882,19 +939,28 @@ const getPropertiesOfAllSellersGroupByUser = async (req, res) => {
         },
       },
       { $unwind: { path: "$user" } },
-      {
-        $project: {
-          _id: "$_id",
-          properties: "$properties",
-          firstName: "$user.firstName",
-          lastName: "$user.lastName",
-          email: "$user.email",
-          phone: "$user.phone",
-          city: "$user.city",
-          country: "$user.country",
-        },
+    ];
+
+    if (req.query.name) {
+      aggQuery.push({
+        $match: userFilter,
+      });
+    }
+
+    aggQuery.push({
+      $project: {
+        _id: "$_id",
+        properties: "$properties",
+        firstName: "$user.firstName",
+        lastName: "$user.lastName",
+        email: "$user.email",
+        phone: "$user.phone",
+        city: "$user.city",
+        country: "$user.country",
       },
-    ]);
+    });
+
+    const aggregate = await Property.aggregate(aggQuery);
     return res.status(200).send(aggregate);
   } catch (err) {
     return res.status(500).send(err.message);
