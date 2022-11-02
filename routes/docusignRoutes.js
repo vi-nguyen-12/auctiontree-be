@@ -4,7 +4,7 @@ const {
   createSellingAgreementURL,
   createBuyingAgreementURL,
   callback,
-  getEnvelopeStatus,
+  getDocusignView,
   sendUIViews,
   sendUIURLByEmail,
   getEnvelopeInfo,
@@ -19,7 +19,7 @@ router.get(
 );
 
 router.get(
-  "/signature/selling_agreement/:propertyId/uiviews",
+  "/signature/sellinuserg_agreement/:propertyId/uiviews",
   auth,
   createSellingAgreementURL,
   sendUIViews
@@ -32,7 +32,7 @@ router.get(
   sendUIURLByEmail
 );
 router.get("/callback/:envelopeId", callback);
-router.get("/envelopes/:envelopeId/status", getEnvelopeStatus);
 router.get("/envelopes/:id", getEnvelopeInfo);
+router.get("/", getDocusignView);
 
 module.exports = router;
