@@ -75,9 +75,6 @@ const propertySchema = new Schema(
     docusignId: {
       type: Schema.Types.ObjectId,
       ref: "Docusign",
-      required: function () {
-        return this.step === 5;
-      },
     },
     reservedAmount: {
       type: Number,
