@@ -16,8 +16,8 @@ const client_url =
   process.env.NODE_ENV === "production"
     ? process.env.PROD_CLIENT_ADMIN_URL
     : process.env.NODE_ENV === "test"
-    ? process.env.TEST_CLIENT_ADMIN_URL
-    : process.env.DEV_CLIENT_ADMIN_URL;
+      ? process.env.TEST_CLIENT_ADMIN_URL
+      : process.env.DEV_CLIENT_ADMIN_URL;
 //@desc  Create a new admin
 //@route POST /api/admins body={fullName,email,phone,location,role, department,image, designation,description}
 
@@ -454,15 +454,14 @@ const getAllAdmins = async (req, res) => {
   try {
     if (req.admin?.permissions.includes("admin_read")) {
       // let {fullName, email, personalEmail, location, role, permissions } = req.query;
-      let { name, location, role, permissions } = req.query;
+      let { fullName, location, role, permissions } = req.query;
       let filter = {};
-      let filterPermission = {};
 
-      if (fullName){
+      if (fullName) {
         filter["$or"] = [
-          { fullName: { $regex: name } },
-          { email: { $regex: name } },
-          { personalEmail: { $regex: name } },
+          { fullName: { $regex: fullName } },
+          { email: { $regex: fullName } },
+          { personalEmail: { $regex: fullName } },
         ];
       }
 

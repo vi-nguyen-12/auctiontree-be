@@ -140,7 +140,6 @@ const getAllUsers = async (req, res) => {
     if (sort) {
       sorts[sort.slice(1)] = sort.slice(0, 1) === "-" ? -1 : 1;
     }
-
     let users = await User.find(filters, [
       "firstName",
       "lastName",
@@ -854,6 +853,10 @@ const getAuctionsOfAllBuyersGroupedByUser = async (req, res) => {
 
     const result = await Promise.all(
       aggregate.map(async (item) => {
+        const user = await User.findById(item._id).select(
+          "firstName lastName userName phone email city country"
+        );
+        item = { ...item, ...user.toObject() };
         const auctions = await Promise.all(
           item.auctions.map(async (item) => {
             const auction = await Auction.findById(item._id).select(

@@ -632,13 +632,13 @@ const getAuction = async (req, res) => {
     if (isRegisteredToBuy && isApprovedToBid) {
       return res.status(200).send(auction);
     }
-    //Authenticate: registered buyer not approved cannot see highestBidders and if reserved is met
     if (isRegisteredToBuy && !isApprovedToBid) {
       delete auction.highestBidders;
       delete auction.isReservedMet;
       return res.status(200).send(auction);
     }
 
+    //Authenticate: registered buyer not approved cannot see highestBidders and if reserved is met
     //Authenticate: normal user, cannot see number of bids and highest bid: the same and add 1 field: "isNotRegisteredToBuy": true
     auction.isNotRegisteredToBuy = true;
     delete auction.highestBidders;
@@ -650,6 +650,11 @@ const getAuction = async (req, res) => {
     res.status(500).send(error.message);
   }
 };
+
+
+const getAuctionCount = async (req, res) => {
+  
+}
 
 //@desc  Get upcoming auctions
 //@route GET /api/auctions/upcoming
@@ -716,6 +721,7 @@ const getOngoingAuctions = async (req, res) => {
             isReservedMet,
           };
           delete auction.bids;
+          delete auction.property.reservedAmount;
           return auction;
         })
     );
@@ -834,41 +840,37 @@ const placeBidding = async (req, res) => {
     let emailBody;
 
     if (highestBidder) {
-      let highestBuyer = await Buyer.findById(highestBidder.buyerId);
-      const highestUser = await User.findById(highestBuyer.userId);
+      let highestBuyer = await Buyer.findById(highestBidder.buyerId).populate(
+        "userId"
+      );
       highestBuyer.availableFund =
         highestBuyer.availableFund + highestBidder.amount;
 
       await highestBuyer.save();
 
-      email = highestUser.email;
+      email = highestBuyer.userId.email;
       subject = "Auction3- You bid is not highest anymore";
-      text = `Hi ${highestUser.firstName} ${highestUser.lastName} Your bid is not highest anymore, and your avaible fund for this property is now ${highestBuyer.availableFund}`;
+      text = `Hi ${highestBuyer.firstName} ${highestBuyer.lastName} Your bid is not highest anymore, and your avaible fund for this property is now ${highestBuyer.availableFund}`;
       sendEmail({
         to: email,
         subject,
         text,
       });
-      highestUser.notifications.push({
-        auctionId: auction._id,
-        message: `New bidding price $${biddingPrice}`,
-      });
     }
 
     //send email to others not highest bidders
     let otherNotHighestBidder =
-      auction.bids.length > 1 ? auction.bids.splice(-1) : null;
+      auction.bids.length > 0 ? auction.bids.splice(-1) : null;
 
-    if (otherNotHighestBidder) {
+    if (otherNotHighestBidder?.length > 0) {
       otherNotHighestBidder = await Promise.all(
         otherNotHighestBidder.map(async (i) => {
           let bidder = await Buyer.findById(i.buyerId);
-          let user = await User.findById(bidder.userId);
-          user.notifications.push({
-            auctionId: auction._id,
-            message: `New bidding price $${biddingPrice}`,
-          });
-          await user.save();
+
+          // let bidder = await Buyer.findBuyId(i.buyerId).populate({
+          //   path: "userId",
+          //   select: "email",
+          // });
           return bidder.userId.email;
         })
       );
@@ -904,7 +906,7 @@ const placeBidding = async (req, res) => {
     await owner.save();
     sendEmail({ to: email, subject, text });
 
-    //send email to admins
+    //send email and notification to admins
     const admins = await getGeneralAdmins();
     sendEmail({
       to: admins.map((admin) => admin.email),
@@ -1068,7 +1070,7 @@ const setWinner = async (req, res) => {
   try {
     const auction = await Auction.findById(req.params.id).populate({
       path: "property",
-      select: "_id type details images reservedAmount createdBy",
+      select: "_id type details images reservedAmount",
     });
     let time = new Date();
     let buyer, amount;
@@ -1107,8 +1109,6 @@ const setWinner = async (req, res) => {
     auction.winner.amount = amount;
     await auction.save();
 
-    //send email to winner
-    const user = await User.findById(buyer.userId);
     let emailBody = await replaceEmailTemplate("winner_of_auction", {
       name: `${buyer.userId.firstName} ${buyer.userId.lastName}`,
       property_type: `${auction.property.type}`,
@@ -1119,7 +1119,7 @@ const setWinner = async (req, res) => {
       subject: emailBody.subject,
       htmlText: emailBody.content,
     });
-
+    console.log(user);
     user.notifications.push({
       auctionId: auction._id,
       message: "Congratulation- winner of the auction",
@@ -1128,6 +1128,7 @@ const setWinner = async (req, res) => {
 
     //send emails to seller
     const seller = await User.findById(auction.property.createdBy);
+    console.log(seller);
     sendEmail({
       to: seller.email,
       subject: "Auction3 - A winner is set for your auction property",
@@ -1155,13 +1156,15 @@ const setWinner = async (req, res) => {
     return res.status(200).send({
       ...auction.toObject(),
       winner: {
-        buyerId: buyer._id,
-        userId: buyer.userId._id,
-        amount,
-        time,
-        firstName: buyer.userId.firstName,
-        lastName: buyer.userId.lastName,
-        email: buyer.userId.email,
+        winner: {
+          buyerId: buyer._id,
+          userId: buyer.userId._id,
+          amount,
+          time,
+          firstName: buyer.userId.firstName,
+          lastName: buyer.userId.lastName,
+          email: buyer.userId.email,
+        },
       },
     });
   } catch (err) {
@@ -1181,4 +1184,5 @@ module.exports = {
   deleteAuction,
   getAuctions,
   setWinner,
+  getAuctionCount,
 };

@@ -14,6 +14,7 @@ const {
   deleteAuction,
   getAuctions,
   setWinner,
+  getAuctionCount
 } = require("../controller/auctionController");
 
 router.get("/upcoming/:type", getUpcomingAuctions);
@@ -21,6 +22,7 @@ router.get("/ongoing/:type", getOngoingAuctions);
 router.get("/upcoming", getUpcomingAuctions);
 router.get("/ongoing", getOngoingAuctions);
 router.get("/status", auth, getAuctionStatusOfABuyer);
+router.get("/real-estate/counts", getAuctionCount);
 
 router.post("/", auth, validateAuction, createAuction);
 router.get("/propertyId/:propertyId", authNotStrict, getAuction);
