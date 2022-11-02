@@ -509,7 +509,7 @@ const propertyObjectSchema = {
     },
   },
   step5: {
-    docusignId: Joi.objectId().required(),
+    docusignId: Joi.objectId().optional(),
     step: Joi.number().required().valid(5).options({ convert: false }),
   },
 };
