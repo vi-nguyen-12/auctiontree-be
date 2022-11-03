@@ -243,6 +243,20 @@ const makeEnvelope = async (args) => {
   return env;
 };
 
+const generateEnvelope = async (envelope) => {
+  const accessToken = await getAccessToken();
+  let dsApiClient = new docusign.ApiClient();
+  dsApiClient.setBasePath(apiArgs.basePath);
+  dsApiClient.addDefaultHeader("Authorization", "Bearer " + accessToken);
+  let envelopeApi = new docusign.EnvelopesApi(dsApiClient);
+
+  let envelopeResult = await envelopeApi.createEnvelope(apiArgs.accountId, {
+    envelopeDefinition: envelope,
+  });
+
+  return envelopeResult;
+};
+
 // desc: make a recipient view request and create UI URL
 
 const makeRecipientViewRequest = (args) => {
@@ -272,10 +286,8 @@ const createSellingAgreementURL = async (req, res, next) => {
     let signerEmail = user.email;
     let docName = "selling_agreement";
 
-    let envelopesApi = new docusign.EnvelopesApi(dsApiClient),
-      envelopeResult = null;
-
     //if dcs does not exist create a new on to get envelopeId
+
     if (!property.docusignId) {
       let envelopeArgs = {
         signer1: {
@@ -298,9 +310,7 @@ const createSellingAgreementURL = async (req, res, next) => {
         propertyAddress: property.details.property_address,
       };
       let envelope = await makeEnvelope(envelopeArgs);
-      envelopeResult = await envelopesApi.createEnvelope(apiArgs.accountId, {
-        envelopeDefinition: envelope,
-      });
+      let envelopeResult = await generateEnvelope(envelope);
 
       envelopeId = envelopeResult.envelopeId;
       const newEnvelope = new Docusign({
@@ -352,9 +362,6 @@ const createBuyingAgreementURL = async (req, res, next) => {
     let signerEmail = user.email;
     let docName = "buying_agreement";
 
-    let envelopesApi = new docusign.EnvelopesApi(dsApiClient),
-      envelopeResult = null;
-
     //if dcs does not exist create a new one
     if (!buyer) {
       let envelopeArgs = {
@@ -383,9 +390,7 @@ const createBuyingAgreementURL = async (req, res, next) => {
         docName,
       };
       let envelope = await makeEnvelope(envelopeArgs);
-      envelopeResult = await envelopesApi.createEnvelope(apiArgs.accountId, {
-        envelopeDefinition: envelope,
-      });
+      let envelopeResult = await generateEnvelope(envelope);
 
       envelopeId = envelopeResult.envelopeId;
       const newEnvelope = new Docusign({
