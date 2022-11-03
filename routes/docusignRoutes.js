@@ -19,7 +19,7 @@ router.get(
 );
 
 router.get(
-  "/signature/sellinuserg_agreement/:propertyId/uiviews",
+  "/signature/selling_agreement/:propertyId/uiviews",
   auth,
   createSellingAgreementURL,
   sendUIViews
