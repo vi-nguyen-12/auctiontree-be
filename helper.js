@@ -7,6 +7,23 @@ const Admin = require("./model/Admin");
 
 const sendEmail = ({ from, to, subject, text, htmlText }) => {
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  if (htmlText) {
+    let htmlArr = htmlText.split("");
+    let s = -1,
+      i = 0;
+    while (i < htmlArr.length) {
+      if (htmlArr[i] === "<") {
+        s = i;
+      }
+      if (htmlArr[i] === ">") {
+        htmlArr.splice(s, i - s + 1);
+        i = s - 1;
+        s = -1;
+      }
+      i++;
+    }
+    text = htmlArr.join("");
+  }
   const msg = {
     to,
     from: from || "vienne@labs196.com",

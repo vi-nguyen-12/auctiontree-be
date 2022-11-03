@@ -19,9 +19,6 @@ const client_url =
     ? process.env.TEST_CLIENT_URL
     : process.env.DEV_CLIENT_URL;
 
-// const consentURI =
-//   "https://account-d.docusign.com/oauth/auth?response_type=code&scope=signature%20impersonation&client_id=54bc1507-9cbe-4119-916f-ec1073bf7b48&redirect_uri=https://www.transenergy360.com/";
-
 const getAccessToken = async () => {
   let privateKey = process.env.DOCUSIGN_PRIVATE_KEY.replace(/\\n/g, "\n");
   let now = new Date();

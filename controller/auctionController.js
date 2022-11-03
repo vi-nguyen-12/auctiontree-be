@@ -651,10 +651,7 @@ const getAuction = async (req, res) => {
   }
 };
 
-
-const getAuctionCount = async (req, res) => {
-  
-}
+const getAuctionCount = async (req, res) => {};
 
 //@desc  Get upcoming auctions
 //@route GET /api/auctions/upcoming
@@ -1128,7 +1125,7 @@ const setWinner = async (req, res) => {
 
     //send emails to seller
     const seller = await User.findById(auction.property.createdBy);
-    console.log(seller);
+
     sendEmail({
       to: seller.email,
       subject: "Auction3 - A winner is set for your auction property",
