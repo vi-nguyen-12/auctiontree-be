@@ -190,9 +190,13 @@ const propertyObjectSchema = {
         then: Joi.valid(null, "").optional(),
         otherwise: Joi.string().required(),
       }),
-      owner_phone: Joi.string()
-        .pattern(/^[0-9]+$/)
-        .required(),
+      owner_phone: Joi.when("broker_name", {
+        is: Joi.any().valid(null, ""),
+        then: Joi.valid(null, "").optional(),
+        otherwise: Joi.string()
+          .pattern(/^[0-9]+$/)
+          .required(),
+      }),
       address: Joi.string().required(),
       email: Joi.string()
         .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
