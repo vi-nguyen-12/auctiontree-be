@@ -609,6 +609,16 @@ const getEnvelopeInfo = async (req, res) => {
   }
 };
 
+// @desc: get docusign
+// @route: GET api/docusign/:id
+const getDocusign = async (req, res) => {
+  try {
+    const docusign = await Docusign.findById(req.params.id);
+    return res.status(200).send(docusign);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
 module.exports = {
   createSellingAgreementURL,
   createBuyingAgreementURL,
@@ -618,6 +628,7 @@ module.exports = {
   sendUIViews,
   sendUIURLByEmail,
   getEnvelopeInfo,
+  getDocusign,
 };
 
 const getUserInfo = async (access_token) => {

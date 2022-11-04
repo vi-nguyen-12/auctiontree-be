@@ -8,6 +8,7 @@ const {
   sendUIViews,
   sendUIURLByEmail,
   getEnvelopeInfo,
+  getDocusign,
 } = require("../controller/docusignController");
 
 //how many docusigns are there in process??
@@ -33,6 +34,7 @@ router.get(
 );
 router.get("/callback/:envelopeId", callback);
 router.get("/envelopes/:id", getEnvelopeInfo);
+router.get("/:id", getDocusign);
 router.get("/", getDocusignView);
 
 module.exports = router;
