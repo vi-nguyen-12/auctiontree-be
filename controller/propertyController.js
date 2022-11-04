@@ -582,7 +582,10 @@ const editRealestate = async (req, res) => {
       }
       if (!isBroker || (isBroker && isHavingPowerOfAttorney)) {
         const docusign = await Docusign.findById(docusignId);
-        if (docusign.status !== "signing_complete") {
+        if (
+          docusign.status !== "signing_complete" &&
+          docusign.status !== "viewing_complete"
+        ) {
           return res
             .status(200)
             .send({ error: "Docusign has not been signed yet" });
@@ -946,7 +949,10 @@ const editOthers = async (req, res) => {
       }
       if (!isBroker || (isBroker && isHavingPowerOfAttorney)) {
         const docusign = await Docusign.findById(docusignId);
-        if (docusign.status !== "signing_complete") {
+        if (
+          docusign.status !== "signing_complete" &&
+          docusign.status !== "viewing_complete"
+        ) {
           return res
             .status(200)
             .send({ error: "Docusign has not been signed yet" });
@@ -1194,7 +1200,10 @@ const approveProperty = async (req, res) => {
       let emailBody = {};
 
       if (status === "success") {
-        if (property.docusignId.status !== "signing_complete") {
+        if (
+          property.docusignId.status !== "signing_complete" &&
+          property.docusignId.status !== "viewing_complete"
+        ) {
           return res.status(200).send({ error: "Docusign is not completed" });
         }
         for (let image of property.images) {
