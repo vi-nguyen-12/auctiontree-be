@@ -281,6 +281,25 @@ const createSellingAgreementURL = async (req, res, next) => {
     let envelopeId;
     let signerName = `${user.firstName} ${user.lastName}`;
     let signerEmail = user.email;
+    // let envelopeId, signerName, signerEmail;
+    // if (!owner.broker) {
+    //   signerName = property.details.owner_name;
+    //   signerEmail = property.details.email;
+    // } else {
+    //   let isHavingPowerOfAttorney = false;
+    //   property.details.forEach((item) => {
+    //     if (item.officialName == "power_of_attorney") {
+    //       isHavingPowerOfAttorney = true;
+    //     }
+    //   });
+    //   if (isHavingPowerOfAttorney) {
+    //     signerName = property.details.broker_name;
+    //     signerEmail = property.details.email;
+    //   } else {
+    //     signerName = property.details.owner_name;
+    //     signerEmail = property.details.owner_email;
+    //   }
+    // }
     let docName = "selling_agreement";
 
     //if dcs does not exist create a new on to get envelopeId
@@ -310,12 +329,14 @@ const createSellingAgreementURL = async (req, res, next) => {
       let envelopeResult = await generateEnvelope(envelope);
 
       envelopeId = envelopeResult.envelopeId;
-      const newEnvelope = new Docusign({
+      const newDocusign = await Docusign.create({
         envelopeId,
         name: docName,
         recipientId: user._id,
       });
-      await newEnvelope.save();
+
+      property.docusignId = newDocusign._id;
+      await property.save();
     } else {
       let dcs = await Docusign.findById(property.docusignId).select(
         "envelopeId"
@@ -330,6 +351,7 @@ const createSellingAgreementURL = async (req, res, next) => {
 
     res.locals = {
       envelopeId,
+      docusignId: property.docusignId,
       redirectUrl: viewResult.url,
       propertyDetails: property.details,
     };
@@ -354,7 +376,7 @@ const createBuyingAgreementURL = async (req, res, next) => {
       return res.status(200).send({ error: "Auction not found" });
     }
 
-    let envelopeId;
+    let envelopeId, docusignId;
     let signerName = `${user.firstName} ${user.lastName}`;
     let signerEmail = user.email;
     let docName = "buying_agreement";
@@ -390,15 +412,18 @@ const createBuyingAgreementURL = async (req, res, next) => {
       let envelopeResult = await generateEnvelope(envelope);
 
       envelopeId = envelopeResult.envelopeId;
-      const newEnvelope = new Docusign({
+      const newDocusign = await Docusign.create({
         envelopeId,
         name: docName,
         recipientId: user._id,
       });
-      await newEnvelope.save();
+
+      await newDocusign.save();
+      docusignId = newDocusign._id;
     } else {
       let dcs = await Docusign.findById(buyer.docusignId).select("envelopeId");
       envelopeId = dcs.envelopeId;
+      docusignId = buyer.docusignId;
     }
 
     let viewResult = await getRecipientURL({
@@ -409,6 +434,7 @@ const createBuyingAgreementURL = async (req, res, next) => {
 
     res.locals = {
       envelopeId,
+      docusignId,
       redirectUrl: viewResult.url,
       propertyDetails: auction.property.details,
     };
@@ -471,6 +497,7 @@ const sendEnvelope = async (req, res) => {
 const sendUIViews = (req, res) => {
   try {
     return res.status(200).send({
+      docusignId: res.locals.docusignId,
       envelopeId: res.locals.envelopeId,
       redirectUrl: res.locals.redirectUrl,
     });
