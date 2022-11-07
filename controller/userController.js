@@ -1381,6 +1381,31 @@ const deleteNotification = async (req, res) => {
   }
 };
 
+const getAllBrokers = async (req, res) => {
+  try {
+    const aggrigate = await User.aggregate([
+      {
+        $match: {
+          "agent.licenseNumber": { $ne: null }
+        },
+      },
+      {
+        $project: {
+          broker: "$firstName",
+          email: "$email",
+          phone: "$phone",
+          address: "$country",
+          broker_id: "$agent.licenseNumber",
+          documents: "$agent.licenseDocument"
+        }
+      }
+    ])
+    res.status(200).send(aggrigate)
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+}
+
 module.exports = {
   registerUser,
   login,
@@ -1407,4 +1432,5 @@ module.exports = {
   getPropertiesOfAllSellersGroupByUser,
   deleteNotification,
   getAllUsers,
+  getAllBrokers,
 };
