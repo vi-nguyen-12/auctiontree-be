@@ -9,11 +9,11 @@ const Docusign = require("../model/Docusign");
 const { sendEmail, replaceEmailTemplate } = require("../helper");
 
 //@desc  Create a buyer
-//@route POST /api/buyers body:{auctionId, docusignId,TC, answers:[{questionId, answer: "yes"/"no", explanation:"", documents:[{officialName:..., name:...,url:...}]}] } TC:{time: ISOString format, IPAddress:...}
+//@route POST /api/buyers body:{auctionId, docusignId,TC, answers:[{questionId, answer: "yes"/"no", explanation:"", documents:[{officialName:..., name:...,url:...}]}] }, TC:{time: ISOString format, IPAddress:...}, client: {name:..., email:..., phone:..., documents: [{officialName:..., name:...,url:...}]}
 const createBuyer = async (req, res) => {
   try {
     const user = await User.findOne({ _id: req.user.id });
-    const { auctionId, docusignId, TC, answers, documents } = req.body;
+    const { auctionId, docusignId, TC, answers, documents, client } = req.body;
     const auction = await Auction.findOne({ _id: auctionId }).populate(
       "property"
     );
@@ -72,6 +72,7 @@ const createBuyer = async (req, res) => {
       funds,
       TC,
       answers,
+      client,
     });
 
     const savedBuyer = await newBuyer.save();
