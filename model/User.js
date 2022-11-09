@@ -49,6 +49,12 @@ const userSchema = new mongoose.Schema(
                 return this.licenseNumber?.length > 0;
               },
             },
+            isVerified : {
+              type: Boolean,
+              required: function () {
+                return this.licenseNumber?.length > 0;
+              }
+            }
           },
         ],
       },
