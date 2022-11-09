@@ -40,7 +40,7 @@ const createBuyer = async (req, res) => {
 
     if (isRegisteredAuction) {
       return res.status(200).send({
-        error: "This user is already registered to buy this property",
+        error: "This user is already registered to buy this auction",
       });
     }
 
@@ -99,17 +99,17 @@ const createBuyer = async (req, res) => {
     });
 
     // send email to admins
-    const admins = await getGeneralAdmins();
-    sendEmail({
-      to: admins.map((admin) => admin.email),
-      subject: "Auction3 - New Buyer is created",
-      text: `A new buyer has been created with id: ${savedBuyer._id}. Please check this new buyer in admin site`,
-    });
-    addNotificationToAdmin(admins, {
-      buyerId: savedBuyer._id,
-      auctionId: savedBuyer.auctionId,
-      message: "New buyer created",
-    });
+    // const admins = await getGeneralAdmins();
+    // sendEmail({
+    //   to: admins.map((admin) => admin.email),
+    //   subject: "Auction3 - New Buyer is created",
+    //   text: `A new buyer has been created with id: ${savedBuyer._id}. Please check this new buyer in admin site`,
+    // });
+    // addNotificationToAdmin(admins, {
+    //   buyerId: savedBuyer._id,
+    //   auctionId: savedBuyer.auctionId,
+    //   message: "New buyer created",
+    // });
 
     const result = {
       _id: savedBuyer._id,
@@ -131,6 +131,7 @@ const createBuyer = async (req, res) => {
     };
     res.status(200).send(result);
   } catch (err) {
+    console.log(err);
     res.status(500).send(err);
   }
 };
@@ -341,17 +342,17 @@ const addFund = async (req, res) => {
       });
 
       // send email to admins
-      const admins = await getGeneralAdmins();
-      sendEmail({
-        to: admins.map((admin) => admin.email),
-        subject: "Auction3 - A buyer request more funds",
-        text: `A buyer with id ${buyer._id} has requested more fund. Please check this in admin site`,
-      });
-      addNotificationToAdmin(admins, {
-        buyerId: buyer._id,
-        auctionId: buyer.auctionId,
-        message: "Request more funds",
-      });
+      // const admins = await getGeneralAdmins();
+      // sendEmail({
+      //   to: admins.map((admin) => admin.email),
+      //   subject: "Auction3 - A buyer request more funds",
+      //   text: `A buyer with id ${buyer._id} has requested more fund. Please check this in admin site`,
+      // });
+      // addNotificationToAdmin(admins, {
+      //   buyerId: buyer._id,
+      //   auctionId: buyer.auctionId,
+      //   message: "Request more funds",
+      // });
       return res.status(200).send(result);
     } else {
       return res

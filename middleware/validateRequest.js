@@ -135,7 +135,16 @@ const validateBuyer = (req, res, next) => {
       }),
       _id: Joi.string().optional(),
     }),
-
+    client: Joi.object({
+      name: Joi.string().optional(),
+      email: Joi.string().email().optional(),
+      phone: Joi.string().optional(),
+      documents: Joi.array().items({
+        officialName: Joi.string().valid("power_of_attorney").required(),
+        url: Joi.string().required(),
+        name: Joi.string().required(),
+      }),
+    }),
     docusignId: Joi.objectId().required(),
     TC: Joi.object({
       time: Joi.date().iso().required(),

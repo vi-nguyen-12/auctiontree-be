@@ -103,30 +103,27 @@ const buyerSchema = new Schema(
       IPAddress: { type: String, required: true },
     },
     client: {
-      name: { type: String, required: [true, "Client Name is require."] },
-      email: { type: String, required: [true, "Client Email is require."] },
-      phone: { type: String, required: [true, "Client Phone is require."] },
+      name: { type: String, required: false },
+      email: { type: String, required: false },
+      phone: { type: String, required: false },
       documents: [
         {
           required: false,
-          document: {
-            officialName: {
-              type: String,
-              required: true,
-              enum: {
-                values: ["power_of_attorney"],
-                message:
-                  "Document with official name {VALUE} is not a supported",
-              },
+          officialName: {
+            type: String,
+            required: true,
+            enum: {
+              values: ["power_of_attorney"],
+              message: "Document with official name {VALUE} is not a supported",
             },
-            name: {
-              type: String,
-              required: [true, "Name of document is required"],
-            },
-            url: {
-              type: String,
-              required: [true, "Url of document is required"],
-            },
+          },
+          name: {
+            type: String,
+            required: [true, "Name of document is required"],
+          },
+          url: {
+            type: String,
+            required: [true, "Url of document is required"],
           },
         },
       ],
