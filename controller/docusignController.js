@@ -444,6 +444,19 @@ const createBuyingAgreementURL = async (req, res, next) => {
   }
 };
 
+const createURLFromDocusignId=async (req,res,next)=>{
+  try{
+    const docusign=await Docusign.findById(req.params.docusignId)
+    if (!docusign){
+      return res.status(200)({error:"Docusign not found"})
+    }
+    
+  }
+  catch(err){
+    res.status(500).send(err.message);
+  }
+}
+
 const getRecipientURL = async ({ envelopeId, signerName, signerEmail }) => {
   const accessToken = await getAccessToken();
   let dsApiClient = new docusign.ApiClient();
@@ -629,6 +642,7 @@ module.exports = {
   sendUIURLByEmail,
   getEnvelopeInfo,
   getDocusign,
+  createURLFromDocusignId
 };
 
 const getUserInfo = async (access_token) => {

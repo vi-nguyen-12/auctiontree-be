@@ -10,6 +10,17 @@ const docusignSchema = new Schema(
       enum: ["selling_agreement", "buying_agreement"],
       required: true,
     },
+    recipients: {
+      type: [
+        {
+          type: { type: String, enum: ["signer1", "signer2", "cc1", "cc2"] },
+          name: { type: String, required: true },
+          email: { type: String, required: true },
+          recipientId: { type: String, required: true },
+          clientUserId: { type: String, required: true },
+        },
+      ],
+    },
     status: {
       type: String,
       enum: [
