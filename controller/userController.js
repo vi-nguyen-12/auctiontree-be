@@ -1389,12 +1389,15 @@ const getAllBrokers = async (req, res) => {
           "agent.licenseNumber": { $ne: null }
         },
       },
+      // {$unwind: "$agent.licenseDocument"},
       {
         $project: {
-          broker: "$firstName",
+          firstName: "$firstName",
+          lastName: "$lastName",
           email: "$email",
           phone: "$phone",
-          address: "$country",
+          city: "$city",
+          country: "$country",
           broker_id: "$agent.licenseNumber",
           documents: "$agent.licenseDocument"
         }
