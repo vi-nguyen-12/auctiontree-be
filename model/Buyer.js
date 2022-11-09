@@ -103,8 +103,6 @@ const buyerSchema = new Schema(
       IPAddress: { type: String, required: true },
     },
     client: {
-      type: String,
-      required: false,
       name: { type: String, required: [true, "Client Name is require."] },
       email: { type: String, required: [true, "Client Email is require."] },
       phone: { type: String, required: [true, "Client Phone is require."] },
