@@ -9,7 +9,7 @@ const {
   sendUIURLByEmail,
   getEnvelopeInfo,
   getDocusign,
-  createURLFromDocusignId
+  createURLFromDocusignId,
 } = require("../controller/docusignController");
 
 //how many docusigns are there in process??
@@ -33,12 +33,12 @@ router.get(
   createSellingAgreementURL,
   sendUIURLByEmail
 );
-router.geT(
+router.get(
   "/signature/:docusignId/uiviews",
   auth,
   createURLFromDocusignId,
   sendUIViews
-)
+);
 
 router.get("/callback/:envelopeId", callback);
 router.get("/envelopes/:id", getEnvelopeInfo);
