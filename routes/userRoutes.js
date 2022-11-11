@@ -34,6 +34,7 @@ const {
   getPropertiesOfAllSellersGroupByUser,
   deleteNotification,
   getAllUsers,
+  getAllBrokers,
 } = require("../controller/userController");
 
 router.post("/register", authNotStrict, validateUser, registerUser);
@@ -70,4 +71,5 @@ router.delete("/:id", auth, deleteUserAccount);
 //only for admin
 router.get("/buyerId/:buyerId", getUserByBuyerId);
 router.get("/propertyId/:propertyId", getUserByPropertyId);
+router.get("/broker",auth, getAllBrokers);
 module.exports = router;
