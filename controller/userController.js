@@ -36,6 +36,7 @@ const registerUser = async (req, res) => {
       userName,
       country,
       city,
+      state,
       agent,
     } = req.body;
     const userExist = await User.findOne({
@@ -72,6 +73,7 @@ const registerUser = async (req, res) => {
       userName,
       country,
       city,
+      state,
       agent,
       secret,
       temp_token: token,
@@ -1386,7 +1388,7 @@ const getAllBrokers = async (req, res) => {
     const aggrigate = await User.aggregate([
       {
         $match: {
-          "agent.licenseNumber": { $ne: null }
+          "agent.licenseNumber": { $ne: null },
         },
       },
       // {$unwind: "$agent.licenseDocument"},
@@ -1399,15 +1401,15 @@ const getAllBrokers = async (req, res) => {
           city: "$city",
           country: "$country",
           broker_id: "$agent.licenseNumber",
-          documents: "$agent.licenseDocument"
-        }
-      }
-    ])
-    res.status(200).send(aggrigate)
+          documents: "$agent.licenseDocument",
+        },
+      },
+    ]);
+    res.status(200).send(aggrigate);
   } catch (error) {
-    res.status(500).send(error.message)
+    res.status(500).send(error.message);
   }
-}
+};
 
 module.exports = {
   registerUser,
