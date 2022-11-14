@@ -36,7 +36,6 @@ const registerUser = async (req, res) => {
       userName,
       country,
       city,
-      state,
       agent,
     } = req.body;
     const userExist = await User.findOne({
@@ -73,7 +72,6 @@ const registerUser = async (req, res) => {
       userName,
       country,
       city,
-      state,
       agent,
       secret,
       temp_token: token,

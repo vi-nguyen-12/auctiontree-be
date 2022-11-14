@@ -31,7 +31,6 @@ const userSchema = new mongoose.Schema(
     },
     country: { type: String, trim: true },
     city: { type: String, trim: true },
-    state: { type: String, trim: true },
     date: { type: Date, default: Date.now },
     agent: {
       licenseNumber: { type: String, trim: true },

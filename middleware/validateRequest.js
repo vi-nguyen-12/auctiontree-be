@@ -16,7 +16,6 @@ const validateUser = (req, res, next) => {
     userName: Joi.string().required(),
     country: Joi.string(),
     city: Joi.string(),
-    state: Joi.string(),
     agent: Joi.object({
       licenseNumber: Joi.string(),
       licenseDocument: Joi.when("licenseNumber", {
