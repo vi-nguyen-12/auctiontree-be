@@ -4,7 +4,6 @@ const {
   createSellingAgreementURL,
   createBuyingAgreementURL,
   sendBuyingAgreementURLByEmail,
-  getBuyingAgreementURL,
   callback,
   getDocusignView,
   sendUIViews,

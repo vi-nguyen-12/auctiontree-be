@@ -450,56 +450,6 @@ const createBuyingAgreementURL = async (req, res, next) => {
   }
 };
 
-const getBuyingAgreementURL = async (req, res, next) => {
-  try {
-    const user = await User.findById(req.user.id);
-    let auction = await Auction.findById(req.params.auctionId).populate(
-      "property"
-    );
-    let buyer = await Buyer.findOne({
-      userId: user._id,
-      auctionId: auction._id,
-    }).populate("docusignId");
-
-    if (!auction) {
-      return res.status(200).send({ error: "Auction not found" });
-    }
-
-    if (!buyer) {
-      return res.status(200).send({ error: "Buyer not found" });
-    }
-
-    let envelopeId = buyer.docusignId.envelopeId;
-    let signerName, signerEmail, recipientId, clientUserId;
-    for (let recipient of buyer.recipients) {
-      if (recipient.type === "signer1") {
-        signerName = recipient.name;
-        signerEmail = recipient.email;
-        recipientId = recipient.recipientId;
-        clientUserId = recipient.clientUserId;
-      }
-    }
-
-    let viewResult = await getRecipientURL({
-      envelopeId,
-      signerName,
-      signerEmail,
-      recipientId,
-      clientUserId,
-    });
-
-    res.locals = {
-      // envelopeId,
-      docusignId: buyer.docusignId,
-      redirectUrl: viewResult.url,
-      propertyDetails: auction.property.details,
-    };
-    next();
-  } catch (error) {
-    res.status(500).send(error);
-  }
-};
-
 const createURLFromDocusignId = async (req, res, next) => {
   try {
     const docusign = await Docusign.findById(req.params.docusignId);
@@ -586,12 +536,10 @@ const sendBuyingAgreementURLByEmail = (req, res) => {
       subject: "Auction3- Request for signature of buying agreement",
       htmlText: `<p>Please click in this link to sign buying agreement with Auction3 <a href=${res.locals.redirectUrl}> Link </a> </p>`,
     });
-    return res
-      .status(200)
-      .send({
-        message: "Email sent successfully",
-        docusignId: res.locals.docusignId,
-      });
+    return res.status(200).send({
+      message: "Email sent successfully",
+      docusignId: res.locals.docusignId,
+    });
   } catch (err) {
     return res.status(500).send(err.message);
   }
@@ -757,7 +705,6 @@ const getDocusign = async (req, res) => {
 module.exports = {
   createSellingAgreementURL,
   createBuyingAgreementURL,
-  getBuyingAgreementURL,
   callback,
   getDocusignView,
   sendEnvelope,
