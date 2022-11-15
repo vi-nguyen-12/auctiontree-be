@@ -29,13 +29,6 @@ router.post(
   sendBuyingAgreementURLByEmail
 );
 
-router.post(
-  "/signature/buying_agreement/:auctionId/email",
-  auth,
-  getBuyingAgreementURL,
-  sendUIURLByEmail
-);
-
 router.get(
   "/signature/selling_agreement/:propertyId/uiviews",
   auth,
