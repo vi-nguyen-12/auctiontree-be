@@ -281,25 +281,6 @@ const createSellingAgreementURL = async (req, res, next) => {
     let envelopeId;
     let signerName = `${user.firstName} ${user.lastName}`;
     let signerEmail = user.email;
-    // let envelopeId, signerName, signerEmail;
-    // if (!owner.broker) {
-    //   signerName = property.details.owner_name;
-    //   signerEmail = property.details.email;
-    // } else {
-    //   let isHavingPowerOfAttorney = false;
-    //   property.details.forEach((item) => {
-    //     if (item.officialName == "power_of_attorney") {
-    //       isHavingPowerOfAttorney = true;
-    //     }
-    //   });
-    //   if (isHavingPowerOfAttorney) {
-    //     signerName = property.details.broker_name;
-    //     signerEmail = property.details.email;
-    //   } else {
-    //     signerName = property.details.owner_name;
-    //     signerEmail = property.details.owner_email;
-    //   }
-    // }
     let docName = "selling_agreement";
 
     //if dcs does not exist create a new on to get envelopeId
@@ -367,74 +348,149 @@ const createBuyingAgreementURL = async (req, res, next) => {
     let auction = await Auction.findById(req.params.auctionId).populate(
       "property"
     );
-    let buyer = await Buyer.findOne({
-      userId: user._id,
-      auctionId: auction._id,
-    });
 
     if (!auction) {
       return res.status(200).send({ error: "Auction not found" });
     }
 
+    let { clientName, clientEmail } = req.body;
+    let clientInitial = "";
+    if ((clientName && !clientEmail) || (!clientName && clientEmail)) {
+      return res
+        .status(200)
+        .send({ error: "Missing client name or client email" });
+    }
+    if (clientName) {
+      let words = clientName.split(" ");
+      for (let word of words) {
+        word = word.charAt(0).toUpperCase() + word.slice(1);
+        clientInitial += word.charAt(0).toUpperCase();
+      }
+      clientName = words.join(" ");
+    }
+
     let envelopeId, docusignId;
-    let signerName = `${user.firstName} ${user.lastName}`;
-    let signerEmail = user.email;
+    let signerName =
+      clientName ||
+      `${
+        user.firstName.charAt(0).toUpperCase() +
+        user.firstName.toLowerCase().slice(1)
+      } ${
+        user.lastName.charAt(0).toUpperCase() +
+        user.lastName.toLowerCase().slice(1)
+      }`;
+    let signerEmail = clientEmail || user.email;
+    let signerInitial =
+      clientInitial ||
+      `${
+        user.firstName.charAt(0).toUpperCase() +
+        user.lastName.charAt(0).toUpperCase()
+      }`;
+    let recipientId = "1";
+    let clientUserId = "1001";
     let docName = "buying_agreement";
 
     //if dcs does not exist create a new one
+
+    let envelopeArgs = {
+      signer1: {
+        email: signerEmail,
+        name: signerName,
+        iniital: signerInitial,
+        recipientId,
+        clientUserId,
+      },
+      cc1: {
+        email: "vienne@labs196.com",
+        name: "Vi Nguyen",
+        recipientId: "2",
+        clientUserId: "1002",
+      },
+      docName,
+    };
+    let envelope = await makeEnvelope(envelopeArgs);
+    let envelopeResult = await generateEnvelope(envelope);
+
+    envelopeId = envelopeResult.envelopeId;
+    const newDocusign = await Docusign.create({
+      envelopeId,
+      name: docName,
+      recipientId: user._id,
+      recipients: [
+        {
+          type: "signer1",
+          name: signerName,
+          email: signerEmail,
+          recipientId,
+          clientUserId,
+        },
+      ],
+    });
+
+    await newDocusign.save();
+    docusignId = newDocusign._id;
+
+    let viewResult = await getRecipientURL({
+      envelopeId,
+      signerName,
+      signerEmail,
+      recipientId,
+      clientUserId,
+    });
+
+    res.locals = {
+      docusignId,
+      redirectUrl: viewResult.url,
+      propertyDetails: auction.property.details,
+      emails: [signerEmail],
+    };
+    next();
+  } catch (error) {
+    res.status(500).send(error);
+  }
+};
+
+const getBuyingAgreementURL = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id);
+    let auction = await Auction.findById(req.params.auctionId).populate(
+      "property"
+    );
+    let buyer = await Buyer.findOne({
+      userId: user._id,
+      auctionId: auction._id,
+    }).populate("docusignId");
+
+    if (!auction) {
+      return res.status(200).send({ error: "Auction not found" });
+    }
+
     if (!buyer) {
-      let envelopeArgs = {
-        signer1: {
-          email: user.email,
-          name: `${
-            user.firstName.charAt(0).toUpperCase() +
-            user.firstName.toLowerCase().slice(1)
-          } ${
-            user.lastName.charAt(0).toUpperCase() +
-            user.lastName.toLowerCase().slice(1)
-          }`,
-          iniital: `${
-            user.firstName.charAt(0).toUpperCase() +
-            user.lastName.charAt(0).toUpperCase()
-          }`,
-          recipientId: "1",
-          clientUserId: "1001",
-        },
-        cc1: {
-          email: "vienne@labs196.com",
-          name: "Vi Nguyen",
-          recipientId: "2",
-          clientUserId: "1002",
-        },
-        docName,
-      };
-      let envelope = await makeEnvelope(envelopeArgs);
-      let envelopeResult = await generateEnvelope(envelope);
+      return res.status(200).send({ error: "Buyer not found" });
+    }
 
-      envelopeId = envelopeResult.envelopeId;
-      const newDocusign = await Docusign.create({
-        envelopeId,
-        name: docName,
-        recipientId: user._id,
-      });
-
-      await newDocusign.save();
-      docusignId = newDocusign._id;
-    } else {
-      let dcs = await Docusign.findById(buyer.docusignId).select("envelopeId");
-      envelopeId = dcs.envelopeId;
-      docusignId = buyer.docusignId;
+    let envelopeId = buyer.docusignId.envelopeId;
+    let signerName, signerEmail, recipientId, clientUserId;
+    for (let recipient of buyer.recipients) {
+      if (recipient.type === "signer1") {
+        signerName = recipient.name;
+        signerEmail = recipient.email;
+        recipientId = recipient.recipientId;
+        clientUserId = recipient.clientUserId;
+      }
     }
 
     let viewResult = await getRecipientURL({
       envelopeId,
       signerName,
       signerEmail,
+      recipientId,
+      clientUserId,
     });
 
     res.locals = {
-      envelopeId,
-      docusignId,
+      // envelopeId,
+      docusignId: buyer.docusignId,
       redirectUrl: viewResult.url,
       propertyDetails: auction.property.details,
     };
@@ -444,20 +500,24 @@ const createBuyingAgreementURL = async (req, res, next) => {
   }
 };
 
-const createURLFromDocusignId=async (req,res,next)=>{
-  try{
-    const docusign=await Docusign.findById(req.params.docusignId)
-    if (!docusign){
-      return res.status(200)({error:"Docusign not found"})
+const createURLFromDocusignId = async (req, res, next) => {
+  try {
+    const docusign = await Docusign.findById(req.params.docusignId);
+    if (!docusign) {
+      return res.status(200)({ error: "Docusign not found" });
     }
-    
-  }
-  catch(err){
+  } catch (err) {
     res.status(500).send(err.message);
   }
-}
+};
 
-const getRecipientURL = async ({ envelopeId, signerName, signerEmail }) => {
+const getRecipientURL = async ({
+  envelopeId,
+  signerName,
+  signerEmail,
+  recipientId,
+  clientUserId,
+}) => {
   const accessToken = await getAccessToken();
   let dsApiClient = new docusign.ApiClient();
   dsApiClient.setBasePath(apiArgs.basePath);
@@ -468,8 +528,8 @@ const getRecipientURL = async ({ envelopeId, signerName, signerEmail }) => {
     dsReturnUrl: `${client_url}/docusign/callback/${envelopeId}`,
     signerEmail,
     signerName,
-    recipientId: "1",
-    clientUserId: "1001",
+    recipientId,
+    clientUserId,
     // signerClientId: "100abc",
   };
   let viewRequest = makeRecipientViewRequest(recipientViewArgs);
@@ -479,6 +539,7 @@ const getRecipientURL = async ({ envelopeId, signerName, signerEmail }) => {
     envelopeId,
     { recipientViewRequest: viewRequest }
   );
+
   return viewResult;
 };
 
@@ -511,9 +572,26 @@ const sendUIViews = (req, res) => {
   try {
     return res.status(200).send({
       docusignId: res.locals.docusignId,
-      envelopeId: res.locals.envelopeId,
       redirectUrl: res.locals.redirectUrl,
     });
+  } catch (err) {
+    return res.status(500).send(err.message);
+  }
+};
+
+const sendBuyingAgreementURLByEmail = (req, res) => {
+  try {
+    sendEmail({
+      to: res.locals.emails,
+      subject: "Auction3- Request for signature of buying agreement",
+      htmlText: `<p>Please click in this link to sign buying agreement with Auction3 <a href=${res.locals.redirectUrl}> Link </a> </p>`,
+    });
+    return res
+      .status(200)
+      .send({
+        message: "Email sent successfully",
+        docusignId: res.locals.docusignId,
+      });
   } catch (err) {
     return res.status(500).send(err.message);
   }
@@ -529,7 +607,7 @@ const sendUIURLByEmail = (req, res) => {
     sendEmail({
       to: res.locals.propertyDetails.owner_email,
       subject: "Auction3- Request for signature of selling agreement",
-      text: `Please click in this link to sign sellinng agreement with Auction3 ${res.locals.redirectUrl} `,
+      htmlText: `<p>Please click in this link to sign selling agreement with Auction3 <a href=${res.locals.redirectUrl}> Link </a> </p>`,
     });
     return res.status(200).send({ message: "Email sent successfully" });
   } catch (err) {
@@ -552,12 +630,45 @@ const callback = async (req, res) => {
   }
 };
 
-// @desc: Get information of a docusign
-// @route: GET api/docusign?propertyId=...&buyerId=...
+// @desc: Get uiviews of a docusign
+// @route: GET api/docusign/:id/uiviews
 const getDocusignView = async (req, res) => {
   try {
+    const dcs = await Docusign.findById(req.params.id);
+    const envelopeId = dcs.envelopeId;
+    let signerName, signerEmail, recipientId, clientUserId;
+
+    for (let recipient of dcs.recipients) {
+      if (recipient.type === "signer1") {
+        console.log("voday k");
+        signerName = recipient.name;
+        signerEmail = recipient.email;
+        recipientId = recipient.recipientId;
+        clientUserId = recipient.clientUserId;
+      }
+    }
+
+    let viewResult = await getRecipientURL({
+      envelopeId,
+      signerName,
+      signerEmail,
+      recipientId,
+      clientUserId,
+    });
+
+    res.status(200).send(viewResult);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+
+// @desc: Get uiviews of a docusign by propertyId
+// @route: GET api/docusign/propertyId/:propertyId/uiviews
+
+const getDocusignViewByPropertyId = async (req, res) => {
+  try {
     const { propertyId, buyerId } = req.query;
-    let dcs, envelopeId, signerEmail, signerName;
+    let dcs, envelopeId, signerEmail, signerName, recipientId, clientUserId;
 
     if (!propertyId && !buyerId) {
       return res
@@ -566,31 +677,41 @@ const getDocusignView = async (req, res) => {
     }
     if (propertyId) {
       const property = await Property.findById(propertyId)
-        .populate("createdBy")
+        .populate("createdBy docusignId")
         .select("createdBy docusignId");
-      dcs = await Docusign.findById(property.docusignId).select("envelopeId");
-      signerName = `${property.createdBy.firstName} ${property.createdBy.lastName}`;
-      signerEmail = `${property.createdBy.email}`;
+
+      envelopeId = property.docusignId.envelopeId;
+      for (let recipient of property.docusignId.recipients) {
+        if (recipient.type === "signer1") {
+          signerName = recipient.name;
+          signerEmail = recipient.email;
+          recipientId = recipient.recipientId;
+          clientUserId = recipient.clientUserId;
+        }
+      }
     }
 
     if (buyerId) {
       const buyer = await Buyer.findById(buyerId)
-        .populate("userId")
+        .populate("userId docusignId")
         .select("docusignId");
-      dcs = await Docusign.findById(buyer.docusignId).select("envelopeId");
-      signerName = `${buyer.userId.firstName} ${buyer.userId.lastName}`;
-      signerEmail = `${buyer.userId.email}`;
+      envelopeId = buyer.docusignId.envelopeId;
+      for (let recipient of buyer.docusignId.recipients) {
+        if (recipient.type === "signer1") {
+          signerName = recipient.name;
+          signerEmail = recipient.email;
+          recipientId = recipient.recipientId;
+          clientUserId = recipient.clientUserId;
+        }
+      }
     }
 
-    if (!dcs) {
-      return res.status(200).send({ error: "Docusign not found" });
-    }
-
-    envelopeId = dcs.envelopeId;
     let viewResult = await getRecipientURL({
       envelopeId,
       signerName,
       signerEmail,
+      recipientId,
+      clientUserId,
     });
 
     res.status(200).send(viewResult);
@@ -632,9 +753,11 @@ const getDocusign = async (req, res) => {
     res.status(500).send(err.message);
   }
 };
+
 module.exports = {
   createSellingAgreementURL,
   createBuyingAgreementURL,
+  getBuyingAgreementURL,
   callback,
   getDocusignView,
   sendEnvelope,
@@ -642,7 +765,8 @@ module.exports = {
   sendUIURLByEmail,
   getEnvelopeInfo,
   getDocusign,
-  createURLFromDocusignId
+  createURLFromDocusignId,
+  sendBuyingAgreementURLByEmail,
 };
 
 const getUserInfo = async (access_token) => {

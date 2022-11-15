@@ -570,7 +570,7 @@ const editRealestate = async (req, res) => {
     }
 
     if (step === 5) {
-      // docusign is signed or send
+      // docusign is signed or sent
       let isBroker = property.details.broker_name;
       let isHavingPowerOfAttorney = false;
       if (isBroker) {

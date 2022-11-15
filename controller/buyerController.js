@@ -11,15 +11,18 @@ const { sendEmail, replaceEmailTemplate } = require("../helper");
 //@desc  Create a buyer
 //@route POST /api/buyers body:{auctionId, docusignId,TC, answers:[{questionId, answer: "yes"/"no", explanation:"", documents:[{officialName:..., name:...,url:...}]}] }, TC:{time: ISOString format, IPAddress:...}, client: {name:..., email:..., phone:..., documents: [{officialName:..., name:...,url:...}]}
 const createBuyer = async (req, res) => {
-  console.log("create buyer");
   try {
     const user = await User.findOne({ _id: req.user.id });
-    console.log(user);
     const { auctionId, docusignId, TC, answers, documents, client } = req.body;
     const auction = await Auction.findOne({ _id: auctionId }).populate(
       "property"
     );
     const docusign = await Docusign.findOne({ _id: docusignId });
+
+    if (user.agent?.licenseNumber && !client) {
+      return res.status(200).send({ error: "Client information needed" });
+    }
+
     let funds = [];
 
     if (!auction) {
