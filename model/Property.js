@@ -90,7 +90,7 @@ const propertySchema = new Schema(
       type: Number,
       min: [0, "Discussed amount cannot be negative"],
       validate: function (value) {
-        return value < this.reservedAmount;
+        return value <= this.reservedAmount;
       },
       required: [
         function () {
