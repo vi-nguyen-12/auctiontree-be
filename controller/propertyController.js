@@ -1257,7 +1257,7 @@ const approveProperty = async (req, res) => {
       //add notifications to user
       user.notifications.push({
         propertyId: property._id,
-        message: `Status changed to ${status}`,
+        message: `Your property at ${property.details.property_address.formatted_street_address} ${property.details.property_address.city} ${property.details.property_address.state} ${property.details.property_address.zip_code} ${property.details.property_address.country} changed to ${status}`,
       });
       await user.save();
 
