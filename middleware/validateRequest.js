@@ -66,6 +66,22 @@ const validateUpdateUser = (req, res, next) => {
       then: Joi.string().required(),
       otherwise: Joi.string().allow(null),
     }),
+    agent: Joi.object({
+      licenseNumber: Joi.string(),
+      licenseDocument: Joi.when("licenseNumber", {
+        is: Joi.any().valid(null, ""),
+        then: Joi.valid(null, "").optional(),
+        otherwise: Joi.array()
+          .items(
+            Joi.object({
+              name: Joi.string().required(),
+              url: Joi.string().required(),
+            })
+          )
+          .min(1)
+          .required(),
+      }),
+    }),
   });
   const { error } = userSchema.validate(req.body);
   if (error) {

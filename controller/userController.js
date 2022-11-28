@@ -483,6 +483,7 @@ const editProfile = async (req, res) => {
       old_password,
       new_password,
       description,
+      agent,
     } = req.body;
 
     let isOwner = req.user?.id.toString() === req.params.id;
@@ -525,6 +526,7 @@ const editProfile = async (req, res) => {
     user.profileImage = profileImage;
     user.social_links = social_links || user.social_links;
     user.description = description || user.description;
+    user.agennt == agent || user.agent;
 
     // if change password, only owner can change password
     if (old_password) {
@@ -556,6 +558,7 @@ const editProfile = async (req, res) => {
       profileImage: savedUser.profileImage,
       social_links: savedUser.social_links,
       description: savedUser.description,
+      agent: savedUser.agent,
     };
     return res.status(200).send(result);
   } catch (err) {
