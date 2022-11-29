@@ -35,6 +35,7 @@ const {
   deleteNotification,
   getAllUsers,
   getAllBrokers,
+  setDueDiligence,
 } = require("../controller/userController");
 
 router.post("/register", authNotStrict, validateUser, registerUser);
@@ -61,6 +62,7 @@ router.get("/:id/seller/properties", auth, getListingsOfSeller);
 router.get("/", authAdmin, getAllUsers);
 //only for login user
 router.put("/:id/suspended", auth, suspendUserAccount);
+router.put("/:id/due_diligence/:propertyId", auth, setDueDiligence);
 router.put("/:id", auth, validateUpdateUser, editProfile);
 router.delete(
   "/:userId/notifications/:notificationId",
@@ -71,5 +73,5 @@ router.delete("/:id", auth, deleteUserAccount);
 //only for admin
 router.get("/buyerId/:buyerId", getUserByBuyerId);
 router.get("/propertyId/:propertyId", getUserByPropertyId);
-router.get("/broker",auth, getAllBrokers);
+router.get("/broker", auth, getAllBrokers);
 module.exports = router;

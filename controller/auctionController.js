@@ -559,7 +559,7 @@ const getAuctions = async (req, res) => {
 const getAuction = async (req, res) => {
   try {
     const url = req.originalUrl;
-    let auction;
+    let auction, user;
     let { fields } = req.query;
 
     let filter = {};
@@ -572,6 +572,10 @@ const getAuction = async (req, res) => {
       path: "property",
       select: "-step -isApproved",
     });
+
+    if (req.user) {
+      user = await User.findById(req.user.id).select("_id dueDiligence");
+    }
 
     if (!auction) return res.status(200).send({ error: "Auction not found!" });
     auction.viewCounts = auction.viewCounts + 1;
@@ -603,6 +607,10 @@ const getAuction = async (req, res) => {
         isOwner: true,
       };
       return res.status(200).send(auction);
+    }
+    // normal logged in user: can only see documents which approved due diligence
+    if (!user || !user.dueDiligence.includes(auction.property._id)) {
+      auction.property.documents = [];
     }
 
     //Authenticate: registered buyer & be approved at least 1 fund can see list top 5, not whole list of bids

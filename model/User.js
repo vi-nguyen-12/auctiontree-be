@@ -81,6 +81,7 @@ const userSchema = new mongoose.Schema(
         date: { type: Date, default: Date.now },
       },
     ],
+    dueDiligence: [{ type: Schema.Types.ObjectId, ref: "Property" }],
   },
   { timestamps: true }
 );

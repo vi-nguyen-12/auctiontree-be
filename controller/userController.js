@@ -670,6 +670,7 @@ const getLikedAuctions = async (req, res) => {
     res.status(500).send(err.message);
   }
 };
+
 //@desc  Set a liked auction
 //@route PUT /api/users/:id/:auctionId/liked
 const setLikedAuction = async (req, res) => {
@@ -709,6 +710,37 @@ const setUnlikedAuction = async (req, res) => {
         .send({ message: "Successfully remove auction from liked list" });
     }
     res.status(200).send({ error: "Not allowed to set unliked auction" });
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+};
+
+//@desc  Set due diligence of a property
+//@route PUT /api/users/:id/due_diligence/:propertyId
+const setDueDiligence = async (req, res) => {
+  try {
+    const { id: _id, propertyId } = req.params;
+    if (req.user?.id === _id) {
+      const user = await User.findById(_id);
+      const property = await Property.findById(propertyId);
+      if (!property) {
+        return res.status(200).send({ error: "Property not found" });
+      }
+
+      let propertyExistsInDueDiligence = user.dueDiligence.includes(propertyId);
+      if (!propertyExistsInDueDiligence) {
+        user.dueDiligence.push(property._id);
+        await user.save();
+      }
+      return res.status(200).send({
+        _id,
+        propertyId: property._id,
+        propertyDocuments: property.documents,
+      }); //should be only documents allowed to show
+    }
+    res
+      .status(200)
+      .send({ error: "Not allowed to set due diligence for property" });
   } catch (err) {
     res.status(500).send(err.message);
   }
@@ -1439,4 +1471,5 @@ module.exports = {
   deleteNotification,
   getAllUsers,
   getAllBrokers,
+  setDueDiligence,
 };
