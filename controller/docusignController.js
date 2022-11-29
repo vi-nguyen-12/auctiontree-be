@@ -274,6 +274,11 @@ const createSellingAgreementURL = async (req, res, next) => {
       .populate("createdBy")
       .select("createdBy docusignId details");
 
+    // we already have property with owner/broker information,
+    //  check if owner: signer is owner, email is owner email
+    // if broker has power of attorney, signer is broker, email is broker email
+    // if broker doesn't have power of attorney, signer is owner_name, email is owner email
+
     if (!property) {
       return res.status(200).send({ error: "Property not found" });
     }
@@ -306,7 +311,9 @@ const createSellingAgreementURL = async (req, res, next) => {
         docName,
         propertyAddress: property.details.property_address,
       };
+
       let envelope = await makeEnvelope(envelopeArgs);
+
       let envelopeResult = await generateEnvelope(envelope);
 
       envelopeId = envelopeResult.envelopeId;
@@ -317,6 +324,7 @@ const createSellingAgreementURL = async (req, res, next) => {
       });
 
       property.docusignId = newDocusign._id;
+
       await property.save();
     } else {
       let dcs = await Docusign.findById(property.docusignId).select(
@@ -335,6 +343,7 @@ const createSellingAgreementURL = async (req, res, next) => {
       docusignId: property.docusignId,
       redirectUrl: viewResult.url,
       propertyDetails: property.details,
+      //emails:
     };
     next();
   } catch (error) {
