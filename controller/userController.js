@@ -526,7 +526,7 @@ const editProfile = async (req, res) => {
     user.profileImage = profileImage;
     user.social_links = social_links || user.social_links;
     user.description = description || user.description;
-    user.agent == agent || user.agent;
+    user.agent = agent || user.agent;
 
     // if change password, only owner can change password
     if (old_password) {
