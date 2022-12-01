@@ -66,6 +66,7 @@ const propertySchema = new Schema(
             enum: ["pending", "success", "fail"],
             default: "pending",
           },
+          isVisible: { type: Boolean, default: false },
         },
       ],
       required: function () {

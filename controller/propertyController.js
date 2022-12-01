@@ -1279,17 +1279,18 @@ const approveProperty = async (req, res) => {
 };
 
 //@desc  Verify a document
-//@route PUT /:propertyId/documents/:documentId/status"  body: {status:"pending"/"success"/"fail"}
+//@route PUT /:propertyId/documents/:documentId/status"  body: {status:"pending"/"success"/"fail", isVisible: true/false}
 const verifyDocument = async (req, res) => {
   const bodySchema = Joi.object({
     status: Joi.string().valid("pending", "success", "fail"),
+    // isVisible: Joi.boolean(),
   });
   const { error } = bodySchema.validate(req.body);
   if (error) {
     return res.status(200).send({ error: error.details[0].message });
   }
 
-  const { status } = req.body;
+  const { status, isVisible } = req.body;
   const { propertyId, documentId } = req.params;
 
   try {
@@ -1308,6 +1309,7 @@ const verifyDocument = async (req, res) => {
       return res.status(404).send("Document not found");
     }
     document.isVerified = status;
+    // document.isVisible = isVisible || document.isVisible;
     const savedDocument = await document.save({ suppressWarning: true });
     if (status === "pending" || status === "fail") {
       property.isApproved = "pending";
@@ -1319,6 +1321,7 @@ const verifyDocument = async (req, res) => {
       url: savedDocument.url,
       isVerified: savedDocument.isVerified,
       propertyId: savedProperty._id,
+      // isVisible: savedDocument.isVisible,
     };
     res.status(200).send(data);
   } catch (err) {
