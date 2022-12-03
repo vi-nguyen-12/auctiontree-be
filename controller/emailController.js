@@ -11,8 +11,7 @@ const createEmail = async (req, res) => {
     const {
       type,
       userId,
-      firstName,
-      lastName,
+      name,
       email,
       phone,
       company,
@@ -23,7 +22,7 @@ const createEmail = async (req, res) => {
     const bodySchema = Joi.object({
       type: Joi.string().required().valid("from_admin", "from_user"),
       userId: Joi.objectId(),
-      firstName: Joi.when("type", {
+      name: Joi.when("type", {
         is: "from_user",
         then: Joi.when("userId", {
           is: Joi.exist(),
@@ -32,7 +31,7 @@ const createEmail = async (req, res) => {
         }),
         otherwise: Joi.string().allow(null),
       }),
-      lastName: Joi.when("type", {
+      title: Joi.when("type", {
         is: "from_user",
         then: Joi.when("userId", {
           is: Joi.exist(),
@@ -115,7 +114,7 @@ const createEmail = async (req, res) => {
         emailText = `${user.firstName} ${user.lastName} has sent a new message: "${content}"`;
       } else {
         await Email.create({
-          sender: { firstName, lastName, phone, email, company },
+          sender: { name, phone, email, company },
           recipients: admins.map((item) => {
             return { _id: item._id };
           }),
@@ -123,12 +122,12 @@ const createEmail = async (req, res) => {
           content,
         });
         //set sender information
-        senderName = `${firstName} ${lastName}`;
+        senderName = `${name}`;
 
         //set email to admin
         fromEmailAddress = email;
         emailSubject = `New message from user about: ${subject}`;
-        emailText = `${firstName} ${lastName} has sent a new message: "${content}"`;
+        emailText = `${name} has sent a new message: "${content}"`;
       }
 
       //should send email to user
