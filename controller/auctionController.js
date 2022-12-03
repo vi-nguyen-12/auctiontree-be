@@ -251,7 +251,13 @@ const getAuctions = async (req, res) => {
       auctionEndDate: Joi.date().iso().optional(),
       // startingBid: Joi.number().min(0).optional(),
       // incrementAmount: Joi.number().min(0).optional(),
-      time: Joi.string().optional().valid("ongoing", "upcoming", "completed"),
+      time: Joi.alternatives(
+        Joi.string().valid("ongoing", "upcoming", "completed"),
+        Joi.array().items(
+          Joi.string().valid("ongoing", "upcoming", "completed")
+        )
+      ).optional(),
+
       isFeatured: Joi.boolean().optional(),
       isSold: Joi.boolean().optional(),
       min_price: Joi.number().optional(),
@@ -344,16 +350,17 @@ const getAuctions = async (req, res) => {
     if (isFeatured === "false") {
       filter.isFeatured = false;
     }
-    if (time === "ongoing") {
+    if (time === "ongoing" || time?.includes("ongoing")) {
       filter.auctionStartDate = { $lte: now };
       filter.auctionEndDate = { $gte: now };
     }
-    if (time === "upcoming") {
+    if (time === "upcoming" || time?.includes("upcoming")) {
       filter.auctionStartDate = { $gte: now };
     }
-    if (time === "completed") {
+    if (time === "completed" || time?.includes("completed")) {
       filter.auctionEndDate = { $lte: now };
     }
+
     if (min_price) {
       filter.startingBid = { $gte: parseInt(min_price) };
     }
