@@ -19,10 +19,6 @@ const createBuyer = async (req, res) => {
     );
     const docusign = await Docusign.findOne({ _id: docusignId });
 
-    if (user.agent?.licenseNumber && !client) {
-      return res.status(200).send({ error: "Client information needed" });
-    }
-
     let funds = [];
 
     if (!auction) {

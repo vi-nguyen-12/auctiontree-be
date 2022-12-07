@@ -118,39 +118,41 @@ const validateBuyer = (req, res, next) => {
         })
       )
       .required(),
-    documents: Joi.array().items({
-      officialName: Joi.string()
-        .valid(
-          "bank_statement",
-          "brokerage_account_statement",
-          "crypto_account_statement",
-          "line_of_credit_doc"
-        )
-        .required(),
-      url: Joi.string().required(),
-      name: Joi.string().required(),
-      validity: Joi.date().iso().optional(),
-      isSelf: Joi.boolean().required(),
-      funderName: Joi.when("isSelf", {
-        is: Joi.boolean().valid(false),
-        then: Joi.string().required(),
-        otherwise: Joi.forbidden(),
-      }),
-      providerName: Joi.when("isSelf", {
-        is: Joi.boolean().valid(false),
-        then: Joi.string().required(),
-        otherwise: Joi.forbidden(),
-      }),
-      declaration: Joi.when("isSelf", {
-        is: Joi.boolean().valid(false),
-        then: Joi.object({
-          time: Joi.date().iso().required(),
-          IPAddress: Joi.string().required(),
+    documents: Joi.array()
+      .items({
+        officialName: Joi.string()
+          .valid(
+            "bank_statement",
+            "brokerage_account_statement",
+            "crypto_account_statement",
+            "line_of_credit_doc"
+          )
+          .required(),
+        url: Joi.string().required(),
+        name: Joi.string().required(),
+        validity: Joi.date().iso().optional(),
+        isSelf: Joi.boolean().required(),
+        funderName: Joi.when("isSelf", {
+          is: Joi.boolean().valid(false),
+          then: Joi.string().required(),
+          otherwise: Joi.forbidden(),
         }),
-        otherwise: Joi.forbidden(),
-      }),
-      _id: Joi.string().optional(),
-    }),
+        providerName: Joi.when("isSelf", {
+          is: Joi.boolean().valid(false),
+          then: Joi.string().required(),
+          otherwise: Joi.forbidden(),
+        }),
+        declaration: Joi.when("isSelf", {
+          is: Joi.boolean().valid(false),
+          then: Joi.object({
+            time: Joi.date().iso().required(),
+            IPAddress: Joi.string().required(),
+          }),
+          otherwise: Joi.forbidden(),
+        }),
+        _id: Joi.string().optional(),
+      })
+      .required(),
     client: Joi.object({
       name: Joi.string().optional(),
       email: Joi.string().email().optional(),
@@ -160,12 +162,12 @@ const validateBuyer = (req, res, next) => {
         url: Joi.string().required(),
         name: Joi.string().required(),
       }),
-    }),
+    }).optional(),
     docusignId: Joi.objectId().required(),
     TC: Joi.object({
       time: Joi.date().iso().required(),
       IPAddress: Joi.string().required(),
-    }),
+    }).required(),
   });
   const { error } = buyerSchema.validate(req.body);
   if (error) {
@@ -242,6 +244,25 @@ const propertyObjectSchema = {
           .required(),
         otherwise: Joi.array().optional(),
       }),
+
+      ownership_type: Joi.object({
+        name: Joi.string().required(),
+        secondary_owner: Joi.when("name", {
+          is: Joi.valid("joint"),
+          then: Joi.string().required(),
+          otherwise: Joi.valid(null, "").optional(),
+        }),
+        corporate_name: Joi.when("name", {
+          is: Joi.valid("corporate"),
+          then: Joi.string().required(),
+          otherwise: Joi.valid(null, "").optional(),
+        }),
+        trust_name: Joi.when("name", {
+          is: Joi.valid("trust"),
+          then: Joi.string().required(),
+          otherwise: Joi.valid(null, "").optional(),
+        }),
+      }).required(),
     }).required(),
 
     step: Joi.number().required().valid(1).options({ convert: false }),
@@ -452,6 +473,7 @@ const propertyObjectSchema = {
             name: Joi.string().required(),
             isVerified: Joi.string().optional(),
             _id: Joi.string().optional(),
+            isVisible: Joi.boolean().optional(),
           })
         )
         .required(),
