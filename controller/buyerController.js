@@ -101,7 +101,7 @@ const createBuyer = async (req, res) => {
     // const admins = await getGeneralAdmins();
     // sendEmail({
     //   to: admins.map((admin) => admin.email),
-    //   subject: "Auction3 - New Buyer is created",
+    //   subject: "Auction Tree - New Buyer is created",
     //   text: `A new buyer has been created with id: ${savedBuyer._id}. Please check this new buyer in admin site`,
     // });
     // addNotificationToAdmin(admins, {
@@ -292,7 +292,7 @@ const editBuyer = async (req, res) => {
     };
     sendEmail({
       to: buyer.userId.email,
-      subject: "Auction3- Request to change funding",
+      subject: "Auction Tree- Request to change funding",
       text: `Your request for changing funding has been sent to the admin`,
     });
 
@@ -336,7 +336,7 @@ const addFund = async (req, res) => {
       };
       sendEmail({
         to: buyer.userId.email,
-        subject: "Auction3- Request to change funding",
+        subject: "Auction Tree- Request to change funding",
         text: `Your request to add more funding has been sent to the admin`,
       });
 
@@ -344,7 +344,7 @@ const addFund = async (req, res) => {
       // const admins = await getGeneralAdmins();
       // sendEmail({
       //   to: admins.map((admin) => admin.email),
-      //   subject: "Auction3 - A buyer request more funds",
+      //   subject: "Auction Tree - A buyer request more funds",
       //   text: `A buyer with id ${buyer._id} has requested more fund. Please check this in admin site`,
       // });
       // addNotificationToAdmin(admins, {

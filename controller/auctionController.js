@@ -113,7 +113,7 @@ const createAuction = async (req, res) => {
       admins = await getGeneralAdmins();
       sendEmail({
         to: admins.map((admin) => admin.email),
-        subject: "Auction3 - New Auction is created",
+        subject: "Auction Tree - New Auction is created",
         text: `A new auction has been created with id: ${savedAuction._id}. Please check this new auction in admin site`,
       });
       addNotificationToAdmin(admins, {
@@ -861,7 +861,7 @@ const placeBidding = async (req, res) => {
       await highestBuyer.save();
 
       email = highestBuyer.userId.email;
-      subject = "Auction3- You bid is not highest anymore";
+      subject = "Auction Tree- You bid is not highest anymore";
       text = `Hi ${highestBuyer.firstName} ${highestBuyer.lastName} Your bid is not highest anymore, and your avaible fund for this property is now ${highestBuyer.availableFund}`;
       sendEmail({
         to: email,
@@ -887,7 +887,7 @@ const placeBidding = async (req, res) => {
         })
       );
       email = otherNotHighestBidder;
-      subject = "Auction3 -New bidding price";
+      subject = "Auction Tree -New bidding price";
       text = `Notice- New bidding price for auction id ${auctionId} is $${biddingPrice}`;
       sendEmail({ to: email, subject, text });
     }
@@ -898,7 +898,7 @@ const placeBidding = async (req, res) => {
 
     //send email to this bidder, and their total available fund
     email = user.email;
-    subject = "Auction3- Bidding completed successfully";
+    subject = "Auction Tree- Bidding completed successfully";
     text = `Hi ${user.firstName} ${user.lastName} Thank you for your bid. Your price is highest with ${biddingPrice} at ${biddingTime}`;
     user.notifications.push({
       auctionId: auction._id,
@@ -909,7 +909,7 @@ const placeBidding = async (req, res) => {
 
     //send email to owner
     email = owner.email;
-    subject = "Auction3 - New bidding price";
+    subject = "Auction Tree - New bidding price";
     text = `Hi ${owner.firstName} ${owner.lastName},new bidder ${buyer._id} bids your property ${auction._id} at $${biddingPrice} at ${biddingTime}`;
     owner.notifications.push({
       auctionId: auction._id,
@@ -922,7 +922,7 @@ const placeBidding = async (req, res) => {
     const admins = await getGeneralAdmins();
     sendEmail({
       to: admins.map((admin) => admin.email),
-      subject: "Auction3 - New bidding is placed",
+      subject: "Auction Tree - New bidding is placed",
       text: `A new bidding has been placed for this auction ${auction._id}. Please check this new bidding in admin site`,
     });
     addNotificationToAdmin(admins, {
@@ -1015,7 +1015,7 @@ const getAuctionResult = async (req, res) => {
       highestBidder.amount < auction.property.discussedAmount
     ) {
       email = auction.property.createdBy.email;
-      subject = `Auction3- Auction for your property with number ${auction.property._id} ended`;
+      subject = `Auction Tree - Auction for your property with number ${auction.property._id} ended`;
       text = `Hi ${auction.property.createdBy.firstName} ${auction.property.createdBy.lastName} Your property with number ${auction.property._id} has not been sold because no one has bid more than discussed amount`;
       return res.status(200).send({
         _id: auction._id,
@@ -1032,12 +1032,12 @@ const getAuctionResult = async (req, res) => {
       const user = await User.findById(savedAuction.winner.userId);
       //send email
       email = user.email;
-      subject = "Auction3- Congratulation for winning an auction";
+      subject = "Auction Tree- Congratulation for winning an auction";
       text = `Congratulation for winning auction for property with id number ${auction.property._id}`;
       sendEmail({ to: email, subject, text });
 
       email = auction.property.createdBy.email;
-      subject = "Auction3 - Your property has been successfully sold";
+      subject = "Auction Tree - Your property has been successfully sold";
       text = `Your property with id number ${property._id} has been sold to ${user.userName} with price ${highestBidder.amount}`;
       sendEmail({ to: email, subject, text });
 
@@ -1059,7 +1059,7 @@ const getAuctionResult = async (req, res) => {
       for (let item of discussedBidders) {
         const user = await User.findById(item.userId);
         let email = user.email;
-        let subject = "Auction3- Discuss auction price";
+        let subject = "Auction Tree - Discuss auction price";
         let text = `Thank you for bidding for real-estate with id number ${auction._id}. Your bid is ${item.amount} is not met reserved amount. However, our seller is willing to discuss more about the price.`;
         sendEmail({ to: email, subject, text });
       }
@@ -1143,7 +1143,7 @@ const setWinner = async (req, res) => {
 
     sendEmail({
       to: seller.email,
-      subject: "Auction3 - A winner is set for your auction property",
+      subject: "Auction Tree - A winner is set for your auction property",
       text: `A buyer with id ${buyer._id} is the winner of your property ${auction.property.type} at ${auction.property.details.property_address.formatted_street_address}  ${auction.property.details.property_address.zip_code} ${auction.property.details.property_address.city} ${auction.property.details.property_address.state} ${auction.property.details.property_address.country} with highest bidding price of $${amount}`,
     });
     seller.notifications.push({
@@ -1156,7 +1156,7 @@ const setWinner = async (req, res) => {
     const admins = await getGeneralAdmins();
     sendEmail({
       to: admins.map((admin) => admin.email),
-      subject: "Auction3 - Winner for Auction",
+      subject: "Auction Tree - Winner for Auction",
       text: `A winner for auction  ${auction._id} has been set. Please check this winner in admin site`,
     });
     addNotificationToAdmin(admins, {

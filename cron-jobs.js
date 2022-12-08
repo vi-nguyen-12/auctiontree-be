@@ -47,7 +47,7 @@ const remindPendingProperties = async () => {
     ]);
     for (let item of pendingProperties) {
       const { email, firstName, lastName } = item.seller;
-      const subject = "Auction3: Reminder for pending property";
+      const subject = "Auction Tree: Reminder for pending property";
       const text = `Hi ${firstName} ${lastName},
       This is a reminder you have one property which is pending for more than 15 days. It will be deleted after 30 days.
       Please check your property and update the status.
@@ -209,7 +209,7 @@ const sendSubscriptionEmail = async () => {
     for (let email of emails) {
       // sendEmail({
       //   email,
-      //   subject: "Auction3X - Latest news",
+      //   subject: "Auction Tree - Latest news",
       //   text: "List of upcoming auctions",
       // });
     }

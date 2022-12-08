@@ -542,8 +542,8 @@ const sendBuyingAgreementURLByEmail = (req, res) => {
   try {
     sendEmail({
       to: res.locals.emails,
-      subject: "Auction3- Request for signature of buying agreement",
-      htmlText: `<p>Please click in this link to sign buying agreement with Auction3 <a href=${res.locals.redirectUrl}> Link </a> </p>`,
+      subject: "Auction Tree - Request for signature of buying agreement",
+      htmlText: `<p>Please click in this link to sign buying agreement with Auction Tree <a href=${res.locals.redirectUrl}> Link </a> </p>`,
     });
     return res.status(200).send({
       message: "Email sent successfully",
@@ -563,8 +563,8 @@ const sendUIURLByEmail = (req, res) => {
     }
     sendEmail({
       to: res.locals.propertyDetails.owner_email,
-      subject: "Auction3- Request for signature of selling agreement",
-      htmlText: `<p>Please click in this link to sign selling agreement with Auction3 <a href=${res.locals.redirectUrl}> Link </a> </p>`,
+      subject: "Auction Tree- Request for signature of selling agreement",
+      htmlText: `<p>Please click in this link to sign selling agreement with Auction Tree <a href=${res.locals.redirectUrl}> Link </a> </p>`,
     });
     return res.status(200).send({ message: "Email sent successfully" });
   } catch (err) {
@@ -842,7 +842,7 @@ const embededConsole = async (args) => {
   return { redirectUrl: url };
 };
 
-//question: buyer docusign: sign with us (Auction3) or sign with seller
+//question: buyer docusign: sign with us (Auction Tree) or sign with seller
 //assume with us: show on FE ->user sign -> save that documents where? -> show in the future.
 //https://stackoverflow.com/questions/57358821/display-particular-signed-contract-in-docusign
 //assume with seller: we send to buyer for sign -> we send that contract to seller to sign

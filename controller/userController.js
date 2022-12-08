@@ -81,7 +81,7 @@ const registerUser = async (req, res) => {
     if (admin?.permissions.includes("user_create")) {
       emailBody = {
         subject: "Registration Confirm",
-        content: `<p>Hello ${user.firstName} ${user.lastName}!</p><p>We are delighted to have you join us. Welcome to Auction3. Sell your property faster over the platform. Please click on the link to complete the registration process to confirm your account ${client_url}/confirm_email?token=${token}</p><p>A unique user ${user._id} will be generated, please do not share the ID with other users.</p><p>This is temporary password: <strong>${password}</strong> </p><p>Please use this password and your personal email to log in and change your password.</p><p>Thanks,</p><p>The Auction3™ Team</p>`,
+        content: `<p>Hello ${user.firstName} ${user.lastName}!</p><p>We are delighted to have you join us. Welcome to Auction Tree. Sell your property faster over the platform. Please click on the link to complete the registration process to confirm your account ${client_url}/confirm_email?token=${token}</p><p>A unique user ${user._id} will be generated, please do not share the ID with other users.</p><p>This is temporary password: <strong>${password}</strong> </p><p>Please use this password and your personal email to log in and change your password.</p><p>Thanks,</p><p>The Auction Tree™ Team</p>`,
       };
     } else {
       emailBody = await replaceEmailTemplate("registration_confirm", {
@@ -206,8 +206,8 @@ const verify = async (req, res) => {
 
     sendEmail({
       to: user.email,
-      subject: "Auction3- Successful Registration",
-      text: `Hi ${user.firstName} ${user.lastName}, We are delighted to have you join us. Welcome to AUCTION3. Your email has been successfully verified. Thanks. The Auction3 Team`,
+      subject: "Auction Tree- Successful Registration",
+      text: `Hi ${user.firstName} ${user.lastName}, We are delighted to have you join us. Welcome to AUCTION TREE. Your email has been successfully verified. Thanks. The Auction Tree Team`,
     });
 
     return res.status(200).send({
@@ -246,7 +246,7 @@ const sendConfirmEmail = async (req, res) => {
     const savedUser = await user.save();
     sendEmail({
       to: user.email,
-      subject: "Auction3- Confirm email",
+      subject: "Auction Tree - Confirm email",
       text: `Please click here to confirm your email: ${client_url}/confirm_email?token=${token}`,
     });
     res.status(200).send({
@@ -421,7 +421,7 @@ const resetForgotPassword = async (req, res) => {
       await user.save();
       sendEmail({
         to: email,
-        subject: "Auction3- Reset password",
+        subject: "Auction Tree - Reset password",
         text: `Please click here to reset password: ${client_url}/reset_password?token=${token}`,
       });
       return res.status(200).send({ message: "Reset link sent successfully" });

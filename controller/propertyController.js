@@ -171,7 +171,7 @@ const createRealestate = async (req, res) => {
     const { email } = await User.findOne({ _id: req.user.id }, "email");
     sendEmail({
       to: email,
-      subject: "Auction3-Listing real-estate status",
+      subject: "Auction Tree - Listing real-estate status",
       text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
     });
 
@@ -356,7 +356,7 @@ const createOthers = async (req, res) => {
       // const { email } = await User.findOne({ _id: req.user.id }, "email");
       // sendEmail({
       //   to: email,
-      //   subject: `Auction3-Listing  ${type} status`,
+      //   subject: `Auction Tree - Listing  ${type} status`,
       //   text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
       // });
       res.status(200).send(savedProperty);
@@ -615,7 +615,7 @@ const editRealestate = async (req, res) => {
         admins = await getGeneralAdmins();
         sendEmail({
           to: admins.map((admin) => admin.email),
-          subject: "Auction3 - New property is created",
+          subject: "Auction Tree - New property is created",
           text: `A new property has been created with id: ${property._id}. Please check this new property in admin site`,
         });
         addNotificationToAdmin(admins, {
@@ -982,7 +982,7 @@ const editOthers = async (req, res) => {
         admins = await getGeneralAdmins();
         sendEmail({
           to: admins.map((admin) => admin.email),
-          subject: "Auction3 - New property is created",
+          subject: "Auction Tree - New property is created",
           text: `A new property has been created with id: ${property._id}. Please check this new property in admin site`,
         });
         addNotificationToAdmin(admins, {
