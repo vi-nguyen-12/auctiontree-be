@@ -55,6 +55,8 @@ if (process.env.NODE_ENV === "test" || process.env.NODE_ENV == "production") {
     process.env.TEST_CLIENT_ADMIN_URL,
     process.env.PROD_CLIENT_ADMIN_URL,
     "https://demo.docusign.net/restapi",
+    "https://master.d2kn8k5vvfikc0.amplifyapp.com",
+    "https://master.d2n2iz8kdj82to.amplifyapp.com",
   ];
 
   const corsOptions = {
