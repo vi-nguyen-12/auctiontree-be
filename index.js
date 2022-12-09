@@ -57,6 +57,8 @@ if (process.env.NODE_ENV === "test" || process.env.NODE_ENV == "production") {
     "https://demo.docusign.net/restapi",
     "https://master.d2kn8k5vvfikc0.amplifyapp.com",
     "https://master.d2n2iz8kdj82to.amplifyapp.com",
+    "http://192.168.1.168:3000",
+    "http://192.168.1.75:3000",
   ];
 
   const corsOptions = {
