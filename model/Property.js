@@ -35,6 +35,7 @@ const propertySchema = new Schema(
             enum: ["pending", "success", "fail"],
             default: "pending",
           },
+          isMain: { type: Boolean, default: false },
         },
       ],
     },
