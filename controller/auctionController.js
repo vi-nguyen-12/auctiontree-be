@@ -506,12 +506,19 @@ const getAuctions = async (req, res) => {
                 type: "$type",
                 details: "$details",
                 images: "$images",
+                documents: {
+                  '$filter': {
+                      input: '$documents',
+                      as: 'documents',
+                      cond: { $eq: ['$$documents.isVisible', true] }
+                  }
+               },
               },
             },
           ],
         },
       },
-      { $unwind: { path: "$property" } },
+      { $unwind: { path: "$property" }},
       { $match: filterProperty },
       {
         $unset: ["incrementAmount", "bids"],
@@ -553,6 +560,10 @@ const getAuctions = async (req, res) => {
       "Pagination-Page": page,
       "Pagination-Limit": limit,
     });
+
+    if (!req.user || !req.user.dueDiligence.includes(auctions.property._id)) {
+      auctions.property.documents = [];
+    }
 
     return res.status(200).send(auctions);
   } catch (err) {

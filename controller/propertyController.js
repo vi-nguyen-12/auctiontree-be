@@ -1413,7 +1413,6 @@ const verifyImage = async (req, res) => {
       item.isMain = false
     });
     image.isVerified = status;
-    image.isMain = isMain;
     const savedImage = await image.save({ suppressWarning: true });
     if (status === "pending" || status === "fail") {
       property.isApproved = "pending";
