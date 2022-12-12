@@ -1406,6 +1406,12 @@ const verifyImage = async (req, res) => {
     if (!image) {
       return res.status(404).send("Image not found");
     }
+    property.images.forEach(item => {
+      if(item.id === imageId){
+        return item.isMain = isMain
+      }
+      item.isMain = false
+    });
     image.isVerified = status;
     image.isMain = isMain;
     const savedImage = await image.save({ suppressWarning: true });
