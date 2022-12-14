@@ -5,8 +5,57 @@ const Buyer = require("./model/Buyer");
 const Role = require("./model/Role");
 const Admin = require("./model/Admin");
 
+// const sendEmail = ({ from, to, subject, text, htmlText }) => {
+//   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+//   console.log(process.env.SENDGRID_API_KEY);
+//   if (htmlText) {
+//     let htmlArr = htmlText.split("");
+//     let s = -1,
+//       i = 0;
+//     while (i < htmlArr.length) {
+//       if (htmlArr[i] === "<") {
+//         s = i;
+//       }
+//       if (htmlArr[i] === ">") {
+//         htmlArr.splice(s, i - s + 1);
+//         i = s - 1;
+//         s = -1;
+//       }
+//       i++;
+//     }
+//     text = htmlArr.join("");
+//   }
+//   const msg = {
+//     to,
+//     from: from || "auction3x@gmail.com",
+//     subject,
+//     text,
+//     html: htmlText,
+//   };
+//   console.log(msg);
+//   sgMail
+//     .send(msg, true)
+//     .then(() => {
+//       console.log("Email sent");
+//     })
+//     .catch((error) => {
+//       console.error(error);
+//     });
+// };
+
+// send email via smtp
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  from: "auction3x@gmail.com",
+  port: 465,
+  secure: true,
+  auth: {
+    user: "techdeveloper2022@gmail.com",
+    pass: "ltxavhpfgtgdcfqr",
+  },
+});
+
 const sendEmail = ({ from, to, subject, text, htmlText }) => {
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
   if (htmlText) {
     let htmlArr = htmlText.split("");
     let s = -1,
@@ -24,50 +73,21 @@ const sendEmail = ({ from, to, subject, text, htmlText }) => {
     }
     text = htmlArr.join("");
   }
-  const msg = {
-    to,
-    from: from || "vienne@labs196.com",
-    subject,
-    text,
-    html: htmlText,
-  };
-  sgMail
-    .send(msg, true)
+  transporter
+    .sendMail({
+      from: from || "auction3x@gmail.com",
+      to,
+      subject,
+      text,
+      html: htmlText,
+    })
     .then(() => {
       console.log("Email sent");
     })
     .catch((error) => {
-      console.error(error);
+      console.log(error);
     });
 };
-
-//send email via smtp
-// const transporter = nodemailer.createTransport({
-//   host: "smtp.gmail.com",
-//   from: "auction3x@gmail.com",
-//   port: 465,
-//   secure: true,
-//   auth: {
-//     user: "auction3x@gmail.com",
-//     pass: "tzygnvhxzrxncioi",
-//   },
-// });
-
-// const sendEmail = ({ from, to, subject, htmlText }) => {
-//   transporter
-//     .sendMail({
-//       from: from || "auction3x@gmail.com",
-//       to,
-//       subject,
-//       html: htmlText,
-//     })
-//     .then(() => {
-//       console.log("Email sent");
-//     })
-//     .catch((error) => {
-//       console.log(error);
-//     });
-// };
 
 const getBidsInformation = async (bids, startingBid) => {
   const numberOfBids = bids.length;
