@@ -561,9 +561,6 @@ const getAuctions = async (req, res) => {
       "Pagination-Limit": limit,
     });
 
-    if (!req.user || !req.user.dueDiligence.includes(auctions.property._id)) {
-      auctions.property.documents = [];
-    }
 
     return res.status(200).send(auctions);
   } catch (err) {
