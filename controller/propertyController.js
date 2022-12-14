@@ -665,6 +665,7 @@ const editOthers = async (req, res) => {
       docusignId,
       step,
     } = req.body;
+
     let admins;
 
     const property = await Property.findOne({ _id: req.params.id });
@@ -744,6 +745,7 @@ const editOthers = async (req, res) => {
             "Discussed amount must be less than or equal to reserved amount",
         });
       }
+
       if (property.type === "car") {
         let {
           make,
@@ -925,8 +927,15 @@ const editOthers = async (req, res) => {
     property.details = property.details
       ? { ...property.details, ...details }
       : details;
-    property.reservedAmount = reservedAmount || property.reservedAmount;
-    property.discussedAmount = discussedAmount || property.discussedAmount;
+    property.reservedAmount =
+      typeof reservedAmount == "number"
+        ? reservedAmount
+        : property.reservedAmount;
+
+    property.discussedAmount =
+      typeof discussedAmount == "number"
+        ? discussedAmount
+        : property.discussedAmount;
     property.images = images || property.images;
     property.videos = videos || property.videos;
     property.documents = documents || property.documents;
