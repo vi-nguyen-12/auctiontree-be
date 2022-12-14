@@ -27,8 +27,8 @@ const addSubscription = async (req, res) => {
     const savedSubscription = await newSubscription.save();
     sendEmail({
       to: email,
-      subject: "Auction3X- Register for subscription",
-      text: "Thank you for subscribing to Auction3X. We will send you updates about the latest auctions.",
+      subject: "Auction Tree - Register for subscription",
+      text: "Thank you for subscribing to Auction Tree. We will send you updates about the latest auctions.",
     });
     res.status(200).send(savedSubscription);
   } catch (err) {
@@ -53,8 +53,8 @@ const removeSubscription = async (req, res) => {
     await Subscription.deleteOne({ email });
     sendEmail({
       to: email,
-      subject: "Auction3X- Unregister for subscription",
-      text: "Your subscription has been removed from Auction3X.",
+      subject: "Auction Tree - Unregister for subscription",
+      text: "Your subscription has been removed from Auction Tree.",
     });
     res.status(200).send({ message: "Subscription removed successfully" });
   } catch (err) {

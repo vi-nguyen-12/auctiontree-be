@@ -16,8 +16,8 @@ const client_url =
   process.env.NODE_ENV === "production"
     ? process.env.PROD_CLIENT_ADMIN_URL
     : process.env.NODE_ENV === "test"
-      ? process.env.TEST_CLIENT_ADMIN_URL
-      : process.env.DEV_CLIENT_ADMIN_URL;
+    ? process.env.TEST_CLIENT_ADMIN_URL
+    : process.env.DEV_CLIENT_ADMIN_URL;
 //@desc  Create a new admin
 //@route POST /api/admins body={fullName,email,phone,location,role, department,image, designation,description}
 
@@ -89,7 +89,7 @@ const createAdmin = async (req, res) => {
       admins = await getGeneralAdmins();
       sendEmail({
         to: admins.map((admin) => admin.email),
-        subject: "Auction3 - New employee is created",
+        subject: "Auction Tree - New employee is created",
         text: `A new employee has been created with id: ${newAdmin._id}. Please check this new employee in admin site`,
       });
       addNotificationToAdmin(admins, {
@@ -384,15 +384,15 @@ const editAdmin = async (req, res) => {
       if (status === "deactivated" && admin.status === "activated") {
         sendEmail({
           to: admin.personalEmail,
-          subject: "Auction3X- Changing status",
-          text: "Your status at Auction3X has been changed to deactivated. Please contact us for more details",
+          subject: "Auction Tree- Changing status",
+          text: "Your status at Auction Tree has been changed to deactivated. Please contact us for more details",
         });
       }
       if (status === "activated" && admin.status === "deactivated") {
         sendEmail({
           to: admin.personalEmail,
-          subject: "Auction3X- Changing status",
-          text: "Your status at Auction3X has been changed to activated.",
+          subject: "Auction Tree- Changing status",
+          text: "Your status at Auction Tree has been changed to activated.",
         });
       }
     }
@@ -454,7 +454,8 @@ const getAllAdmins = async (req, res) => {
   try {
     if (req.admin?.permissions.includes("admin_read")) {
       // let {fullName, email, personalEmail, location, role, permissions } = req.query;
-      let { name, email, personalEmail, location, role, permissions } = req.query;
+      let { name, email, personalEmail, location, role, permissions } =
+        req.query;
       let filter = {};
 
       if (name) {
@@ -603,7 +604,7 @@ const forgotPassword = async (req, res) => {
 
       sendEmail({
         to: admin.personalEmail,
-        subject: "Auction3X- Reset Password",
+        subject: "Auction Tree- Reset Password",
         text: `Please click in this link to reset your password: ${client_url}/reset-password?token=${token}`,
       });
       return res.status(200).send({ message: "Reset link sent successfully" });

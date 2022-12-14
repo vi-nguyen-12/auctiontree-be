@@ -171,7 +171,7 @@ const createRealestate = async (req, res) => {
     const { email } = await User.findOne({ _id: req.user.id }, "email");
     sendEmail({
       to: email,
-      subject: "Auction3-Listing real-estate status",
+      subject: "Auction Tree - Listing real-estate status",
       text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
     });
 
@@ -356,7 +356,7 @@ const createOthers = async (req, res) => {
       // const { email } = await User.findOne({ _id: req.user.id }, "email");
       // sendEmail({
       //   to: email,
-      //   subject: `Auction3-Listing  ${type} status`,
+      //   subject: `Auction Tree - Listing  ${type} status`,
       //   text: "Thank you for listing a property for sell. We are reviewing your documents and will instruct you the next step of selling process in short time. ",
       // });
       res.status(200).send(savedProperty);
@@ -615,7 +615,7 @@ const editRealestate = async (req, res) => {
         admins = await getGeneralAdmins();
         sendEmail({
           to: admins.map((admin) => admin.email),
-          subject: "Auction3 - New property is created",
+          subject: "Auction Tree - New property is created",
           text: `A new property has been created with id: ${property._id}. Please check this new property in admin site`,
         });
         addNotificationToAdmin(admins, {
@@ -982,7 +982,7 @@ const editOthers = async (req, res) => {
         admins = await getGeneralAdmins();
         sendEmail({
           to: admins.map((admin) => admin.email),
-          subject: "Auction3 - New property is created",
+          subject: "Auction Tree - New property is created",
           text: `A new property has been created with id: ${property._id}. Please check this new property in admin site`,
         });
         addNotificationToAdmin(admins, {
@@ -1283,7 +1283,7 @@ const approveProperty = async (req, res) => {
 const verifyDocument = async (req, res) => {
   const bodySchema = Joi.object({
     status: Joi.string().valid("pending", "success", "fail"),
-    // isVisible: Joi.boolean(),
+    isVisible: Joi.boolean(),
   });
   const { error } = bodySchema.validate(req.body);
   if (error) {
@@ -1309,7 +1309,7 @@ const verifyDocument = async (req, res) => {
       return res.status(404).send("Document not found");
     }
     document.isVerified = status;
-    // document.isVisible = isVisible || document.isVisible;
+    document.isVisible = isVisible;
     const savedDocument = await document.save({ suppressWarning: true });
     if (status === "pending" || status === "fail") {
       property.isApproved = "pending";
@@ -1321,7 +1321,7 @@ const verifyDocument = async (req, res) => {
       url: savedDocument.url,
       isVerified: savedDocument.isVerified,
       propertyId: savedProperty._id,
-      // isVisible: savedDocument.isVisible,
+      isVisible: savedDocument.isVisible,
     };
     res.status(200).send(data);
   } catch (err) {
@@ -1381,13 +1381,14 @@ const verifyVideo = async (req, res) => {
 const verifyImage = async (req, res) => {
   const bodySchema = Joi.object({
     status: Joi.string().valid("pending", "success", "fail"),
+    isMain: Joi.boolean(),
   });
   const { error } = bodySchema.validate(req.body);
   if (error) {
     return res.status(200).send({ error: error.details[0].message });
   }
 
-  const { status } = req.body;
+  const { status, isMain } = req.body;
   const { propertyId, imageId } = req.params;
 
   try {
@@ -1405,6 +1406,12 @@ const verifyImage = async (req, res) => {
     if (!image) {
       return res.status(404).send("Image not found");
     }
+    property.images.forEach(item => {
+      if(item.id === imageId){
+        return item.isMain = isMain
+      }
+      item.isMain = false
+    });
     image.isVerified = status;
     const savedImage = await image.save({ suppressWarning: true });
     if (status === "pending" || status === "fail") {
@@ -1417,6 +1424,7 @@ const verifyImage = async (req, res) => {
       url: savedImage.url,
       isVerified: savedImage.isVerified,
       propertyId: savedProperty._id,
+      isMain: savedImage.isMain
     };
     res.status(200).send(data);
   } catch (err) {

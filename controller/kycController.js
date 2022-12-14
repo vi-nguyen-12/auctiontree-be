@@ -82,7 +82,7 @@ const callback = async (req, res) => {
       let email = user.email;
       sendEmail({
         to: email,
-        subject: "Auction3- KYC approved",
+        subject: "Auction Tree- KYC approved",
         text: "Thank you for completing KYC. Your ID is successfuly approved",
       });
     }
