@@ -1406,12 +1406,15 @@ const verifyImage = async (req, res) => {
     if (!image) {
       return res.status(404).send("Image not found");
     }
-    property.images.forEach(item => {
-      if(item.id === imageId){
-        return item.isMain = isMain
-      }
-      item.isMain = false
-    });
+    if (isMain) {
+      property.images.forEach((item) => {
+        if (item.id === imageId) {
+          return (item.isMain = isMain);
+        }
+        item.isMain = false;
+      });
+    }
+
     image.isVerified = status;
     const savedImage = await image.save({ suppressWarning: true });
     if (status === "pending" || status === "fail") {
@@ -1424,7 +1427,7 @@ const verifyImage = async (req, res) => {
       url: savedImage.url,
       isVerified: savedImage.isVerified,
       propertyId: savedProperty._id,
-      isMain: savedImage.isMain
+      isMain: savedImage.isMain,
     };
     res.status(200).send(data);
   } catch (err) {

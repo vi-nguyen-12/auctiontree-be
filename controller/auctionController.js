@@ -507,18 +507,18 @@ const getAuctions = async (req, res) => {
                 details: "$details",
                 images: "$images",
                 documents: {
-                  '$filter': {
-                      input: '$documents',
-                      as: 'documents',
-                      cond: { $eq: ['$$documents.isVisible', true] }
-                  }
-               },
+                  $filter: {
+                    input: "$documents",
+                    as: "documents",
+                    cond: { $eq: ["$$documents.isVisible", true] },
+                  },
+                },
               },
             },
           ],
         },
       },
-      { $unwind: { path: "$property" }},
+      { $unwind: { path: "$property" } },
       { $match: filterProperty },
       {
         $unset: ["incrementAmount", "bids"],
@@ -560,7 +560,6 @@ const getAuctions = async (req, res) => {
       "Pagination-Page": page,
       "Pagination-Limit": limit,
     });
-
 
     return res.status(200).send(auctions);
   } catch (err) {
@@ -627,7 +626,9 @@ const getAuction = async (req, res) => {
     if (!user || !user.dueDiligence.includes(auction.property._id)) {
       auction.property.documents = [];
     }
-
+    auction.property.documents = auction.property.documents.filter(
+      (document) => document.isVisible
+    );
     //Authenticate: registered buyer & be approved at least 1 fund can see list top 5, not whole list of bids
     delete auction.bids;
     delete auction.property.reservedAmount;
