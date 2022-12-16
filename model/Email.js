@@ -40,6 +40,7 @@ const emailSchema = new Schema(
       enum: ["User", "Admin"],
     },
     content: { type: String, required: true },
+    subject: { type: String },
   },
   { timestamp: true }
 );
@@ -51,9 +52,7 @@ emailSchema.pre("save", function (next) {
       this.sender.email ||
       this.sender.phone
     ) {
-      next(
-        new Error("Name or email or phone is no required")
-      );
+      next(new Error("Name or email or phone is no required"));
     }
   } else {
     if (!this.sender.name || !this.sender.email) {

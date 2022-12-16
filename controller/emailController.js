@@ -80,15 +80,16 @@ const createEmail = async (req, res) => {
     }
 
     if (type == "from_user") {
-      //find all who is general admin for now/ might change in thefuture
-      const role = await Role.findOne({ name: "general_admin" });
-      const admins = await Admin.find({ role: role._id }).select("email");
+      //send to info@auctiontree.com
+      // const role = await Role.findOne({ name: "general_admin" });
+      const admins = await Admin.find({ email: "info@auctiontree.com" });
       let fromEmailAddress,
         toEmailAddresses,
         emailSubject,
         emailText,
         senderName;
-      toEmailAddresses = admins.map((item) => item.email);
+      // toEmailAddresses = admins.map((item) => item.email);
+      toEmailAddresses = ["info@auctiontree.com"];
       if (userId) {
         const user = await User.findById(userId);
 
@@ -103,6 +104,7 @@ const createEmail = async (req, res) => {
           }),
           recipientsModel: "Admin",
           content,
+          subject,
         });
 
         //set sender information
@@ -120,6 +122,7 @@ const createEmail = async (req, res) => {
           }),
           recipientsModel: "Admin",
           content,
+          subject,
         });
         //set sender information
         senderName = `${name}`;
@@ -130,7 +133,7 @@ const createEmail = async (req, res) => {
         emailText = `${name} has sent a new message: "${content}"`;
       }
 
-      //should send email to user
+      //autoreply- send email to user
       if (autoReply) {
         let emailBody = await replaceEmailTemplate(autoReply, {
           name: senderName,
@@ -145,7 +148,7 @@ const createEmail = async (req, res) => {
         });
       }
 
-      //send email to admin
+      //send email to info@auctiontree.com
       sendEmail({
         // from: fromEmailAddress,
         to: toEmailAddresses,
@@ -155,6 +158,11 @@ const createEmail = async (req, res) => {
       return res.status(200).send({ message: "Successfully sent message" });
     }
     if (type == "from_admin") {
+      if (!req.admin) {
+        return res.status(200).send({ error: "Not authorized to send email" });
+      }
+      const admin = await Admin.findById(req.admin.id);
+
       if (userId) {
         const user = await User.findById(userId);
         if (!user) {
@@ -166,11 +174,12 @@ const createEmail = async (req, res) => {
           senderModel: "Admin",
           recipients: [{ _id: userId }],
           recipientsModel: "User",
+          subject,
           content,
         });
 
         sendEmail({
-          // from: admin.email,
+          from: admin.email.includes("@auctiontree.com") ? admin.email : null,
           to: user.email,
           subject,
           htmlText: content,
@@ -181,10 +190,12 @@ const createEmail = async (req, res) => {
           senderModel: "Admin",
           recipients: [{ email }],
           recipientsModel: "User",
+          subject,
           content,
         });
 
         sendEmail({
+          from: admin.email.includes("@auctiontree.com") ? admin.email : null,
           to: email,
           subject,
           htmlText: content,
