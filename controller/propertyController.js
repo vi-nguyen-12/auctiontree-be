@@ -394,6 +394,7 @@ const editRealestate = async (req, res) => {
       description,
       reservedAmount,
       discussedAmount,
+      currency,
       images,
       videos,
       documents,
@@ -643,6 +644,7 @@ const editRealestate = async (req, res) => {
       typeof discussedAmount == "number"
         ? discussedAmount
         : property.discussedAmount;
+    property.currency = currency || property.currency;
     property.images = images || property.images;
     property.videos = videos || property.videos;
     property.documents = documents || property.documents;
@@ -943,6 +945,7 @@ const editOthers = async (req, res) => {
       typeof discussedAmount == "number"
         ? discussedAmount
         : property.discussedAmount;
+    property.currency = currency || property.currency;
     property.images = images || property.images;
     property.videos = videos || property.videos;
     property.documents = documents || property.documents;
