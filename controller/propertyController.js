@@ -668,6 +668,7 @@ const editOthers = async (req, res) => {
       details,
       reservedAmount,
       discussedAmount,
+      currency,
       images,
       videos,
       documents,
