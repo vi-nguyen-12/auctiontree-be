@@ -101,6 +101,7 @@ const propertySchema = new Schema(
         "Discussed amount is required",
       ],
     },
+    currency: { type: String, required: true, enum: ["USD", "INR"] },
     isApproved: {
       type: String,
       required: true,
