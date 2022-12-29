@@ -31,7 +31,7 @@ const sendEmail = ({ from, to, subject, text, htmlText }) => {
     text,
     html: htmlText,
   };
-  console.log(msg);
+
   sgMail
     .send(msg, true)
     .then(() => {
