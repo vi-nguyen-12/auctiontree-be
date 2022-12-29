@@ -90,7 +90,7 @@ emailTemplateSchema.pre("save", function (next) {
     this.replacedTexts = ["name"];
   }
   if (this.type == "property_registration") {
-    this.replacedTexts = ["name", "property_adddress"];
+    this.replacedTexts = ["name", "property_address"];
   }
   if (this.type == "property_payment") {
     this.replacedTexts = ["amount", "property_address"];
