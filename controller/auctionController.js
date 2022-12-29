@@ -216,7 +216,8 @@ const editAuction = async (req, res) => {
     auction.auctionEndDate = auctionEndDate;
     auction.startingBid = startingBid || auction.startingBid;
     auction.incrementAmount = incrementAmount || auction.incrementAmount;
-    auction.isFeatured = isFeatured || auction.isFeatured;
+    auction.isFeatured =
+      typeof isFeatured === "boolean" ? isFeatured : auction.isFeatured;
     auction.isActive = isActive || auction.isActive;
     const updatedAuction = await auction.save();
     res.status(200).send(updatedAuction);
@@ -803,12 +804,17 @@ const placeBidding = async (req, res) => {
   const bodySchema = Joi.object({
     biddingTime: Joi.date().iso().required(),
     biddingPrice: Joi.number().required().strict(),
+    biddingCurrency: Joi.string().required().valid("USD", "INR"),
   });
   const { error } = bodySchema.validate(req.body);
   if (error) return res.status(200).send({ error: error.details[0].message });
 
   const auctionId = req.params.id;
-  const { biddingTime: biddingTimeISOString, biddingPrice } = req.body;
+  const {
+    biddingTime: biddingTimeISOString,
+    biddingPrice,
+    biddingCurrency,
+  } = req.body;
   const biddingTime = new Date(biddingTimeISOString);
   try {
     let email, subject, text;
@@ -818,16 +824,25 @@ const placeBidding = async (req, res) => {
       return res.status(200).send({ error: "User did not register to buy" });
     }
 
-    const auction = await Auction.findOne({ _id: auctionId });
+    const auction = await Auction.findOne({ _id: auctionId }).populate(
+      "property"
+    );
     if (!auction) {
       return res.status(200).send({ error: "Auction not found" });
+    }
+
+    if (auction.property.currency !== biddingCurrency) {
+      return res.status(200).send({
+        error:
+          "Bidding currency is not the same as currency of listed property",
+      });
     }
 
     const property = await Property.findById(auction.property);
     const owner = await User.findById(property.createdBy);
 
     //check if has enough funds for that property
-    if (buyer.availableFund < biddingPrice) {
+    if (buyer.availableFund[biddingCurrency] || 0 < biddingPrice) {
       return res.status(200).send({ error: "Wallet is insufficient to bid" });
     }
 
@@ -864,14 +879,14 @@ const placeBidding = async (req, res) => {
       let highestBuyer = await Buyer.findById(highestBidder.buyerId).populate(
         "userId"
       );
-      highestBuyer.availableFund =
-        highestBuyer.availableFund + highestBidder.amount;
+      highestBuyer.availableFund[biddingCurrency] =
+        highestBuyer.availableFund[biddingCurrency] + highestBidder.amount;
 
       await highestBuyer.save();
 
       email = highestBuyer.userId.email;
       subject = "Auction Tree- You bid is not highest anymore";
-      text = `Hi ${highestBuyer.firstName} ${highestBuyer.lastName} Your bid is not highest anymore, and your avaible fund for this property is now ${highestBuyer.availableFund}`;
+      text = `Hi ${highestBuyer.firstName} ${highestBuyer.lastName} Your bid is not highest anymore, and your avaible fund for this property is now ${highestBuyer.availableFund[biddingCurrency]}`;
       sendEmail({
         to: email,
         subject,
@@ -902,7 +917,8 @@ const placeBidding = async (req, res) => {
     }
 
     // deduct money from new bidder
-    buyer.availableFund = buyer.availableFund - biddingPrice;
+    buyer.availableFund[biddingCurrency] =
+      buyer.availableFund[biddingCurrency] - biddingPrice;
     await buyer.save();
 
     //send email to this bidder, and their total available fund
