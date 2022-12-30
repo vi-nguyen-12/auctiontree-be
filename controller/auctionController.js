@@ -343,6 +343,9 @@ const getAuctions = async (req, res) => {
     let auctions;
     let filter = {};
     let filterProperty = {};
+    let auctionStartDateFilter = [];
+    let auctionEndDateFilter = [];
+    let timeFilter = [];
     const now = new Date();
 
     if (isFeatured === "true") {
@@ -352,14 +355,23 @@ const getAuctions = async (req, res) => {
       filter.isFeatured = false;
     }
     if (time === "ongoing" || time?.includes("ongoing")) {
-      filter.auctionStartDate = { $lte: now };
-      filter.auctionEndDate = { $gte: now };
+      timeFilter.push({
+        auctionStartDate: { $lte: now },
+        auctionEndDate: { $gte: now },
+      });
     }
+
     if (time === "upcoming" || time?.includes("upcoming")) {
-      filter.auctionStartDate = { $gte: now };
+      auctionStartDateFilter.push({ $gte: now });
+      timeFilter.push({ auctionStartDate: { $gte: now } });
     }
+
     if (time === "completed" || time?.includes("completed")) {
-      filter.auctionEndDate = { $lte: now };
+      auctionEndDateFilter.push({ $lte: now });
+    }
+
+    if (timeFilter.length > 0) {
+      filter["$or"] = timeFilter;
     }
 
     if (min_price) {
@@ -493,7 +505,7 @@ const getAuctions = async (req, res) => {
     }
 
     auctions = await Auction.aggregate([
-      { $match: filter },
+      { $match: { $and: [filter] } },
       {
         $lookup: {
           from: "properties",
