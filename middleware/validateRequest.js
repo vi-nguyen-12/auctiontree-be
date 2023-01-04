@@ -314,7 +314,7 @@ const propertyObjectSchema = {
       }).required(),
       reservedAmount: Joi.number().required().options({ convert: false }),
       discussedAmount: Joi.number().required().options({ convert: false }),
-      currency: Joi.string().required().valid("USD", "INR"),
+      // currency: Joi.string().required().valid("USD", "INR"),
       step: Joi.number().required().valid(2).options({ convert: false }),
     },
     car: {
@@ -365,7 +365,7 @@ const propertyObjectSchema = {
       }).required(),
       reservedAmount: Joi.number().required().options({ convert: false }),
       discussedAmount: Joi.number().required().options({ convert: false }),
-      currency: Joi.string().required().valid("USD", "INR"),
+      // currency: Joi.string().required().valid("USD", "INR"),
       step: Joi.number().required().valid(2).options({ convert: false }),
     },
     yacht: {
@@ -397,7 +397,7 @@ const propertyObjectSchema = {
       }).required(),
       reservedAmount: Joi.number().required().options({ convert: false }),
       discussedAmount: Joi.number().required().options({ convert: false }),
-      currency: Joi.string().required().valid("USD", "INR"),
+      // currency: Joi.string().required().valid("USD", "INR"),
       step: Joi.number().required().valid(2).options({ convert: false }),
     },
     jet: {
@@ -429,7 +429,7 @@ const propertyObjectSchema = {
       }).required(),
       reservedAmount: Joi.number().required().options({ convert: false }),
       discussedAmount: Joi.number().required().options({ convert: false }),
-      currency: Joi.string().required().valid("USD", "INR"),
+      // currency: Joi.string().required().valid("USD", "INR"),
       step: Joi.number().required().valid(2).options({ convert: false }),
     },
   },

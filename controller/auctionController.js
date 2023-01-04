@@ -816,7 +816,7 @@ const placeBidding = async (req, res) => {
   const bodySchema = Joi.object({
     biddingTime: Joi.date().iso().required(),
     biddingPrice: Joi.number().required().strict(),
-    biddingCurrency: Joi.string().required().valid("USD", "INR"),
+    // biddingCurrency: Joi.string().required().valid("USD", "INR"),
   });
   const { error } = bodySchema.validate(req.body);
   if (error) return res.status(200).send({ error: error.details[0].message });
@@ -825,7 +825,7 @@ const placeBidding = async (req, res) => {
   const {
     biddingTime: biddingTimeISOString,
     biddingPrice,
-    biddingCurrency,
+    // biddingCurrency,
   } = req.body;
   const biddingTime = new Date(biddingTimeISOString);
   try {
@@ -843,18 +843,21 @@ const placeBidding = async (req, res) => {
       return res.status(200).send({ error: "Auction not found" });
     }
 
-    if (auction.property.currency !== biddingCurrency) {
-      return res.status(200).send({
-        error:
-          "Bidding currency is not the same as currency of listed property",
-      });
-    }
+    // if (auction.property.currency !== biddingCurrency) {
+    //   return res.status(200).send({
+    //     error:
+    //       "Bidding currency is not the same as currency of listed property",
+    //   });
+    // }
 
     const property = await Property.findById(auction.property);
     const owner = await User.findById(property.createdBy);
 
     //check if has enough funds for that property
-    if (buyer.availableFund[biddingCurrency] || 0 < biddingPrice) {
+    // if (buyer.availableFund[biddingCurrency] || 0 < biddingPrice) {
+    //   return res.status(200).send({ error: "Wallet is insufficient to bid" });
+    // }
+    if (buyer.availableFund < biddingPrice) {
       return res.status(200).send({ error: "Wallet is insufficient to bid" });
     }
 
@@ -885,20 +888,23 @@ const placeBidding = async (req, res) => {
     //add money back to funds of the highest bidder & send email
     let highestBidder =
       auction.bids.length > 0 ? auction.bids.slice(-1)[0] : null;
+
     let emailBody;
 
     if (highestBidder) {
       let highestBuyer = await Buyer.findById(highestBidder.buyerId).populate(
         "userId"
       );
-      highestBuyer.availableFund[biddingCurrency] =
-        highestBuyer.availableFund[biddingCurrency] + highestBidder.amount;
+      highestBuyer.availableFund =
+        highestBuyer.availableFund + highestBidder.amount;
+      // highestBuyer.availableFund[biddingCurrency] =
+      //   highestBuyer.availableFund[biddingCurrency] + highestBidder.amount;
 
       await highestBuyer.save();
 
       email = highestBuyer.userId.email;
       subject = "Auction Tree- You bid is not highest anymore";
-      text = `Hi ${highestBuyer.firstName} ${highestBuyer.lastName} Your bid is not highest anymore, and your avaible fund for this property is now ${highestBuyer.availableFund[biddingCurrency]}`;
+      text = `Hi ${highestBuyer.firstName} ${highestBuyer.lastName} Your bid is not highest anymore, and your avaible fund for this property is now ${highestBuyer.availableFund}`;
       sendEmail({
         to: email,
         subject,
@@ -929,8 +935,7 @@ const placeBidding = async (req, res) => {
     }
 
     // deduct money from new bidder
-    buyer.availableFund[biddingCurrency] =
-      buyer.availableFund[biddingCurrency] - biddingPrice;
+    buyer.availableFund = buyer.availableFund - biddingPrice;
     await buyer.save();
 
     //send email to this bidder, and their total available fund

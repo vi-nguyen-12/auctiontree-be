@@ -363,18 +363,31 @@ const addFund = async (req, res) => {
 };
 
 //@desc  Approve/disapprove a fund,
-//@route PUT /api/buyers/:id/fund/:id body: {status:..., amount}
+//@route PUT /api/buyers/:id/funds/:id body: {status:..., amount}
 const approveFund = async (req, res) => {
   try {
     const bodySchema = Joi.object({
-      status: Joi.string().required().valid("pending", "success", "fail"),
+      status: Joi.string()
+        .required()
+        .valid("pending", "success", "fail")
+        .messages({
+          "string.pattern.base": "status should be a type of text",
+          "any.required": "status is a required field",
+          "any.only": "status should be pending or success or fail",
+        }),
       amount: Joi.when("status", {
         is: Joi.string().valid("success"),
-        then: Joi.number().required().min(0),
-        otherwise: Joi.forbidden(),
+        then: Joi.number().required().positive().messages({
+          "any.required": "Amount is a required field",
+          "number.positive": "Amount must be greater than 0",
+        }),
+        otherwise: Joi.forbidden().messages({
+          "any.unknown": "Amount is not allowed",
+        }),
       }),
     });
     const { error } = bodySchema.validate(req.body);
+    console.log(error);
     if (error) return res.status(200).send({ error: error.details[0].message });
     if (!req.admin?.permissions.includes("buyer_edit")) {
       return res
@@ -406,6 +419,7 @@ const approveFund = async (req, res) => {
           });
         }
       }
+
       //check if that document is approved for a fund before
       buyer.availableFund = buyer.availableFund - fund.amount + amount;
       fund.amount = amount;
