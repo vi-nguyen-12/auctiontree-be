@@ -130,6 +130,18 @@ const getAllUsers = async (req, res) => {
     let filters = {};
     let sorts = {};
 
+    if (isBroker === "true"){
+      filters = {
+        "agent.licenseNumber": {$ne: null},
+      };
+    }
+
+    if (isBroker === "false"){
+      filters = {
+        "agent.licenseNumber": {$eq: null},
+      };
+    }
+
     if (name) {
       filters["$or"] = [
         { firstName: { $regex: name } },
@@ -140,23 +152,6 @@ const getAllUsers = async (req, res) => {
 
     if (sort) {
       sorts[sort.slice(1)] = sort.slice(0, 1) === "-" ? -1 : 1;
-    }
-
-    if (isBroker === "true"){
-      filters = {
-        "agent.licenseNumber": {$ne: null},
-      };
-    }
-
-    if (isBroker === "true" && name){
-      filters = {
-        "agent.licenseNumber": {$ne: null},
-      };
-      filters["$or"] = [
-        { firstName: { $regex: name } },
-        { lastName: { $regex: name } },
-        { email: { $regex: name } },
-      ];
     }
 
     let users = await User.find(filters, [
