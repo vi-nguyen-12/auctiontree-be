@@ -31,6 +31,16 @@ const validateUser = (req, res, next) => {
           .min(1)
           .required(),
       }),
+      licenseState: Joi.when("licenseNumber", {
+        is: Joi.any().valid(null, ""),
+        then: Joi.valid(null, "").required(),
+        otherwise: Joi.string().required(),
+      }),
+      licenseExpireDate: Joi.when("licenseNumber", {
+        is: Joi.date().iso(),
+        then: Joi.date().iso().required(),
+        otherwise: Joi.date().iso().required(),
+      }),
     }),
     profileImage: Joi.string(),
   });

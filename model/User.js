@@ -58,6 +58,18 @@ const userSchema = new mongoose.Schema(
           },
         ],
       },
+      licenseState: {
+        type: String,
+        required: function () {
+          return this.licenseNumber?.length > 0;
+        },
+      },
+      licenseExpireDate: {
+        type: Date,
+        required: function () {
+          return this.licenseNumber?.length > 0;
+        },
+      },
     },
     secret: { type: Object },
     profileImage: String,
