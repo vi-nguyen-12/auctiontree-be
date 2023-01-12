@@ -88,7 +88,7 @@ const createRealestate = async (req, res) => {
     //Check if seller is a broker, require listing_agreement
     let isHavingListingAgreement = false;
     if (details.broker_name) {
-      for (let i in details.broker_documents) {
+      for (let i of details.broker_documents) {
         if (i.officialName === "listing_agreement") {
           isHavingListingAgreement = true;
         }
