@@ -91,6 +91,16 @@ const validateUpdateUser = (req, res, next) => {
           .min(1)
           .required(),
       }),
+      licenseState: Joi.when("licenseNumber", {
+        is: Joi.any().valid(null, ""),
+        then: Joi.valid(null, "").optional(),
+        otherwise: Joi.string().required(),
+      }),
+      licenseExpireDate: Joi.when("licenseNumber", {
+        is: Joi.any().valid(null, ""),
+        then: Joi.valid(null, "").optional(),
+        otherwise: Joi.date().iso().required(),
+      }),
     }),
   });
   const { error } = userSchema.validate(req.body);
