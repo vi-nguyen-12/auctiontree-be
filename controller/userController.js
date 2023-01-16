@@ -113,12 +113,13 @@ const registerUser = async (req, res) => {
 // should allow only super admin has permission user_read
 const getAllUsers = async (req, res) => {
   try {
-    let { page, limit, name, sort } = req.query;
+    let { page, limit, name, sort, isBroker } = req.query;
     const paramsSchema = Joi.object({
       page: Joi.string().regex(/^\d+$/).optional(),
       limit: Joi.string().regex(/^\d+$/).optional(),
       name: Joi.string().optional(),
       sort: Joi.string().optional().valid("+firstName", "-firstName"),
+      isBroker: Joi.string().optional().valid("true", "false"),
     });
     const { error } = paramsSchema.validate(req.query);
     if (error) return res.status(200).send({ error: error.details[0].message });
@@ -128,6 +129,18 @@ const getAllUsers = async (req, res) => {
 
     let filters = {};
     let sorts = {};
+
+    if (isBroker === "true"){
+      filters = {
+        "agent.licenseNumber": {$ne: null},
+      };
+    }
+
+    if (isBroker === "false"){
+      filters = {
+        "agent.licenseNumber": {$eq: null},
+      };
+    }
 
     if (name) {
       filters["$or"] = [
@@ -140,6 +153,7 @@ const getAllUsers = async (req, res) => {
     if (sort) {
       sorts[sort.slice(1)] = sort.slice(0, 1) === "-" ? -1 : 1;
     }
+
     let users = await User.find(filters, [
       "firstName",
       "lastName",
