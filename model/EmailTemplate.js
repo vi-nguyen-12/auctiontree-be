@@ -57,7 +57,7 @@ const emailTemplateSchema = new Schema(
 
 emailTemplateSchema.pre("save", function (next) {
   if (this.type == "registration_confirm") {
-    this.replacedTexts = ["name", "customer_id"];
+    this.replacedTexts = ["name", "customer_id", "link"];
   }
   if (this.type == "reset_password") {
     this.replacedTexts = ["name", "link"];
