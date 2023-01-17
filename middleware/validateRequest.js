@@ -269,21 +269,37 @@ const propertyObjectSchema = {
           .required(),
         otherwise: Joi.array().optional(),
       }),
-      broker_license_number: Joi.when("broker_name", {
+      broker_licenses: Joi.when("broker_name", {
         is: Joi.any().valid(null, ""),
         then: Joi.valid(null, "").optional(),
-        otherwise: Joi.string().required(),
+        otherwise: Joi.array()
+          .required()
+          .min(1)
+          .items(
+            Joi.object({
+              _id: Joi.string().optional(),
+              number: Joi.string().required(),
+              expired_date: Joi.string().required(),
+              state: Joi.string().required(),
+            })
+          ),
       }),
-      broker_license_expired_date: Joi.when("broker_name", {
-        is: Joi.any().valid(null, ""),
-        then: Joi.valid(null, "").optional(),
-        otherwise: Joi.date().iso().required(),
-      }),
-      broker_license_state: Joi.when("broker_name", {
-        is: Joi.any().valid(null, ""),
-        then: Joi.valid(null, "").optional(),
-        otherwise: Joi.string().required(),
-      }),
+      // broker_license_number: Joi.when("broker_name", {
+      //   is: Joi.any().valid(null, ""),
+      //   then: Joi.valid(null, "").optional(),
+      //   otherwise: Joi.string().required(),
+      // }),
+      // broker_license_expired_date: Joi.when("broker_name", {
+      //   is: Joi.any().valid(null, ""),
+      //   then: Joi.valid(null, "").optional(),
+      //   otherwise: Joi.date().iso().required(),
+      // }),
+      // broker_license_state: Joi.when("broker_name", {
+      //   is: Joi.any().valid(null, ""),
+      //   then: Joi.valid(null, "").optional(),
+      //   otherwise: Joi.string().required(),
+      // }),
+
       ownership_type: Joi.object({
         name: Joi.string().required(),
         secondary_owner: Joi.when("name", {
