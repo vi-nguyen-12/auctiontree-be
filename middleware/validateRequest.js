@@ -87,6 +87,7 @@ const validateUpdateUser = (req, res, next) => {
             Joi.object({
               name: Joi.string().required(),
               url: Joi.string().required(),
+              _id: Joi.string().optional(),
             })
           )
           .min(1)
