@@ -41,6 +41,7 @@ const validateUser = (req, res, next) => {
         then: Joi.valid(null, "").optional(),
         otherwise: Joi.date().iso().required(),
       }),
+      _id: Joi.string().optional(),
     }),
     profileImage: Joi.string(),
   });
