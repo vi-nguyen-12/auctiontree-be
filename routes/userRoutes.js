@@ -59,7 +59,7 @@ router.get(
 router.get("/buyer/auctions", getAuctionsOfAllBuyersGroupedByUser);
 router.get("/:id/seller/auctions", getAuctionsOfSeller);
 router.get("/:id/seller/properties", auth, getListingsOfSeller);
-router.get("/", authAdmin, getAllUsers);
+router.get("/", auth, getAllUsers);
 //only for login user
 router.put("/:id/suspended", auth, suspendUserAccount);
 router.put("/:id/due_diligence/:propertyId", auth, setDueDiligence);

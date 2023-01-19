@@ -124,21 +124,28 @@ const getAllUsers = async (req, res) => {
     const { error } = paramsSchema.validate(req.query);
     if (error) return res.status(200).send({ error: error.details[0].message });
 
+    // user only can get broker information
+    if (!req.admin && !isBroker) {
+      return res
+        .status(200)
+        .send({ error: "Not authorized to get information" });
+    }
+
     page = parseInt(page) || 1;
     limit = parseInt(limit) || 10;
 
     let filters = {};
     let sorts = {};
 
-    if (isBroker === "true"){
+    if (isBroker === "true") {
       filters = {
-        "agent.licenseNumber": {$ne: null},
+        "agent.licenseNumber": { $ne: null },
       };
     }
 
-    if (isBroker === "false"){
+    if (isBroker === "false") {
       filters = {
-        "agent.licenseNumber": {$eq: null},
+        "agent.licenseNumber": { $eq: null },
       };
     }
 
