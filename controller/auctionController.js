@@ -1173,7 +1173,6 @@ const setWinner = async (req, res) => {
       subject: emailBody.subject,
       htmlText: emailBody.content,
     });
-    console.log(user);
     user.notifications.push({
       auctionId: auction._id,
       message: "Congratulation- winner of the auction",
@@ -1226,6 +1225,119 @@ const setWinner = async (req, res) => {
   }
 };
 
+//@desc Create review for an auction
+//@route PUT /api/auctions/:id/reviews body {content,star}
+const createReview = async (req, res) => {
+  try {
+    const { content, star } = req.body;
+    const bodySchema = Joi.object({
+      content: Joi.string().required(),
+      star: Joi.number().min(1).max(5).required(),
+    });
+    const { error } = bodySchema.validate(req.body);
+    if (error) {
+      return res.status(200).send({ error: error.details[0].message });
+    }
+    const auction = await Auction.findById(req.params.id).populate("property");
+    if (!auction) {
+      return res.status(200).send({ error: "Auction not found" });
+    }
+    // User must be seller or buyer for this property
+    const buyer = await Buyer.findOne({
+      auctionId: auction._id,
+      userId: req.user.id,
+    });
+    if (auction.property.createdBy.toString() !== req.user.id && !buyer) {
+      return res.status(200).send({
+        error:
+          "Only who sells or registers to buy this property can make review",
+      });
+    }
+    auction.reviews.push({ userId: req.user.id, content, star });
+    const savedAuction = await auction.save();
+    res.status(200).send({
+      message: "Review saved successfully",
+      review: savedAuction.reviews.at(-1),
+    });
+  } catch (err) {
+    return res.status(500).send(err.message);
+  }
+};
+
+//@desc Edit review of an auction
+//@route PUT /api/auctions/:auctionId/reviews/:reviewId body { content,star}
+const editReview = async (req, res) => {
+  try {
+    const { content, star } = req.body;
+    const bodySchema = Joi.object({
+      content: Joi.string().required(),
+      star: Joi.number().min(1).max(5).required(),
+    });
+    const { error } = bodySchema.validate(req.body);
+    if (error) {
+      return res.status(200).send({ error: error.details[0].message });
+    }
+    const auction = await Auction.findById(req.params.auctionId).populate(
+      "property"
+    );
+    if (!auction) {
+      return res.status(200).send({ error: "Auction not found" });
+    }
+    const review = auction.reviews.find(
+      (review) => review._id.toString() === req.params.reviewId
+    );
+    if (!review) {
+      return res.status(200).send({ error: "Review not found" });
+    }
+    review.content = content;
+    review.star = star;
+    await auction.save();
+    res.status(200).send({
+      message: "Review saved successfully",
+      review: {
+        _id: review._id,
+        content,
+        star,
+      },
+    });
+  } catch (err) {
+    return res.status(500).send(err.message);
+  }
+};
+
+//@desc Delete a review of an auction
+//@route DELETE /api/auctions/:auctionId/reviews/:reviewId
+const deleteReview = async (req, res) => {
+  try {
+    const auction = await Auction.findById(req.params.auctionId).populate(
+      "property"
+    );
+    if (!auction) {
+      return res.status(200).send({ error: "Auction not found" });
+    }
+    const review = auction.reviews.find(
+      (review) => review._id.toString() === req.params.reviewId
+    );
+    if (!review) {
+      return res.status(200).send({ error: "Review not found" });
+    }
+
+    if (review.userId.toString() !== req.user.id.toString()) {
+      return res
+        .status(200)
+        .send({ error: "Not authorized to delete this review" });
+    }
+    auction.reviews.pull({ _id: review._id });
+    await auction.save();
+    res.status(200).send({
+      message: "Review deleted successfully",
+      review,
+    });
+  } catch (err) {
+    return res.status(500).send(err.message);
+  }
+};
+
 module.exports = {
   createAuction,
   getAuction,
@@ -1239,4 +1351,8 @@ module.exports = {
   getAuctions,
   setWinner,
   getAuctionCount,
+  createReview,
+  editReview,
+  deleteReview,
+  deleteReview,
 };

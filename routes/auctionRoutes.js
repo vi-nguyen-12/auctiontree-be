@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { auth, authNotStrict } = require("../middleware/verifyToken");
+const { auth, authUser, authNotStrict } = require("../middleware/verifyToken");
 const { validateAuction } = require("../middleware/validateRequest");
 
 const {
@@ -14,7 +14,10 @@ const {
   deleteAuction,
   getAuctions,
   setWinner,
-  getAuctionCount
+  getAuctionCount,
+  createReview,
+  editReview,
+  deleteReview,
 } = require("../controller/auctionController");
 
 router.get("/upcoming/:type", getUpcomingAuctions);
@@ -31,6 +34,9 @@ router.get("/:id", authNotStrict, getAuction);
 router.get("/", authNotStrict, getAuctions);
 router.put("/bidding/:id", auth, placeBidding);
 router.put("/:id/winner", authNotStrict, setWinner);
+router.put("/:auctionId/reviews/:reviewId", authUser, editReview);
+router.put("/:id/reviews", authUser, createReview);
+router.delete("/:auctionId/reviews/:reviewId", authUser, deleteReview);
 router.put("/:id", auth, editAuction);
 router.delete("/:id", auth, deleteAuction);
 module.exports = router;
