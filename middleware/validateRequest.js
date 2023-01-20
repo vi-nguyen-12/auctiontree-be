@@ -232,11 +232,11 @@ const propertyObjectSchema = {
     details: Joi.object({
       owner_name: Joi.string().required(),
       broker_name: Joi.string().allow("", null).optional(),
-      broker_id: Joi.when("broker_name", {
-        is: Joi.any().valid(null, ""),
-        then: Joi.valid(null, "").optional(),
-        otherwise: Joi.string().required(),
-      }),
+      // broker_id: Joi.when("broker_name", {
+      //   is: Joi.any().valid(null, ""),
+      //   then: Joi.valid(null, "").optional(),
+      //   otherwise: Joi.string().required(),
+      // }),
       owner_email: Joi.when("broker_name", {
         is: Joi.any().valid(null, ""),
         then: Joi.valid(null, "").optional(),
