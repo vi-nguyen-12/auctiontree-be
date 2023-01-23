@@ -318,8 +318,17 @@ const propertyObjectSchema = {
           otherwise: Joi.valid(null, "").optional(),
         }),
       }).required(),
+      co_broker: Joi.object({
+        name: Joi.string().required(),
+        email: Joi.string()
+        .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
+        .required(),
+        phone: Joi.string()
+        .pattern(/^[0-9]+$/)
+        .required(),
+        is_secondary: Joi.boolean().required(),
+      }).required(),
     }).required(),
-
     step: Joi.number().required().valid(1).options({ convert: false }),
   },
   step2: {
