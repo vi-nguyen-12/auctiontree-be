@@ -62,7 +62,6 @@ const createRealestate = async (req, res) => {
       docusignId,
       step,
     } = req.body;
-
     let bodySchema = {};
     let objectSchema = {
       step1: propertyObjectSchema.step1,

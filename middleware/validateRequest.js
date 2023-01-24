@@ -321,8 +321,26 @@ const propertyObjectSchema = {
           otherwise: Joi.valid(null, "").optional(),
         }),
       }).required(),
+      company: Joi.object({
+        company_name: Joi.string().optional(),
+        website: Joi.string().optional()
+      }).required(),
+      co_broker: Joi.when("name", {
+        is: Joi.exist(),
+        then: Joi.array()
+        .items({
+          name: Joi.string().required(),
+          email: Joi.string()
+          .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
+          .required(),
+          phone: Joi.string()
+          .pattern(/^[0-9]+$/)
+          .required(),
+          is_secondary: Joi.boolean().required(),
+        }).required(),
+        otherwise: Joi.array().optional()
+      }),
     }).required(),
-
     step: Joi.number().required().valid(1).options({ convert: false }),
   },
   step2: {
