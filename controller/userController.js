@@ -1463,6 +1463,5 @@ module.exports = {
   getPropertiesOfAllSellersGroupByUser,
   deleteNotification,
   getAllUsers,
-  getAllBrokers,
   setDueDiligence,
 };

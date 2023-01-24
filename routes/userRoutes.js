@@ -34,7 +34,6 @@ const {
   getPropertiesOfAllSellersGroupByUser,
   deleteNotification,
   getAllUsers,
-  getAllBrokers,
   setDueDiligence,
 } = require("../controller/userController");
 
