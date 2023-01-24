@@ -17,30 +17,33 @@ const validateUser = (req, res, next) => {
     country: Joi.string(),
     city: Joi.string(),
     agent: Joi.object({
-      licenseNumber: Joi.string(),
-      licenseDocument: Joi.when("licenseNumber", {
-        is: Joi.any().valid(null, ""),
-        then: Joi.valid(null, "").optional(),
-        otherwise: Joi.array()
-          .items(
-            Joi.object({
-              name: Joi.string().required(),
-              url: Joi.string().required(),
-              _id: Joi.string().optional(),
-            })
-          )
-          .min(1)
-          .required(),
-      }),
-      licenseState: Joi.when("licenseNumber", {
-        is: Joi.any().valid(null, ""),
-        then: Joi.valid(null, "").optional(),
-        otherwise: Joi.string().required(),
-      }),
-      licenseExpireDate: Joi.when("licenseNumber", {
-        is: Joi.any().valid(null, ""),
-        then: Joi.valid(null, "").optional(),
-        otherwise: Joi.date().iso().required(),
+      broker_licenses: Joi.array().items({
+        _id: Joi.string().optional(),
+        number: Joi.string().optional(),
+        expired_date: Joi.when("number", {
+          is: Joi.any().valid(null, ""),
+          then: Joi.valid(null, "").optional(),
+          otherwise: Joi.string().required(),
+        }),
+        state: Joi.when("number", {
+          is: Joi.any().valid(null, ""),
+          then: Joi.valid(null, "").optional(),
+          otherwise: Joi.string().required(),
+        }),
+        documents: Joi.when("number", {
+          is: Joi.any().valid(null, ""),
+          then: Joi.valid(null, "").optional(),
+          otherwise: Joi.array()
+            .items(
+              Joi.object({
+                name: Joi.string().required(),
+                url: Joi.string().required(),
+                isVerified: Joi.boolean().optional(),
+              })
+            )
+            .min(1)
+            .required(),
+        }),
       }),
     }),
     profileImage: Joi.string(),

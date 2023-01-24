@@ -33,42 +33,73 @@ const userSchema = new mongoose.Schema(
     city: { type: String, trim: true },
     date: { type: Date, default: Date.now },
     agent: {
-      licenseNumber: { type: String, trim: true },
-      licenseDocument: {
+      // licenseNumber: { type: String, trim: true },
+      // licenseDocument: {
+      //   type: [
+      //     {
+      //       name: {
+      //         type: String,
+      //         required: function () {
+      //           return this.licenseNumber?.length > 0;
+      //         },
+      //       },
+      //       url: {
+      //         type: String,
+      //         required: function () {
+      //           return this.licenseNumber?.length > 0;
+      //         },
+      //       },
+      //       isVerified: {
+      //         type: Boolean,
+      //         required: function () {
+      //           return this.licenseNumber?.length > 0;
+      //         },
+      //       },
+      //     },
+      //   ],
+      // },
+      // licenseState: {
+      //   type: String,
+      //   required: function () {
+      //     return this.licenseNumber?.length > 0;
+      //   },
+      // },
+      // licenseExpireDate: {
+      //   type: Date,
+      //   required: function () {
+      //     return this.licenseNumber?.length > 0;
+      //   },
+      // },
+      broker_licenses: {
         type: [
           {
-            name: {
-              type: String,
-              required: function () {
-                return this.licenseNumber?.length > 0;
-              },
-            },
-            url: {
-              type: String,
-              required: function () {
-                return this.licenseNumber?.length > 0;
-              },
-            },
-            isVerified: {
-              type: Boolean,
-              required: function () {
-                return this.licenseNumber?.length > 0;
-              },
+            number: { type: String },
+            expired_date: { type: String },
+            state: { type: String },
+            documents: {
+              type: [
+                {
+                  name: {
+                    type: String,
+                    required: function () {
+                      return this.number?.length > 0;
+                    },
+                  },
+                  url: {
+                    type: String,
+                    required: function () {
+                      return this.number?.length > 0;
+                    },
+                  },
+                  isVerified: {
+                    type: Boolean,
+                    default: false,
+                  },
+                },
+              ],
             },
           },
         ],
-      },
-      licenseState: {
-        type: String,
-        required: function () {
-          return this.licenseNumber?.length > 0;
-        },
-      },
-      licenseExpireDate: {
-        type: Date,
-        required: function () {
-          return this.licenseNumber?.length > 0;
-        },
       },
     },
     secret: { type: Object },

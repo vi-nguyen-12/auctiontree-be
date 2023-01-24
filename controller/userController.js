@@ -139,13 +139,13 @@ const getAllUsers = async (req, res) => {
 
     if (isBroker === "true") {
       filters = {
-        "agent.licenseNumber": { $ne: null },
+        "agent.broker_licenses.0": { $exists: true },
       };
     }
 
     if (isBroker === "false") {
       filters = {
-        "agent.licenseNumber": { $eq: null },
+        "agent.broker_licenses.0": { $exists: false },
       };
     }
 
