@@ -16,34 +16,32 @@ const validateUser = (req, res, next) => {
     userName: Joi.string().required(),
     country: Joi.string(),
     city: Joi.string(),
-    agent: Joi.object({
-      broker_licenses: Joi.array().items({
-        _id: Joi.string().optional(),
-        number: Joi.string().optional(),
-        expired_date: Joi.when("number", {
-          is: Joi.any().valid(null, ""),
-          then: Joi.valid(null, "").optional(),
-          otherwise: Joi.string().required(),
-        }),
-        state: Joi.when("number", {
-          is: Joi.any().valid(null, ""),
-          then: Joi.valid(null, "").optional(),
-          otherwise: Joi.string().required(),
-        }),
-        documents: Joi.when("number", {
-          is: Joi.any().valid(null, ""),
-          then: Joi.valid(null, "").optional(),
-          otherwise: Joi.array()
-            .items(
-              Joi.object({
-                name: Joi.string().required(),
-                url: Joi.string().required(),
-                isVerified: Joi.boolean().optional(),
-              })
-            )
-            .min(1)
-            .required(),
-        }),
+    broker_licenses: Joi.array().items({
+      _id: Joi.string().optional(),
+      number: Joi.string().optional(),
+      expired_date: Joi.when("number", {
+        is: Joi.any().valid(null, ""),
+        then: Joi.valid(null, "").optional(),
+        otherwise: Joi.string().required(),
+      }),
+      state: Joi.when("number", {
+        is: Joi.any().valid(null, ""),
+        then: Joi.valid(null, "").optional(),
+        otherwise: Joi.string().required(),
+      }),
+      documents: Joi.when("number", {
+        is: Joi.any().valid(null, ""),
+        then: Joi.valid(null, "").optional(),
+        otherwise: Joi.array()
+          .items(
+            Joi.object({
+              name: Joi.string().required(),
+              url: Joi.string().required(),
+              isVerified: Joi.boolean().optional(),
+            })
+          )
+          .min(1)
+          .required(),
       }),
     }),
     profileImage: Joi.string(),
@@ -323,22 +321,23 @@ const propertyObjectSchema = {
       }).required(),
       company: Joi.object({
         company_name: Joi.string().optional(),
-        website: Joi.string().optional()
+        website: Joi.string().optional(),
       }).required(),
       co_broker: Joi.when("name", {
         is: Joi.exist(),
         then: Joi.array()
-        .items({
-          name: Joi.string().required(),
-          email: Joi.string()
-          .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
+          .items({
+            name: Joi.string().required(),
+            email: Joi.string()
+              .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
+              .required(),
+            phone: Joi.string()
+              .pattern(/^[0-9]+$/)
+              .required(),
+            is_secondary: Joi.boolean().required(),
+          })
           .required(),
-          phone: Joi.string()
-          .pattern(/^[0-9]+$/)
-          .required(),
-          is_secondary: Joi.boolean().required(),
-        }).required(),
-        otherwise: Joi.array().optional()
+        otherwise: Joi.array().optional(),
       }),
     }).required(),
     step: Joi.number().required().valid(1).options({ convert: false }),

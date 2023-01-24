@@ -139,13 +139,13 @@ const getAllUsers = async (req, res) => {
 
     if (isBroker === "true") {
       filters = {
-        "agent.broker_licenses.0": { $exists: true },
+        "broker_licenses.0": { $exists: true },
       };
     }
 
     if (isBroker === "false") {
       filters = {
-        "agent.broker_licenses.0": { $exists: false },
+        "broker_licenses.0": { $exists: false },
       };
     }
 
@@ -1432,34 +1432,6 @@ const deleteNotification = async (req, res) => {
         .status(200)
         .send({ error: "Not authorized to delete notification" });
     }
-  } catch (error) {
-    res.status(500).send(error.message);
-  }
-};
-
-const getAllBrokers = async (req, res) => {
-  try {
-    const aggrigate = await User.aggregate([
-      {
-        $match: {
-          "agent.licenseNumber": { $ne: null },
-        },
-      },
-      // {$unwind: "$agent.licenseDocument"},
-      {
-        $project: {
-          firstName: "$firstName",
-          lastName: "$lastName",
-          email: "$email",
-          phone: "$phone",
-          city: "$city",
-          country: "$country",
-          broker_id: "$agent.licenseNumber",
-          documents: "$agent.licenseDocument",
-        },
-      },
-    ]);
-    res.status(200).send(aggrigate);
   } catch (error) {
     res.status(500).send(error.message);
   }
