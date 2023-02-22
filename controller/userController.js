@@ -1437,6 +1437,19 @@ const deleteNotification = async (req, res) => {
   }
 };
 
+
+  const approveBroker = async(req, res) => {
+    try{
+      const {id} = req.params
+      const broker = await User.findOne({_id: id})
+      broker.agent.isApproved = true
+      const approvedBroker = await broker.save()
+      return res.status(200).send(approvedBroker);
+    }catch (error){
+      res.status(500).send(error.message);
+    }
+  };  
+
 module.exports = {
   registerUser,
   login,
@@ -1464,4 +1477,5 @@ module.exports = {
   deleteNotification,
   getAllUsers,
   setDueDiligence,
+  approveBroker,
 };

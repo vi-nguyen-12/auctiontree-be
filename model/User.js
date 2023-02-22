@@ -70,6 +70,7 @@ const userSchema = new mongoose.Schema(
       //     return this.licenseNumber?.length > 0;
       //   },
       // },
+      isApproved: { type: Boolean, required: true, default: false },
       broker_licenses: {
         type: [
           {

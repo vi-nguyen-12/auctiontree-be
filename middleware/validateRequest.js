@@ -319,10 +319,10 @@ const propertyObjectSchema = {
           otherwise: Joi.valid(null, "").optional(),
         }),
       }).required(),
-      company: Joi.object({
-        company_name: Joi.string().optional(),
-        website: Joi.string().optional(),
-      }).required(),
+      // company: Joi.object({
+      //   company_name: Joi.string().optional(),
+      //   website: Joi.string().optional(),
+      // }).required(),
       co_broker: Joi.when("name", {
         is: Joi.exist(),
         then: Joi.array()

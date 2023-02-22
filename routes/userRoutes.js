@@ -35,6 +35,7 @@ const {
   deleteNotification,
   getAllUsers,
   setDueDiligence,
+  approveBroker,
 } = require("../controller/userController");
 
 router.post("/register", authNotStrict, validateUser, registerUser);
@@ -72,4 +73,5 @@ router.delete("/:id", auth, deleteUserAccount);
 //only for admin
 router.get("/buyerId/:buyerId", getUserByBuyerId);
 router.get("/propertyId/:propertyId", getUserByPropertyId);
+router.put("/broker/:id",auth, approveBroker)
 module.exports = router;

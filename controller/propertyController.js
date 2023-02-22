@@ -651,6 +651,11 @@ const editRealestate = async (req, res) => {
     property.step = step >= property.step ? step : property.step;
     property.isApproved = "pending";
     const savedProperty = await property.save();
+    sendEmail({
+      to: savedProperty.details.co_broker.map((e) => e.email),
+      subject: "Auction Tree - Co-broker is added",
+      text: `A Co-broker has been added.`,
+    });
 
     res.status(200).send(savedProperty);
   } catch (error) {
