@@ -137,17 +137,17 @@ const getAllUsers = async (req, res) => {
     let filters = {};
     let sorts = {};
 
-    if (isBroker === "true") {
-      filters = {
-        "broker_licenses.0": { $exists: true },
-      };
-    }
+    // if (isBroker === "true") {
+    //   filters = {
+    //     "broker_licenses.0": { $exists: true },
+    //   };
+    // }
 
-    if (isBroker === "false") {
-      filters = {
-        "broker_licenses.0": { $exists: false },
-      };
-    }
+    // if (isBroker === "false") {
+    //   filters = {
+    //     "broker_licenses.0": { $exists: false },
+    //   };
+    // }
 
     if (name) {
       filters["$or"] = [
@@ -1437,18 +1437,17 @@ const deleteNotification = async (req, res) => {
   }
 };
 
-
-  const approveBroker = async(req, res) => {
-    try{
-      const {id} = req.params
-      const broker = await User.findOne({_id: id})
-      broker.agent.isApproved = true
-      const approvedBroker = await broker.save()
-      return res.status(200).send(approvedBroker);
-    }catch (error){
-      res.status(500).send(error.message);
-    }
-  };  
+const approveBroker = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const broker = await User.findOne({ _id: id });
+    broker.agent.isApproved = true;
+    const approvedBroker = await broker.save();
+    return res.status(200).send(approvedBroker);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
 
 module.exports = {
   registerUser,

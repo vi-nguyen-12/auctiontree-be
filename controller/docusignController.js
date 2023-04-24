@@ -315,6 +315,7 @@ const createSellingAgreementURL = async (req, res, next) => {
       let envelope = await makeEnvelope(envelopeArgs);
 
       let envelopeResult = await generateEnvelope(envelope);
+      console.log()
 
       envelopeId = envelopeResult.envelopeId;
       const newDocusign = await Docusign.create({

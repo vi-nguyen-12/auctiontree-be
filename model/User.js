@@ -73,7 +73,7 @@ const userSchema = new mongoose.Schema(
       isApproved: {
         type: Boolean,
         required: true,
-        default: false
+        default: false,
       },
       broker_licenses: {
         type: [
