@@ -27,7 +27,10 @@ const uploadS3 = multer({
       });
     },
     key: function (req, file, cb) {
-      cb(null, uuid() + file.originalname);
+      cb(
+        null,
+        `${process.env.AWS_BUCKET_FOLDER}/` + uuid() + file.originalname
+      );
     },
   }),
 });
