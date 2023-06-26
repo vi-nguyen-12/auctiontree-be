@@ -303,7 +303,7 @@ const getAuctions = async (req, res) => {
     });
 
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 8;
+    const limit = parseInt(req.query.limit) || 15;
 
     let {
       // registerStartDate,
@@ -362,12 +362,13 @@ const getAuctions = async (req, res) => {
     }
 
     if (time === "upcoming" || time?.includes("upcoming")) {
-      auctionStartDateFilter.push({ $gte: now });
+      // auctionStartDateFilter.push({ $gte: now });
       timeFilter.push({ auctionStartDate: { $gte: now } });
     }
 
     if (time === "completed" || time?.includes("completed")) {
       auctionEndDateFilter.push({ $lte: now });
+      timeFilter.push({ auctionEndDate: { $lte: now } });
     }
 
     if (timeFilter.length > 0) {
@@ -540,7 +541,6 @@ const getAuctions = async (req, res) => {
         //   : ["incrementAmount", "winner", "bids"],
       },
     ]);
-
     if (isSold === "true") {
       auctions = auctions.filter((auction) => {
         return auction.winner?.buyerId;
