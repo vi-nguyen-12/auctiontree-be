@@ -82,22 +82,24 @@ const makeEnvelope = async (args) => {
   if (!document) {
     return res.status(200).send({ error: `Document ${title} not found ` });
   }
+
   const s3 = new AWS.S3();
-  const keyName = document.url.split("/")[3];
+  const keyName = document.url.split("/")[4];
   const getObject = async (bucket, objectKey) => {
     try {
       const params = {
         Bucket: bucket,
-        Key: objectKey,
+        Key: `${process.env.AWS_BUCKET_FOLDER}/${objectKey}`,
       };
+
       const data = await s3.getObject(params).promise();
+
       return data.Body.toString("base64");
     } catch (e) {
       throw new Error(e);
     }
   };
   let docb64 = await getObject(process.env.AWS_BUCKET_NAME, keyName);
-
   let doc1 = new docusign.Document.constructFromObject({
     documentBase64: docb64,
     name: args.docName,
@@ -313,9 +315,7 @@ const createSellingAgreementURL = async (req, res, next) => {
       };
 
       let envelope = await makeEnvelope(envelopeArgs);
-
       let envelopeResult = await generateEnvelope(envelope);
-      console.log()
 
       envelopeId = envelopeResult.envelopeId;
       const newDocusign = await Docusign.create({
@@ -331,6 +331,7 @@ const createSellingAgreementURL = async (req, res, next) => {
       let dcs = await Docusign.findById(property.docusignId).select(
         "envelopeId"
       );
+
       envelopeId = dcs.envelopeId;
     }
     let viewResult = await getRecipientURL({
@@ -598,7 +599,6 @@ const getDocusignView = async (req, res) => {
 
     for (let recipient of dcs.recipients) {
       if (recipient.type === "signer1") {
-        console.log("voday k");
         signerName = recipient.name;
         signerEmail = recipient.email;
         recipientId = recipient.recipientId;
