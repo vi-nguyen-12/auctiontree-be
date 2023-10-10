@@ -81,27 +81,23 @@ const userSchema = new mongoose.Schema(
             number: { type: String },
             expired_date: { type: String },
             state: { type: String },
-            documents: {
-              type: [
-                {
-                  name: {
-                    type: String,
-                    required: function () {
-                      return this.number?.length > 0;
-                    },
-                  },
-                  url: {
-                    type: String,
-                    required: function () {
-                      return this.number?.length > 0;
-                    },
-                  },
-                  isVerified: {
-                    type: Boolean,
-                    default: false,
-                  },
+            document: {
+              name: {
+                type: String,
+                required: function () {
+                  return this.number?.length > 0;
                 },
-              ],
+              },
+              url: {
+                type: String,
+                required: function () {
+                  return this.number?.length > 0;
+                },
+              },
+              isVerified: {
+                type: Boolean,
+                default: false,
+              },
             },
           },
         ],

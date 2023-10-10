@@ -16,34 +16,19 @@ const validateUser = (req, res, next) => {
     userName: Joi.string().required(),
     country: Joi.string(),
     city: Joi.string(),
-    broker_licenses: Joi.array().items({
-      _id: Joi.string().optional(),
-      number: Joi.string().optional(),
-      expired_date: Joi.when("number", {
-        is: Joi.any().valid(null, ""),
-        then: Joi.valid(null, "").optional(),
-        otherwise: Joi.string().required(),
+    agent: {
+      broker_licenses: Joi.array().items({
+        _id: Joi.string().optional(),
+        number: Joi.string().optional(),
+        expired_date: Joi.string().optional(),
+        state: Joi.string().optional(),
+        document: Joi.object({
+          name: Joi.string().optional(),
+          url: Joi.string().optional(),
+          isVerified: Joi.boolean().optional(),
+        }),
       }),
-      state: Joi.when("number", {
-        is: Joi.any().valid(null, ""),
-        then: Joi.valid(null, "").optional(),
-        otherwise: Joi.string().required(),
-      }),
-      documents: Joi.when("number", {
-        is: Joi.any().valid(null, ""),
-        then: Joi.valid(null, "").optional(),
-        otherwise: Joi.array()
-          .items(
-            Joi.object({
-              name: Joi.string().required(),
-              url: Joi.string().required(),
-              isVerified: Joi.boolean().optional(),
-            })
-          )
-          .min(1)
-          .required(),
-      }),
-    }),
+    },
     profileImage: Joi.string(),
   });
   const { error } = userSchema.validate(req.body);
@@ -516,6 +501,7 @@ const propertyObjectSchema = {
           name: Joi.string().required(),
           url: Joi.string().required(),
           isVerified: Joi.string().optional(),
+          isMain: Joi.boolean().optional(),
         })
       )
       .min(1)
