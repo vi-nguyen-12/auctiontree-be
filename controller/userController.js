@@ -468,6 +468,14 @@ const resetForgotPassword = async (req, res) => {
       }
       const salt = await bcrypt.genSaltSync(10);
       const hashedPassword = await bcrypt.hash(password, salt);
+      if (user.password === hashedPassword) {
+        return res
+          .status(200)
+          .send({
+            error:
+              "This password has been used previously. Please try new password",
+          });
+      }
       user.password = hashedPassword;
       user.temp_token = undefined;
       await user.save();
