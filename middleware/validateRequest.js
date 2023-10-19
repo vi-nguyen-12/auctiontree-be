@@ -287,22 +287,24 @@ const propertyObjectSchema = {
       // }),
 
       ownership_type: Joi.object({
-        name: Joi.string().required(),
-        secondary_owner: Joi.when("name", {
-          is: Joi.valid("joint"),
-          then: Joi.string().required(),
-          otherwise: Joi.valid(null, "").optional(),
-        }),
-        corporate_name: Joi.when("name", {
-          is: Joi.valid("corporate"),
-          then: Joi.string().required(),
-          otherwise: Joi.valid(null, "").optional(),
-        }),
-        trust_name: Joi.when("name", {
-          is: Joi.valid("trust"),
-          then: Joi.string().required(),
-          otherwise: Joi.valid(null, "").optional(),
-        }),
+        name: Joi.string()
+          .required()
+          .valid("individual", "joint", "corporate", "trust", "others"),
+        // secondary_owner: Joi.when("name", {
+        //   is: Joi.valid("joint"),
+        //   then: Joi.string().required(),
+        //   otherwise: Joi.valid(null, "").optional(),
+        // }),
+        // corporate_name: Joi.when("name", {
+        //   is: Joi.valid("corporate"),
+        //   then: Joi.string().required(),
+        //   otherwise: Joi.valid(null, "").optional(),
+        // }),
+        // trust_name: Joi.when("name", {
+        //   is: Joi.valid("trust"),
+        //   then: Joi.string().required(),
+        //   otherwise: Joi.valid(null, "").optional(),
+        // }),
       }).required(),
       // company: Joi.object({
       //   company_name: Joi.string().optional(),

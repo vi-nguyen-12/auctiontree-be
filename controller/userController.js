@@ -466,9 +466,9 @@ const resetForgotPassword = async (req, res) => {
           error: "Invalid or expired token",
         });
       }
-      const salt = await bcrypt.genSaltSync(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
-      if (user.password === hashedPassword) {
+      // check if new password is the same as previous one
+      const isNewPasswordSameAsOldOne= await bcrypt.compare(password,user.password)
+      if (isNewPasswordSameAsOldOne) {
         return res
           .status(200)
           .send({
@@ -476,6 +476,9 @@ const resetForgotPassword = async (req, res) => {
               "This password has been used previously. Please try new password",
           });
       }
+      const salt = await bcrypt.genSaltSync(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+ 
       user.password = hashedPassword;
       user.temp_token = undefined;
       await user.save();
