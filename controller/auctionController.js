@@ -452,9 +452,14 @@ const getAuctions = async (req, res) => {
       };
     }
     if (max_length) {
-      filterProperty["property.details.length"] = {
-        $lte: parseInt(max_length),
-      };
+      filterProperty["property.details.length"] = filterProperty[
+        "property.details.length"
+      ]
+        ? {
+            ...filterProperty["property.details.length"],
+            $lte: parseInt(max_length),
+          }
+        : { $lte: parseInt(max_length) };
     }
     if (aircraft_builder_name) {
       filterProperty["property.details.aircraft_builder_name"] =
