@@ -440,10 +440,18 @@ const resetForgotPassword = async (req, res) => {
       });
       user.temp_token = token;
       await user.save();
+      let emailBody;
+      emailBody = await replaceEmailTemplate("reset_password", {
+        name: user.firstName,
+        link: `${client_url}/reset_password?token=${token}`,
+      });
+      if (emailBody.error) {
+        return res.status(200).send({ error: emailBody.error });
+      }
       sendEmail({
         to: email,
-        subject: "Auction Tree - Reset password",
-        text: `Please click here to reset password: ${client_url}/reset_password?token=${token}`,
+        subject: emailBody.subject,
+        htmlText: emailBody.content,
       });
       return res.status(200).send({ message: "Reset link sent successfully" });
     }
@@ -467,18 +475,19 @@ const resetForgotPassword = async (req, res) => {
         });
       }
       // check if new password is the same as previous one
-      const isNewPasswordSameAsOldOne= await bcrypt.compare(password,user.password)
+      const isNewPasswordSameAsOldOne = await bcrypt.compare(
+        password,
+        user.password
+      );
       if (isNewPasswordSameAsOldOne) {
-        return res
-          .status(200)
-          .send({
-            error:
-              "This password has been used previously. Please try new password",
-          });
+        return res.status(200).send({
+          error:
+            "This password has been used previously. Please try new password",
+        });
       }
       const salt = await bcrypt.genSaltSync(10);
       const hashedPassword = await bcrypt.hash(password, salt);
- 
+
       user.password = hashedPassword;
       user.temp_token = undefined;
       await user.save();
