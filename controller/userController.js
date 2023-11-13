@@ -557,6 +557,14 @@ const editProfile = async (req, res) => {
         return res.status(200).send({ error: "UserName already exists" });
       }
     }
+    if (agent) {
+      if (
+        agent["broker_licenses"][0].number !==
+        user.agent["broker_licenses"][0].number
+      ) {
+        agent.isApproved = false;
+      }
+    }
     user.firstName = firstName || user.firstName;
     user.lastName = lastName || user.lastName;
     user.email = email || user.email;

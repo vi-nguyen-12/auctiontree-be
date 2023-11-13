@@ -64,30 +64,16 @@ const validateUpdateUser = (req, res, next) => {
       otherwise: Joi.string().allow(null),
     }),
     agent: Joi.object({
-      licenseNumber: Joi.string(),
-      licenseDocument: Joi.when("licenseNumber", {
-        is: Joi.any().valid(null, ""),
-        then: Joi.valid(null, "").optional(),
-        otherwise: Joi.array()
-          .items(
-            Joi.object({
-              name: Joi.string().required(),
-              url: Joi.string().required(),
-              _id: Joi.string().optional(),
-            })
-          )
-          .min(1)
-          .required(),
-      }),
-      licenseState: Joi.when("licenseNumber", {
-        is: Joi.any().valid(null, ""),
-        then: Joi.valid(null, "").optional(),
-        otherwise: Joi.string().required(),
-      }),
-      licenseExpireDate: Joi.when("licenseNumber", {
-        is: Joi.any().valid(null, ""),
-        then: Joi.valid(null, "").optional(),
-        otherwise: Joi.date().iso().required(),
+      broker_licenses: Joi.array().items({
+        _id: Joi.string().optional(),
+        number: Joi.string().optional(),
+        expired_date: Joi.string().optional(),
+        state: Joi.string().optional(),
+        document: Joi.object({
+          name: Joi.string().optional(),
+          url: Joi.string().optional(),
+          isVerified: Joi.boolean().optional(),
+        }),
       }),
     }),
   });
