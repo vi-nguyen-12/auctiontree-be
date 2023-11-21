@@ -1,6 +1,13 @@
 const router = require("express").Router();
 const { auth } = require("../middleware/verifyToken");
-const { uploadS3, upload, uploadAll } = require("../controller/awsController");
+const {
+  uploadS3,
+  // uploadSharpS3,
+  upload,
+  uploadAll,
+  uploadMulterResize,
+  uploadResize,
+} = require("../controller/awsController");
 
 // router.post("/images/upload", auth, uploadS3.array("images"), upload);
 // router.post("/videos/upload", auth, uploadS3.array("videos"), upload);
@@ -15,7 +22,11 @@ const { uploadS3, upload, uploadAll } = require("../controller/awsController");
 //   ]),
 //   uploadAll
 // );
-
+router.post(
+  "/image/resize/upload",
+  uploadMulterResize.single("image"),
+  uploadResize
+);
 router.post("/images/upload", uploadS3.array("images"), upload);
 router.post("/videos/upload", uploadS3.array("videos"), upload);
 router.post("/documents/upload", uploadS3.array("documents"), upload);
