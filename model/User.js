@@ -72,7 +72,6 @@ const userSchema = new mongoose.Schema(
       // },
       isApproved: {
         type: Boolean,
-
         default: false,
       },
       broker_licenses: {
