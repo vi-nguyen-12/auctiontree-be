@@ -19,12 +19,12 @@ const validateUser = (req, res, next) => {
     agent: {
       broker_licenses: Joi.array().items({
         _id: Joi.string().optional(),
-        number: Joi.string().optional(),
-        expired_date: Joi.string().optional(),
-        state: Joi.string().optional(),
+        number: Joi.string().allow("").allow(null),
+        expired_date: Joi.string().allow("").allow(null),
+        state: Joi.string().allow("").allow(null),
         document: Joi.object({
-          name: Joi.string().optional(),
-          url: Joi.string().optional(),
+          name: Joi.string().allow("").allow(null),
+          url: Joi.string().allow("").allow(null),
           isVerified: Joi.boolean().optional(),
         }),
       }),
@@ -53,7 +53,7 @@ const validateUpdateUser = (req, res, next) => {
     profileImage: Joi.string(),
     description: Joi.string(),
     social_links: Joi.object({
-      facebook: Joi.string().allow("").allow(null),
+      facebook: Joi.string().allow("").allow(null).allow("").allow(null),
       instagram: Joi.string().allow("").allow(null),
       twitter: Joi.string().allow("").allow(null),
     }),
