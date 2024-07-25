@@ -87,18 +87,15 @@ const validateBuyer = (req, res, next) => {
             then: Joi.string().required(),
             otherwise: Joi.string().allow[(null, "")],
           }),
-          files: Joi.when("answer", {
-            is: Joi.string().valid("yes"),
-            then: Joi.array()
-              .required()
-              .items(
-                Joi.object({
-                  name: Joi.string().required(),
-                  url: Joi.string().required(),
-                })
-              ),
-            otherwise: Joi.string().allow(null, ""),
-          }),
+          files: Joi.alternatives().try(
+            Joi.array().items(
+              Joi.object({
+                name: Joi.string(),
+                url: Joi.string(),
+              })
+            ),
+            Joi.allow(null)
+          ),
         })
       )
       .required()
