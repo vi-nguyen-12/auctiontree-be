@@ -13,6 +13,7 @@ const {
   registerUser,
   login,
   verify,
+  getUser,
   getUserByBuyerId,
   getUserByPropertyId,
   checkJWT,
@@ -59,6 +60,7 @@ router.get(
 router.get("/buyer/auctions", getAuctionsOfAllBuyersGroupedByUser);
 router.get("/:id/seller/auctions", getAuctionsOfSeller);
 router.get("/:id/seller/properties", auth, getListingsOfSeller);
+router.get("/:id", auth, getUser);
 router.get("/", authNotStrict, getAllUsers);
 //only for login user
 router.put("/:id/suspended", auth, suspendUserAccount);
@@ -73,5 +75,5 @@ router.delete("/:id", auth, deleteUserAccount);
 //only for admin
 router.get("/buyerId/:buyerId", getUserByBuyerId);
 router.get("/propertyId/:propertyId", getUserByPropertyId);
-router.put("/broker/:id",auth, approveBroker)
+router.put("/broker/:id", auth, approveBroker);
 module.exports = router;

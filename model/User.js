@@ -32,6 +32,7 @@ const userSchema = new mongoose.Schema(
     country: { type: String, trim: true },
     city: { type: String, trim: true },
     date: { type: Date, default: Date.now },
+    isBroker: { type: Number, enum: [0, 1], required: true },
     agent: {
       isApproved: {
         type: Boolean,

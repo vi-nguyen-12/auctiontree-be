@@ -85,17 +85,18 @@ const createRealestate = async (req, res) => {
     if (error) return res.status(200).send({ error: error.details[0].message });
 
     //Check if seller is a broker, require listing_agreement
-    let isHavingListingAgreement = false;
-    if (details.broker_name) {
-      for (let i of details.broker_documents) {
-        if (i.officialName === "listing_agreement") {
-          isHavingListingAgreement = true;
-        }
-      }
-      if (!isHavingListingAgreement) {
-        return res.status(200).send({ error: "Listing Agreement is required" });
-      }
-    }
+    // check later, comment out for the time being
+    // let isHavingListingAgreement = false;
+    // if (details.broker_name) {
+    //   for (let i of details.broker_documents) {
+    //     if (i.officialName === "listing_agreement") {
+    //       isHavingListingAgreement = true;
+    //     }
+    //   }
+    //   if (!isHavingListingAgreement) {
+    //     return res.status(200).send({ error: "Listing Agreement is required" });
+    //   }
+    // }
 
     //From step 2: check reservedAmount and disscussedAmount
     //From step 2: get details of real-estate from Estated and from input and add to details field;

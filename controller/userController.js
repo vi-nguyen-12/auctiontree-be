@@ -27,17 +27,8 @@ const client_url =
 //@route POST /api/users/register
 const registerUser = async (req, res) => {
   try {
-    let {
-      firstName,
-      lastName,
-      email,
-      phone,
-      password,
-      userName,
-      country,
-      city,
-      agent,
-    } = req.body;
+    let { firstName, lastName, email, phone, password, userName, isBroker } =
+      req.body;
     const userExist = await User.findOne({
       $or: [{ email: email.toLowerCase() }, { userName }],
     });
@@ -70,9 +61,7 @@ const registerUser = async (req, res) => {
       phone,
       password: hashedPassword,
       userName,
-      country,
-      city,
-      agent,
+      isBroker,
       secret,
       temp_token: token,
     });
@@ -344,6 +333,7 @@ const login = async (req, res) => {
         userName: user.userName,
         country: user.country,
         city: user.city,
+        isBroker: user.isBroker,
         isActive: user.isActive,
         KYC: user.KYC,
         token,
@@ -360,6 +350,40 @@ const login = async (req, res) => {
 const logout = async (req, res) => {
   res.clearCookie("auth-token");
   res.status(200).send({ message: "User logged out" });
+};
+
+//@desc  Get user
+//@route GET /api/users/:id
+const getUser = async (req, res) => {
+  const { id: userId } = req.params;
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(200).send({ error: `No user found` });
+    }
+    const result = {
+      _id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      userName: user.userName,
+      email: user.email,
+      phone: user.phone,
+      country: user.country,
+      city: user.city,
+      isBroker: user.isBroker,
+      agent: user.agent,
+      profileImage: user.profileImage,
+      description: user.description,
+      isActive: user.isActive,
+      likedAuctions: user.likedAutions,
+      social_links: user.social_links,
+      notifications: user.notifications,
+      dueDiligence: user.dueDiligence,
+    };
+    res.status(200).send(result);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
 };
 
 //@desc  Get user based on buyerId
@@ -608,6 +632,7 @@ const editProfile = async (req, res) => {
       social_links: savedUser.social_links,
       description: savedUser.description,
       agent: savedUser.agent,
+      isBroker: savedUser.isBroker,
     };
     return res.status(200).send(result);
   } catch (err) {
@@ -1482,6 +1507,7 @@ module.exports = {
   login,
   logout,
   verify,
+  getUser,
   getUserByBuyerId,
   getUserByPropertyId,
   checkJWT,

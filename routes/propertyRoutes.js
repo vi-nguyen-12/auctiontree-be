@@ -19,7 +19,7 @@ const {
 router.get("/real-estates/search", search);
 
 //this should be only for user is admin
-router.put("/:propertyId/documents/:documentId", auth, verifyDocument);
+router.put("/:propertyId/documents/:documentId/status", auth, verifyDocument);
 router.put("/:propertyId/images/:imageId/status", auth, verifyImage);
 router.put("/:propertyId/videos/:videoId/status", auth, verifyVideo);
 router.put("/:id/status", auth, approveProperty);
