@@ -642,12 +642,13 @@ const getAuction = async (req, res) => {
       return res.status(200).send(auction);
     }
     // normal logged in user: can only see documents which approved due diligence
-    if (!user || !user.dueDiligence.includes(auction.property._id)) {
-      auction.property.documents = [];
-    }
-    auction.property.documents = auction.property.documents.filter(
-      (document) => document.isVisible
-    );
+    // [temporary let logged in user can see documents if they click approve disclaimer on client site]
+    // if (!user || !user.dueDiligence.includes(auction.property._id)) {
+    //   auction.property.documents = [];
+    // }
+    // auction.property.documents = auction.property.documents.filter(
+    //   (document) => document.isVisible
+    // );
     //Authenticate: registered buyer & be approved at least 1 fund can see list top 5, not whole list of bids
     delete auction.bids;
     delete auction.property.reservedAmount;
@@ -920,7 +921,7 @@ const placeBidding = async (req, res) => {
 
     //send email to others not highest bidders
     let otherNotHighestBidder =
-      auction.bids.length > 0 ? auction.bids.splice(-1) : null;
+      auction.bids.length > 0 ? auction.bids.slice(-1, 0) : null;
 
     if (otherNotHighestBidder?.length > 0) {
       otherNotHighestBidder = await Promise.all(
@@ -952,6 +953,7 @@ const placeBidding = async (req, res) => {
       auctionId: auction._id,
       message: `New bidding price ${biddingPrice} at ${biddingTime}`,
     });
+
     await user.save();
     sendEmail({ to: email, subject, text });
 
@@ -963,6 +965,7 @@ const placeBidding = async (req, res) => {
       auctionId: auction._id,
       message: `New bidding price ${biddingPrice} at ${biddingTime}`,
     });
+
     await owner.save();
     sendEmail({ to: email, subject, text });
 
@@ -984,9 +987,12 @@ const placeBidding = async (req, res) => {
       amount: biddingPrice,
       time: biddingTime,
     };
+    console.log(auction.bids);
     auction.bids.push(newBidder);
+    console.log(auction.bids);
 
     const savedAuction = await auction.save();
+    console.log(savedAuction);
 
     let numberOfBids, highestBidders;
     ({ numberOfBids, highestBid, highestBidders } = await getBidsInformation(
