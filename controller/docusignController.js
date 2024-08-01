@@ -99,7 +99,9 @@ const makeEnvelope = async (args) => {
       throw new Error(e);
     }
   };
+
   let docb64 = await getObject(process.env.AWS_BUCKET_NAME, keyName);
+
   let doc1 = new docusign.Document.constructFromObject({
     documentBase64: docb64,
     name: args.docName,
@@ -127,6 +129,10 @@ const makeEnvelope = async (args) => {
   cc1.routingOrder = "2";
   cc1.recipientId = "2";
 
+  const today = new Date();
+  const options = { year: "numeric", month: "short", day: "numeric" };
+  const formattedDate = today.toLocaleDateString("en-US", options);
+
   // Create tabs
   // let property, sign1, sign2, by1, by2, date1, date2;
   if (docName === "selling_agreement") {
@@ -137,21 +143,49 @@ const makeEnvelope = async (args) => {
       anchorUnits: "pixels",
       anchorXOffset: "0",
       width: "176",
+      bold: "true",
     });
+    let dateTab = docusign.Text.constructFromObject({
+      value: formattedDate,
+      anchorString: "[Today’s Date]",
+      anchorYOffset: "-5",
+      anchorUnits: "pixels",
+      anchorXOffset: "0",
+      width: "40",
+      bold: "true",
+    });
+    let name1 = docusign.Text.constructFromObject({
+      value: `${args.signer1.name}`,
+      anchorString: "[Seller]",
+      anchorYOffset: "-5",
+      anchorUnits: "pixels",
+      anchorXOffset: "0",
+      width: "80",
+      bold: "true",
+    });
+    let address1 = docusign.Text.constructFromObject({
+      value: args.signer1.address,
+      anchorString: "[Seller Address]",
+      anchorYOffset: "-5",
+      anchorUnits: "pixels",
+      anchorXOffset: "0",
+      width: "176",
+      bold: "true",
+    });
+
     let sign1 = docusign.SignHere.constructFromObject({
       anchorString: "\\s1\\",
       anchorYOffset: "-5",
       anchorUnits: "pixels",
       anchorXOffset: "100",
     });
-    let by1 = docusign.Text.constructFromObject({
-      value: `${args.signer1.name}`,
-      anchorString: "\\b1\\",
+    let initial1 = docusign.InitialHere.constructFromObject({
+      anchorString: "\\init1\\",
       anchorYOffset: "-5",
       anchorUnits: "pixels",
-      anchorXOffset: "50",
-      width: "100",
+      anchorXOffset: "100",
     });
+
     let date1 = docusign.DateSigned.constructFromObject({
       anchorString: "\\d1\\",
       anchorYOffset: "-5",
@@ -179,8 +213,9 @@ const makeEnvelope = async (args) => {
     });
     signer1.tabs = docusign.Tabs.constructFromObject({
       signHereTabs: [sign1],
+      initialHereTabs: [initial1],
       // prefillTabs: { textTabs: [property] },
-      textTabs: [property, by1],
+      textTabs: [property, dateTab, name1, address1],
       dateSignedTabs: [date1],
     });
   }
@@ -191,13 +226,11 @@ const makeEnvelope = async (args) => {
       anchorUnits: "pixels",
       anchorXOffset: "100",
     });
-    let int1 = docusign.Text.constructFromObject({
-      value: `${args.signer1.iniital}`,
+    let int1 = docusign.InitialHere.constructFromObject({
       anchorString: "\\i1\\",
       anchorYOffset: "-5",
       anchorUnits: "pixels",
-      anchorXOffset: "80",
-      width: "100",
+      anchorXOffset: "100",
     });
     let date1 = docusign.DateSigned.constructFromObject({
       anchorString: "\\d1\\",
@@ -225,7 +258,7 @@ const makeEnvelope = async (args) => {
     });
     signer1.tabs = docusign.Tabs.constructFromObject({
       signHereTabs: [sign1],
-      textTabs: [int1],
+      initialHereTabs: [int1],
       dateSignedTabs: [date1],
     });
   }
@@ -301,6 +334,7 @@ const createSellingAgreementURL = async (req, res, next) => {
             user.firstName.charAt(0).toUpperCase() +
             user.lastName.charAt(0).toUpperCase()
           }`,
+          address: property.details.address,
           recipientId: "1",
           clientUserId: "1001",
         },
@@ -315,6 +349,7 @@ const createSellingAgreementURL = async (req, res, next) => {
       };
 
       let envelope = await makeEnvelope(envelopeArgs);
+
       let envelopeResult = await generateEnvelope(envelope);
 
       envelopeId = envelopeResult.envelopeId;

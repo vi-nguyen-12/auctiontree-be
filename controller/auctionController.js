@@ -662,9 +662,11 @@ const getAuction = async (req, res) => {
       auctionId: auction._id,
       userId,
     });
+
     let isApprovedToBid = false;
 
     if (isRegisteredToBuy) {
+      auction.availableFund = isRegisteredToBuy.availableFund;
       for (let fund of isRegisteredToBuy.funds) {
         if (fund.document.isVerified === "success") {
           isApprovedToBid = true;
