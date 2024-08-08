@@ -113,11 +113,15 @@ const getAllUsers = async (req, res) => {
     const { error } = paramsSchema.validate(req.query);
     if (error) return res.status(200).send({ error: error.details[0].message });
 
-    // user only can get broker information
+    // user only can get broker information, should fix this !!
     if (!req.admin && !isBroker) {
       return res
         .status(200)
         .send({ error: "Not authorized to get information" });
+    }
+
+    if (!req.admin?.permissions.includes("user_read")) {
+      return res.status(200).send({ error: "Not allowed to Access" });
     }
 
     page = parseInt(page) || 1;

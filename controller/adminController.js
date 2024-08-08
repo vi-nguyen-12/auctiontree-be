@@ -215,20 +215,23 @@ const editAdmin = async (req, res) => {
     if (!isOwner && !isAbleToEditAdmin) {
       return res.status(200).send({ error: "Not allowed to edit admin" });
     }
-    //owner of this account & not super admin
+    //owner of this account & not super admin, cannot edit permission,role,designaion, description, status
     if (isOwner && !isAbleToEditAdmin) {
       querySchema = Joi.object({
         fullName: Joi.string().optional(),
         phone: Joi.string()
           .pattern(/^[0-9]+$/)
-          .optional(),
-        personalEmail: Joi.string().email({
-          minDomainSegments: 2,
-          tlds: { allow: ["com", "net"] },
-        }),
-        location: Joi.string().optional(),
+          .optional()
+          .allow(null, ""),
+        personalEmail: Joi.string()
+          .email({
+            minDomainSegments: 2,
+            tlds: { allow: ["com", "net"] },
+          })
+          .allow(null, ""),
+        location: Joi.string().optional().allow(null, ""),
         image: Joi.string().optional(),
-        oldPassword: Joi.string().optional(),
+        oldPassword: Joi.string().optional().allow(null, ""),
         newPassword: Joi.when("oldPassword", {
           is: Joi.exist(),
           then: Joi.string().required(),
@@ -242,14 +245,17 @@ const editAdmin = async (req, res) => {
         fullName: Joi.string().optional(),
         phone: Joi.string()
           .pattern(/^[0-9]+$/)
-          .optional(),
-        personalEmail: Joi.string().email({
-          minDomainSegments: 2,
-          tlds: { allow: ["com", "net"] },
-        }),
-        location: Joi.string().optional(),
+          .optional()
+          .allow(null, ""),
+        personalEmail: Joi.string()
+          .email({
+            minDomainSegments: 2,
+            tlds: { allow: ["com", "net"] },
+          })
+          .allow(null, ""),
+        location: Joi.string().optional().allow(null, ""),
         image: Joi.string().optional(),
-        oldPassword: Joi.string().optional(),
+        oldPassword: Joi.string().optional().allow(null, ""),
         newPassword: Joi.when("oldPassword", {
           is: Joi.exist(),
           then: Joi.string().required(),
@@ -259,7 +265,7 @@ const editAdmin = async (req, res) => {
           minDomainSegments: 2,
           tlds: { allow: ["com", "net"] },
         }),
-        IPAddress: Joi.string().optional(),
+        IPAddress: Joi.string().optional().allow(null, ""),
         role: Joi.objectId().optional(),
         permissions: Joi.array()
           .items(
@@ -295,27 +301,34 @@ const editAdmin = async (req, res) => {
             )
           )
           .optional(),
-        designation: Joi.string().optional(),
-        description: Joi.string().optional(),
-        status: Joi.string().optional().valid("activated", "deactivated"),
+        designation: Joi.string().optional().allow(null, ""),
+        description: Joi.string().optional().allow(null, ""),
+        status: Joi.string()
+          .optional()
+          .valid("activated", "deactivated")
+          .allow(null, ""),
       });
     }
+    //not owner and has permission: cannot change password
     if (!isOwner && isAbleToEditAdmin) {
       querySchema = Joi.object({
-        fullName: Joi.string().optional(),
+        fullName: Joi.string().optional().allow(null, ""),
         phone: Joi.string()
           .pattern(/^[0-9]+$/)
-          .optional(),
-        personalEmail: Joi.string().email({
-          minDomainSegments: 2,
-          tlds: { allow: ["com", "net"] },
-        }),
+          .optional()
+          .allow(null, ""),
+        personalEmail: Joi.string()
+          .email({
+            minDomainSegments: 2,
+            tlds: { allow: ["com", "net"] },
+          })
+          .allow(null, ""),
         email: Joi.string().email({
           minDomainSegments: 2,
           tlds: { allow: ["com", "net"] },
         }),
-        location: Joi.string().optional(),
-        IPAddress: Joi.string().optional(),
+        location: Joi.string().optional().allow(null, ""),
+        IPAddress: Joi.string().optional().allow(null, ""),
         role: Joi.objectId().optional(),
         permissions: Joi.array()
           .items(
@@ -351,9 +364,9 @@ const editAdmin = async (req, res) => {
             )
           )
           .optional(),
-        image: Joi.string().optional(),
-        designation: Joi.string().optional(),
-        description: Joi.string().optional(),
+        image: Joi.string().optional().allow(null, ""),
+        designation: Joi.string().optional().allow(null, ""),
+        description: Joi.string().optional().allow(null, ""),
         status: Joi.string().optional().valid("activated", "deactivated"),
       });
     }
