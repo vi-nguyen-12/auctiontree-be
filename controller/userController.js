@@ -130,11 +130,11 @@ const getAllUsers = async (req, res) => {
     let filters = {};
     let sorts = {};
 
-    // if (isBroker === "true") {
-    //   filters = {
-    //     "broker_licenses.0": { $exists: true },
-    //   };
-    // }
+    if (isBroker === "true") {
+      filters = {
+        isBroker: 1,
+      };
+    }
 
     // if (isBroker === "false") {
     //   filters = {

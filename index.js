@@ -59,6 +59,8 @@ if (process.env.NODE_ENV === "test" || process.env.NODE_ENV == "production") {
     "https://master.d2n2iz8kdj82to.amplifyapp.com",
     "http://192.168.1.168:3000",
     "http://192.168.1.75:3000",
+    "https://royalbid.netlify.app",
+    "https://royalbid.com",
   ];
 
   const corsOptions = {
